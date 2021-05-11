@@ -3,6 +3,8 @@ from django.http import HttpResponse
 from django.urls import path
 from django.views.decorators.http import require_GET
 
+from ras import api
+
 
 @require_GET
 def health_check(request):
@@ -12,4 +14,5 @@ def health_check(request):
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("health_check", health_check),
+    path("api/", api.urls),
 ]
