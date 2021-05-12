@@ -119,3 +119,9 @@ STATIC_URL = "/static/"
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# AWS
+AWS_ACCESS_KEY_ID = env.str("AWS_ACCESS_KEY_ID", default="test")
+AWS_SECRET_ACCESS_KEY = env.str("AWS_SECRET_ACCESS_KEY", default="test")
+AWS_REGION = env.str("AWS_REGION", default="us-east-2")
+AWS_SNS_ENDPOINT_URL = env.str("AWS_SNS_ENDPOINT_URL", default="http://0.0.0.0:4566")
