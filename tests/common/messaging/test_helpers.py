@@ -16,4 +16,4 @@ def test_publish_message(mock_sns_publish):
     # Then: 예상한 mock 결과가 반환되고,
     assert result is True
     # And: publish 요청인자는 미리 정의한 message 값들과 일치한다.
-    mock_sns_publish.assert_called_with(TopicArn="test-topic-arn", Message='{"test-message": 123}')
+    mock_sns_publish.assert_called_once_with(TopicArn="test-topic-arn", Message='{"test-message": 123}')
