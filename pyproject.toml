@@ -32,6 +32,7 @@ awscli-local = "^0.14"
 mysqlclient = "^2.0.3"
 ipdb = "^0.13.7"
 ipython = "^7.23.1"
+localstack = "^0.12.10"
 
 
 [tool.black]
