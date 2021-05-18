@@ -4,7 +4,7 @@ from ninja.router import Router
 from ras.rider.schemas import EventMsgRiderUpdated, EventType, RiderState
 from ras.simulator.schemas import LocationTriggerPayload, RiderStatusTriggerPayload
 
-from .helpers import get_state_transition, publish_rider_updated
+from .helpers import get_state_of_rider_action, publish_rider_updated
 
 trigger_router = Router()
 
@@ -27,7 +27,7 @@ def trigger_rider_location(request, data: LocationTriggerPayload):
 
 @trigger_router.post("/rider/status", url_name="simulator_rider_status_trigger")
 def trigger_rider_status(request, data: RiderStatusTriggerPayload):
-    state = get_state_transition(data.action)
+    state = get_state_of_rider_action(data.action)
     msg = EventMsgRiderUpdated(
         event_type=EventType.UPDATE,
         event_name=f"rider-{data.action.value}",

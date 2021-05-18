@@ -19,5 +19,5 @@ rider_state_machine = {
 }
 
 
-def get_state_transition(action: RiderSimulatedAction):
+def get_state_of_rider_action(action: RiderSimulatedAction):
     return rider_state_machine[action]
