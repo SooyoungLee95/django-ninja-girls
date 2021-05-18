@@ -12,7 +12,7 @@ class Location(Schema):
     lng: float
 
 
-class RiderState(Enum):
+class RiderState(str, Enum):
     AVAILABLE = "available"
     COMPLETED = "completed"
     IN_TRANSIT = "in_transit"
