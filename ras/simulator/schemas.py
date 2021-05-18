@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 from typing import Optional
 
@@ -22,5 +23,18 @@ class RiderSimulatedAction(str, Enum):
 
 class RiderStatusTriggerPayload(Schema):
     rider_id: int
+    action: RiderSimulatedAction
+    location: Optional[Location]
+
+
+class RiderShiftSimulatedAction(str, Enum):
+    SHIFT_START = "shift-start"
+    SHIFT_END = "shift-end"
+
+
+class RiderShiftTriggerPayload(Schema):
+    rider_id: int
+    start_at: datetime
+    end_at: datetime
     action: RiderSimulatedAction
     location: Optional[Location]

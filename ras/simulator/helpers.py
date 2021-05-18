@@ -1,7 +1,7 @@
 from ras.common.messaging import SNSMessage, publish_message
 from ras.rider.schemas import EventMsgRiderUpdated, RiderState
 from ras.simulator.consts import RIDER_UPDATED_TOPIC_ARN
-from ras.simulator.schemas import RiderSimulatedAction
+from ras.simulator.schemas import RiderShiftSimulatedAction, RiderSimulatedAction
 
 
 def publish_rider_updated(event_msg: EventMsgRiderUpdated):
@@ -18,6 +18,15 @@ rider_state_machine = {
     RiderSimulatedAction.TAKE_A_BREAK: RiderState.BREAK,
 }
 
+rider_shift_state_machine = {
+    RiderShiftSimulatedAction.SHIFT_START: RiderState.AVAILABLE,
+    RiderShiftSimulatedAction.SHIFT_END: RiderState.NOT_WORKING,
+}
+
 
 def get_state_of_rider_action(action: RiderSimulatedAction):
     return rider_state_machine[action]
+
+
+def get_state_of_shift_action(action: RiderShiftSimulatedAction):
+    return rider_shift_state_machine[action]
