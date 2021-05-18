@@ -36,5 +36,5 @@ class RiderShiftTriggerPayload(Schema):
     rider_id: int
     start_at: datetime
     end_at: datetime
-    action: RiderSimulatedAction
+    action: RiderShiftSimulatedAction
     location: Optional[Location]
