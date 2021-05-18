@@ -1,0 +1,74 @@
+asyncapi: 2.0.0
+info:
+  title: Rider API Service
+  version: "0.0.1"
+
+servers:
+  development:
+    url: http://localhost:8000/
+    protocol: http
+
+channels:
+  /rider:
+    description: AWS SNS Topic for rider updates
+    subscribe:
+      message:
+        $ref: "#/components/messages/rider-updated"
+
+components:
+  schemas:
+    Location:
+      type: object
+      properties:
+        lat:
+          type: number
+          format: float
+        lng:
+          type: number
+          format: float
+
+    RiderState:
+      type: string
+      enum:
+        - "available"
+        - "completed"
+        - "in_transit"
+        - "near_pickup"
+        - "near_dropoff"
+        - "not_working"
+        - "break"
+
+    EventType:
+      type: string
+      enum:
+        - "add"
+        - "update"
+        - "delete"
+
+    EventBase:
+      type: object
+      properties: &event_base
+        event_id:
+          type: string
+        event_type:
+          $ref: "#/components/schemas/EventType"
+        event_name:
+          type: string
+
+    EventRiderUpdated:
+      $ref: "#/components/schemas/EventBase"
+      properties:
+        <<: *event_base
+        id:
+          type: integer
+        zone_id:
+          type: integer
+        current_location:
+          $ref: "#/components/schemas/Location"
+        state:
+          $ref: "#/components/schemas/RiderState"
+
+  messages:
+    rider-updated:
+      payload:
+        $ref: "#/components/schemas/EventRiderUpdated"
