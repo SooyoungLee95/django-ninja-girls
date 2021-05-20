@@ -21,7 +21,7 @@ class RiderSimulatedAction(str, Enum):
     TAKE_A_BREAK = "take-a-break"
 
 
-class RiderStatusTriggerPayload(Schema):
+class RiderStateTriggerPayload(Schema):
     rider_id: int
     action: RiderSimulatedAction
     location: Optional[Location]

@@ -5,7 +5,7 @@ from ras.rider.schemas import EventMsgRiderUpdated, EventType, RiderState
 from ras.simulator.schemas import (
     LocationTriggerPayload,
     RiderShiftTriggerPayload,
-    RiderStatusTriggerPayload,
+    RiderStateTriggerPayload,
 )
 
 from .helpers import (
@@ -33,8 +33,8 @@ def trigger_rider_location(request, data: LocationTriggerPayload):
     }
 
 
-@trigger_router.post("/rider/status", url_name="simulator_rider_status_trigger")
-def trigger_rider_status(request, data: RiderStatusTriggerPayload):
+@trigger_router.post("/rider/state", url_name="simulator_rider_state_trigger")
+def trigger_rider_state(request, data: RiderStateTriggerPayload):
     state = get_state_of_rider_action(data.action)
     msg = EventMsgRiderUpdated(
         event_type=EventType.UPDATE,

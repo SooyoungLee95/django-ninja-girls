@@ -64,7 +64,7 @@ def test_trigger_rider_location(mock_publish_message):
         (RiderState.BREAK, RiderSimulatedAction.TAKE_A_BREAK),
     ],
 )
-def test_trigger_rider_status(expected_state, rider_action):
+def test_trigger_rider_state(expected_state, rider_action):
     # When: rider action 트리거가 발생하는 경우
     expected_rider_id = 1
     expected_rider_lat = 37.04921
@@ -85,7 +85,7 @@ def test_trigger_rider_status(expected_state, rider_action):
         mock_publish_message.return_value = expected_publish_message_return_value
 
         response = client.post(
-            reverse("ninja:simulator_rider_status_trigger"),
+            reverse("ninja:simulator_rider_state_trigger"),
             data=trigger_payload,
             content_type="application/json",
         )
