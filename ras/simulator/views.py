@@ -43,7 +43,7 @@ def trigger_rider_state(request, data: RiderStateTriggerPayload):
         event_name=f"rider-{data.action.value}",
         id=data.rider_id,
         zone_id=1,
-        current_location=data.location or {"lat": 37.12364, "lng": 127.14424},
+        current_location=data.location or {"latitude": 37.12364, "longitude": 127.14424},
         state=state,
     )
     return {
@@ -61,7 +61,7 @@ def trigger_rider_shift(request, data: RiderShiftTriggerPayload):
         event_name=f"rider-{data.action.value}",
         id=data.rider_id,
         zone_id=1,
-        current_location=data.location or {"lat": 37.12364, "lng": 127.14424},
+        current_location=data.location or {"latitude": 37.12364, "longitude": 127.14424},
         state=state,
     )
     return {

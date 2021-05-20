@@ -8,8 +8,8 @@ from .helpers import generate_event_id
 
 
 class Location(Schema):
-    lat: float
-    lng: float
+    latitude: float
+    longitude: float
 
 
 class RiderState(str, Enum):

@@ -23,8 +23,8 @@ def test_trigger_rider_location(mock_publish_message):
     trigger_payload = {
         "rider_id": expected_rider_id,
         "location": {
-            "lat": expected_rider_lat,
-            "lng": expected_rider_lng,
+            "latitude": expected_rider_lat,
+            "longitude": expected_rider_lng,
         },
     }
     client = Client()
@@ -47,8 +47,8 @@ def test_trigger_rider_location(mock_publish_message):
     assert data["message"]["event_name"] == "rider-location-update"
     assert data["message"]["id"] == expected_rider_id
     assert data["message"]["zone_id"] == expected_zone_id
-    assert data["message"]["current_location"]["lat"] == expected_rider_lat
-    assert data["message"]["current_location"]["lng"] == expected_rider_lng
+    assert data["message"]["current_location"]["latitude"] == expected_rider_lat
+    assert data["message"]["current_location"]["longitude"] == expected_rider_lng
     assert data["message"]["state"] == "in_transit"
     assert data["response"] == expected_publish_message_return_value
 
@@ -74,8 +74,8 @@ def test_trigger_rider_state(expected_state, expected_event, rider_action):
         "rider_id": expected_rider_id,
         "action": rider_action,
         "location": {
-            "lat": expected_rider_lat,
-            "lng": expected_rider_lng,
+            "latitude": expected_rider_lat,
+            "longitude": expected_rider_lng,
         },
     }
     client = Client()
@@ -103,8 +103,8 @@ def test_trigger_rider_state(expected_state, expected_event, rider_action):
     assert data["message"]["event_name"] == f"rider-{rider_action.value}"
     assert data["message"]["id"] == expected_rider_id
     assert data["message"]["zone_id"] == expected_zone_id
-    assert data["message"]["current_location"]["lat"] == expected_rider_lat
-    assert data["message"]["current_location"]["lng"] == expected_rider_lng
+    assert data["message"]["current_location"]["latitude"] == expected_rider_lat
+    assert data["message"]["current_location"]["longitude"] == expected_rider_lng
     assert data["message"]["state"] == expected_state.value
     assert data["response"] == expected_publish_message_return_value
 
@@ -128,8 +128,8 @@ def test_trigger_rider_shift(expected_state, expected_event, shift_action):
         "start_at": "2021-05-18T10:00:00.000000",
         "end_at": "2021-05-18T10:15:00.000000",
         "location": {
-            "lat": expected_rider_lat,
-            "lng": expected_rider_lng,
+            "latitude": expected_rider_lat,
+            "longitude": expected_rider_lng,
         },
     }
     client = Client()
@@ -157,7 +157,7 @@ def test_trigger_rider_shift(expected_state, expected_event, shift_action):
     assert data["message"]["event_name"] == f"rider-{shift_action.value}"
     assert data["message"]["id"] == expected_rider_id
     assert data["message"]["zone_id"] == expected_zone_id
-    assert data["message"]["current_location"]["lat"] == expected_rider_lat
-    assert data["message"]["current_location"]["lng"] == expected_rider_lng
+    assert data["message"]["current_location"]["latitude"] == expected_rider_lat
+    assert data["message"]["current_location"]["longitude"] == expected_rider_lng
     assert data["message"]["state"] == expected_state.value
     assert data["response"] == expected_publish_message_return_value
