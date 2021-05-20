@@ -9,6 +9,7 @@ from ras.simulator.schemas import (
 )
 
 from .helpers import (
+    get_event_type_of_rider_state,
     get_state_of_rider_action,
     get_state_of_shift_action,
     publish_rider_updated,
@@ -36,8 +37,9 @@ def trigger_rider_location(request, data: LocationTriggerPayload):
 @trigger_router.post("/rider/state", url_name="simulator_rider_state_trigger")
 def trigger_rider_state(request, data: RiderStateTriggerPayload):
     state = get_state_of_rider_action(data.action)
+    event = get_event_type_of_rider_state(state)
     msg = EventMsgRiderUpdated(
-        event_type=EventType.UPDATE,
+        event_type=event,
         event_name=f"rider-{data.action.value}",
         id=data.rider_id,
         zone_id=1,
@@ -53,8 +55,9 @@ def trigger_rider_state(request, data: RiderStateTriggerPayload):
 @trigger_router.post("/rider/shift", url_name="simulator_rider_shift_trigger")
 def trigger_rider_shift(request, data: RiderShiftTriggerPayload):
     state = get_state_of_shift_action(data.action)
+    event = get_event_type_of_rider_state(state)
     msg = EventMsgRiderUpdated(
-        event_type=EventType.UPDATE,
+        event_type=event,
         event_name=f"rider-{data.action.value}",
         id=data.rider_id,
         zone_id=1,

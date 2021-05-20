@@ -5,7 +5,7 @@ import pytest
 from django.test import Client
 from django.urls import reverse
 
-from ras.rider.schemas import RiderState
+from ras.rider.schemas import EventType, RiderState
 from ras.simulator.schemas import RiderShiftSimulatedAction, RiderSimulatedAction
 
 
@@ -54,17 +54,17 @@ def test_trigger_rider_location(mock_publish_message):
 
 
 @pytest.mark.parametrize(
-    "expected_state, rider_action",
+    "expected_state, expected_event, rider_action",
     [
-        (RiderState.AVAILABLE, RiderSimulatedAction.LOGIN),
-        (RiderState.NOT_WORKING, RiderSimulatedAction.LOGOUT),
-        (RiderState.IN_TRANSIT, RiderSimulatedAction.ACCEPT_DELIVERY),
-        (RiderState.AVAILABLE, RiderSimulatedAction.DECLINE_DELIVERY),
-        (RiderState.AVAILABLE, RiderSimulatedAction.COMPLETE_DELIVERY),
-        (RiderState.BREAK, RiderSimulatedAction.TAKE_A_BREAK),
+        (RiderState.AVAILABLE, EventType.ADD, RiderSimulatedAction.LOGIN),
+        (RiderState.NOT_WORKING, EventType.DELETE, RiderSimulatedAction.LOGOUT),
+        (RiderState.IN_TRANSIT, EventType.UPDATE, RiderSimulatedAction.ACCEPT_DELIVERY),
+        (RiderState.AVAILABLE, EventType.ADD, RiderSimulatedAction.DECLINE_DELIVERY),
+        (RiderState.AVAILABLE, EventType.ADD, RiderSimulatedAction.COMPLETE_DELIVERY),
+        (RiderState.BREAK, EventType.DELETE, RiderSimulatedAction.TAKE_A_BREAK),
     ],
 )
-def test_trigger_rider_state(expected_state, rider_action):
+def test_trigger_rider_state(expected_state, expected_event, rider_action):
     # When: rider action 트리거가 발생하는 경우
     expected_rider_id = 1
     expected_rider_lat = 37.04921
@@ -99,7 +99,7 @@ def test_trigger_rider_state(expected_state, rider_action):
     # And: 게시된 message 및 publish 응답이 반환된다
     data = response.json()
     assert data["message"]["event_id"].startswith("ras:")
-    assert data["message"]["event_type"] == "update"
+    assert data["message"]["event_type"] == expected_event.value
     assert data["message"]["event_name"] == f"rider-{rider_action.value}"
     assert data["message"]["id"] == expected_rider_id
     assert data["message"]["zone_id"] == expected_zone_id
@@ -110,13 +110,13 @@ def test_trigger_rider_state(expected_state, rider_action):
 
 
 @pytest.mark.parametrize(
-    "expected_state, shift_action",
+    "expected_state, expected_event, shift_action",
     [
-        (RiderState.AVAILABLE, RiderShiftSimulatedAction.SHIFT_START),
-        (RiderState.NOT_WORKING, RiderShiftSimulatedAction.SHIFT_END),
+        (RiderState.AVAILABLE, EventType.ADD, RiderShiftSimulatedAction.SHIFT_START),
+        (RiderState.NOT_WORKING, EventType.DELETE, RiderShiftSimulatedAction.SHIFT_END),
     ],
 )
-def test_trigger_rider_shift(expected_state, shift_action):
+def test_trigger_rider_shift(expected_state, expected_event, shift_action):
     # When: shift action 트리거가 발생하는 경우
     expected_rider_id = 1
     expected_rider_lat = 37.04921
@@ -153,7 +153,7 @@ def test_trigger_rider_shift(expected_state, shift_action):
     # And: 게시된 message 및 publish 응답이 반환된다
     data = response.json()
     assert data["message"]["event_id"].startswith("ras:")
-    assert data["message"]["event_type"] == "update"
+    assert data["message"]["event_type"] == expected_event.value
     assert data["message"]["event_name"] == f"rider-{shift_action.value}"
     assert data["message"]["id"] == expected_rider_id
     assert data["message"]["zone_id"] == expected_zone_id
