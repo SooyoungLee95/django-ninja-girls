@@ -13,17 +13,20 @@ channels:
     description: AWS SNS Topic for rider updates
     subscribe:
       message:
-        $ref: "#/components/messages/rider-updated"
+        oneOf:
+          - $ref: "#/components/messages/rider-add"
+          - $ref: "#/components/messages/rider-update"
+          - $ref: "#/components/messages/rider-delete"
 
 components:
   schemas:
     Location:
       type: object
       properties:
-        lat:
+        latitude:
           type: number
           format: float
-        lng:
+        longitude:
           type: number
           format: float
 
@@ -55,7 +58,7 @@ components:
         event_name:
           type: string
 
-    EventRiderUpdated:
+    EventRider:
       $ref: "#/components/schemas/EventBase"
       properties:
         <<: *event_base
@@ -69,6 +72,12 @@ components:
           $ref: "#/components/schemas/RiderState"
 
   messages:
-    rider-updated:
+    rider-add:
       payload:
-        $ref: "#/components/schemas/EventRiderUpdated"
+        $ref: "#/components/schemas/EventRider"
+    rider-update:
+      payload:
+        $ref: "#/components/schemas/EventRider"
+    rider-delete:
+      payload:
+        $ref: "#/components/schemas/EventRider"
