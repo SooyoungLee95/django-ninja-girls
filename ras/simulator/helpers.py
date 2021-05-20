@@ -1,5 +1,7 @@
+from random import random
+
 from ras.common.messaging import SNSMessage, publish_message
-from ras.rider.schemas import EventMsgRiderUpdated, EventType, RiderState
+from ras.rider.schemas import EventMsgRiderUpdated, EventType, Location, RiderState
 from ras.simulator.consts import RIDER_UPDATED_TOPIC_ARN
 from ras.simulator.schemas import RiderShiftSimulatedAction, RiderSimulatedAction
 
@@ -42,3 +44,7 @@ def get_state_of_shift_action(action: RiderShiftSimulatedAction):
 
 def get_event_type_of_rider_state(state: RiderState):
     return rider_state_event_type_mapping[state]
+
+
+def get_location():
+    return Location(latitude=f"{37+random():.7f}", longitude=f"{127+random():.7f}")
