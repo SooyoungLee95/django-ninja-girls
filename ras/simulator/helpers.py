@@ -11,7 +11,7 @@ def publish_rider_updated(event_msg: EventMsgRiderUpdated):
     return publish_message(sns_message)
 
 
-rider_state_machine = {
+rider_action_state_mapping = {
     RiderSimulatedAction.LOGIN: RiderState.AVAILABLE,
     RiderSimulatedAction.LOGOUT: RiderState.NOT_WORKING,
     RiderSimulatedAction.ACCEPT_DELIVERY: RiderState.IN_TRANSIT,
@@ -21,7 +21,7 @@ rider_state_machine = {
 }
 
 
-rider_shift_state_machine = {
+rider_shift_action_state_mapping = {
     RiderShiftSimulatedAction.SHIFT_START: RiderState.AVAILABLE,
     RiderShiftSimulatedAction.SHIFT_END: RiderState.NOT_WORKING,
 }
@@ -35,11 +35,11 @@ rider_state_event_type_mapping = {
 
 
 def get_state_of_rider_action(action: RiderSimulatedAction):
-    return rider_state_machine[action]
+    return rider_action_state_mapping[action]
 
 
 def get_state_of_shift_action(action: RiderShiftSimulatedAction):
-    return rider_shift_state_machine[action]
+    return rider_shift_action_state_mapping[action]
 
 
 def get_event_type_of_rider_state(state: RiderState):
