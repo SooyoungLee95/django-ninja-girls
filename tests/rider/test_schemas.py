@@ -24,7 +24,7 @@ def test_event_msg_schema_event_id_validator(expected_result, event_id):
     except (TypeError, ValueError):
         pass
     finally:
-        # Then: 예샹한 검증결과와 일치한다.
+        # Then: 예상한 검증결과와 일치한다.
         assert validator_result is expected_result
 
 
