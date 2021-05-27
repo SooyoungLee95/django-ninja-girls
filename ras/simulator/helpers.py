@@ -14,8 +14,11 @@ def publish_rider_updated(event_msg: EventMsgRiderUpdated):
 rider_action_state_mapping = {
     RiderSimulatedAction.LOGIN: RiderState.AVAILABLE,
     RiderSimulatedAction.LOGOUT: RiderState.NOT_WORKING,
+    RiderSimulatedAction.WAITING_FOR_DELIVERY: RiderState.AVAILABLE,
+    RiderSimulatedAction.RECEIVE_DELIVERY: RiderState.AVAILABLE,
     RiderSimulatedAction.ACCEPT_DELIVERY: RiderState.IN_TRANSIT,
     RiderSimulatedAction.DECLINE_DELIVERY: RiderState.AVAILABLE,
+    RiderSimulatedAction.DELIVERYING: RiderState.IN_TRANSIT,
     RiderSimulatedAction.COMPLETE_DELIVERY: RiderState.AVAILABLE,
     RiderSimulatedAction.TAKE_A_BREAK: RiderState.BREAK,
 }

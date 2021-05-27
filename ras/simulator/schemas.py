@@ -15,8 +15,11 @@ class LocationTriggerPayload(Schema):
 class RiderSimulatedAction(str, Enum):
     LOGIN = "login"
     LOGOUT = "logout"
+    WAITING_FOR_DELIVERY = "waiting-for-delivery"
+    RECEIVE_DELIVERY = "receive-delivery"
     ACCEPT_DELIVERY = "accept-delivery"
     DECLINE_DELIVERY = "decline-delivery"
+    DELIVERYING = "deliverying"
     COMPLETE_DELIVERY = "complete-delivery"
     TAKE_A_BREAK = "take-a-break"
 
