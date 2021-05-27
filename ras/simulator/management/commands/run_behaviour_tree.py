@@ -11,9 +11,8 @@ from py_trees.composites import Parallel, Sequence
 
 from ras.simulator.schemas import RiderSimulatedAction
 
+blackboard.Blackboard.enable_activity_stream(maximum_size=100)
 blackboard = blackboard.Client(name="Global")
-blackboard.register_key(key="action", access=Access.WRITE)
-blackboard.action = RiderSimulatedAction.LOGIN
 
 
 def call_on_rider_action_change(new_action: RiderSimulatedAction):
@@ -31,8 +30,8 @@ def call_on_rider_location_change():
 
 
 class LocationSendBehaviour(Behaviour):
-    def __init__(self, name="위치전송"):
-        super().__init__(name)
+    def __init__(self, rider_id, name="위치전송"):
+        super().__init__(f"[{rider_id}] {name}")
 
     def update(self):
         self.logger.debug(f"  {self.name} [위치전송::update()]")
@@ -41,28 +40,27 @@ class LocationSendBehaviour(Behaviour):
 
 
 class RiderInTransitBehaviour(SuccessEveryN):
-    def __init__(self, name="배달상태 확인"):
+    def __init__(self, rider_id, name="배달지로 이동"):
         ticks_until_delivery_completed = 5
-        super().__init__(name, n=ticks_until_delivery_completed)
-        self.blackboard = self.attach_blackboard_client(name="RiderInTransitBehaviour")
-        self.blackboard.register_key("count", access=Access.WRITE)
+        super().__init__(f"[{rider_id}] {name}", n=ticks_until_delivery_completed)
+        self.rider_id = rider_id
 
     def update(self):
         status = super().update()
-        self.logger.debug(f"  {self.name} [배달상태 확인::update()]")
-        self.blackboard.count = self.count
+        self.logger.debug(f"  {self.name} [배달지로 이동 확인::update()]")
         if status == Status.SUCCESS:
-            blackboard.action = RiderSimulatedAction.COMPLETE_DELIVERY.name
+            setattr(blackboard, f"{self.rider_id}/action", RiderSimulatedAction.COMPLETE_DELIVERY.name)
             call_on_rider_action_change(RiderSimulatedAction.COMPLETE_DELIVERY)
             self.feedback_message = "배달완료"
 
             # = 다음 배달수락 시, 대기해야 하는 tick 수 랜덤 조절하려면 아래 주석 사용.
             # self.every_n = random.randrange(2, 7)
             # self.count = 0
+            return status
         else:
-            blackboard.action = RiderSimulatedAction.DELIVERYING.name
+            setattr(blackboard, f"{self.rider_id}/action", RiderSimulatedAction.DELIVERYING.name)
             self.feedback_message = "배달 중"
-        return status
+            return Status.RUNNING
 
     def terminate(self, new_status):
         if new_status == Status.INVALID:
@@ -70,17 +68,18 @@ class RiderInTransitBehaviour(SuccessEveryN):
 
 
 class RiderNotifiedBehaviour(Behaviour):
-    def __init__(self, name="배차 수신여부 확인"):
-        super().__init__(name)
+    def __init__(self, rider_id, name="배차 수신여부 확인"):
+        super().__init__(f"[{rider_id}] {name}")
+        self.rider_id = rider_id
 
     def update(self):
         self.logger.debug(f"  {self.name} [배차 수신여부 확인::update()]")
-        if random.random() < 0.3:
-            blackboard.action = RiderSimulatedAction.RECEIVE_DELIVERY.name
+        if random.random() < 0.7:
+            setattr(blackboard, f"{self.rider_id}/action", RiderSimulatedAction.RECEIVE_DELIVERY.name)
             self.feedback_message = "배차 수신 완료"
             return Status.SUCCESS
         else:
-            blackboard.action = RiderSimulatedAction.WAITING_FOR_DELIVERY.name
+            setattr(blackboard, f"{self.rider_id}/action", RiderSimulatedAction.WAITING_FOR_DELIVERY.name)
             self.feedback_message = "배차 수신 대기중"
             return Status.RUNNING
 
@@ -90,18 +89,19 @@ class RiderNotifiedBehaviour(Behaviour):
 
 
 class RiderDecidedBehaviour(Behaviour):
-    def __init__(self, name="배차 수락/거절 선택"):
-        super().__init__(name)
+    def __init__(self, rider_id, name="배차 수락/거절 선택"):
+        super().__init__(f"[{rider_id}] {name}")
+        self.rider_id = rider_id
 
     def update(self):
         self.logger.debug(f"  {self.name} [배차 수락/거절 선택::update()]")
-        if random.random() < 0.3:
-            blackboard.action = RiderSimulatedAction.ACCEPT_DELIVERY.name
+        if random.random() < 0.7:
+            setattr(blackboard, f"{self.rider_id}/action", RiderSimulatedAction.ACCEPT_DELIVERY.name)
             call_on_rider_action_change(RiderSimulatedAction.ACCEPT_DELIVERY)
             self.feedback_message = "배차 수락"
             return Status.SUCCESS
         else:
-            blackboard.action = RiderSimulatedAction.DECLINE_DELIVERY.name
+            setattr(blackboard, f"{self.rider_id}/action", RiderSimulatedAction.DECLINE_DELIVERY.name)
             call_on_rider_action_change(RiderSimulatedAction.DECLINE_DELIVERY)
             self.feedback_message = "배차 거절"
             return Status.FAILURE
@@ -111,8 +111,37 @@ class RiderDecidedBehaviour(Behaviour):
             self.feedback_message = ""
 
 
-class RiderSimulatorParallel(Parallel):
+class FleetSimulatorParallel(Parallel):
     pass
+
+
+class RiderSimulatorParallel(Parallel):
+    def __init__(self, rider_id, name="운행 중 (위치/상태 동시전송)", *args, **kwargs):
+        super().__init__(f"[{rider_id}] {name}", *args, **kwargs)
+        self.rider_id = rider_id
+        self.success_delivery = 0
+
+    def update(self):
+        if self.status == Status.FAILURE:
+            return Status.RUNNING
+
+    def terminate(self, new_status):
+        if new_status == Status.SUCCESS:
+            self.success_delivery += 1
+            setattr(blackboard, f"{self.rider_id}/successful-delivery", self.success_delivery)
+
+
+class RiderWorkingChecker(decorators.Decorator):
+    def __init__(self, child, rider_id, max_deliveries, name="운행완료 여부 확인", *args, **kwargs):
+        super().__init__(child, f"[{rider_id}] {name}", *args, **kwargs)
+        self.max_deliveries = max_deliveries
+
+    def update(self):
+        if self.decorated.success_delivery < self.max_deliveries:
+            return Status.RUNNING
+        else:
+            self.feedback_message = "done."
+            return Status.SUCCESS
 
 
 class CustomFailureIsRunning(decorators.FailureIsRunning):
@@ -122,7 +151,9 @@ class CustomFailureIsRunning(decorators.FailureIsRunning):
 
 
 def print_tree(tree):
-    print("RiderStatus:", blackboard.action)
+    # NOTE: blackboard 저장 내역 확인 시 아래 주석 사용
+    # print(display.unicode_blackboard_activity_stream())
+    print(display.unicode_blackboard())
     print(display.unicode_tree(root=tree.root, show_status=True))
 
 
@@ -131,52 +162,69 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("--export", action="store_true")
+        parser.add_argument("-n", "--num", default=1)
+        parser.add_argument("-m", "--max", default=1)
+        parser.add_argument("--debug", action="store_true")
 
-    def handle(self, *args, **options):
-        # NOTE: Debug 로그 확인 시 아래 주석 사용
-        # from py_trees import logging
-        # logging.level = logging.Level.DEBUG
-
+    def spawn_rider(self, rider_id):
         # 배달 프로세스 시퀀스
         #   1. 배차 수신
         #   2. 배차 수락/거절
         #   3. 배달 진행
-        delivery_process = Sequence(name="배달 프로세스", memory=True)
-        rider_notified = RiderNotifiedBehaviour()
-        rider_decided = RiderDecidedBehaviour()
-        rider_in_transit = RiderInTransitBehaviour()
-        rider_in_transit_until_complete = CustomFailureIsRunning(rider_in_transit, name="배달완료까지 반복")
+        delivery_process = Sequence(name=f"[{rider_id}] 배달 프로세스", memory=True)
+        blackboard.register_key(key=f"{rider_id}/action", access=Access.WRITE)
+        setattr(blackboard, f"{rider_id}/action", RiderSimulatedAction.LOGIN)
 
-        delivery_process.add_children([rider_notified, rider_decided, rider_in_transit_until_complete])
+        blackboard.register_key(key=f"{rider_id}/successful-delivery", access=Access.WRITE)
+        setattr(blackboard, f"{rider_id}/successful-delivery", 0)
+
+        rider_notified = RiderNotifiedBehaviour(rider_id)
+        rider_decided = RiderDecidedBehaviour(rider_id)
+        rider_in_transit = RiderInTransitBehaviour(rider_id)
+
+        delivery_process.add_children([rider_notified, rider_decided, rider_in_transit])
 
         # 위치정보 전송 행동
-        location_send = LocationSendBehaviour()
+        location_send = LocationSendBehaviour(rider_id)
 
-        root = RiderSimulatorParallel(
-            "라이더 시뮬레이션",
+        rider_sim = RiderSimulatorParallel(
+            rider_id,
             policy=ParallelPolicy.SuccessOnAll(synchronise=False),
             children=[delivery_process, location_send],
         )
-        root.validate_policy_configuration()
-        root.setup_with_descendants()
 
-        behaviour_tree = trees.BehaviourTree(root=root)
+        return rider_sim
+
+    def handle(self, *args, **options):
+        if options["debug"]:
+            from py_trees import logging
+
+            logging.level = logging.Level.DEBUG
+
+        TOTAL_RIDERS = int(options["num"])
+        MAX_SUCCESS_DELIVERIES = int(options["max"])
+
+        fleet_simulator = FleetSimulatorParallel(policy=ParallelPolicy.SuccessOnAll(synchronise=True))
+        riders = []
+        for rider_id in range(TOTAL_RIDERS):
+            rider = self.spawn_rider(rider_id)
+            riders.append(RiderWorkingChecker(child=rider, rider_id=rider_id, max_deliveries=MAX_SUCCESS_DELIVERIES))
+
+        fleet_simulator.add_children(riders)
+        fleet_simulator.validate_policy_configuration()
+        fleet_simulator.setup_with_descendants()
+        behaviour_tree = trees.BehaviourTree(root=fleet_simulator)
 
         if options["export"]:
-            # NOTE: tree diagram render시 아래 주석 사용
-            display.render_dot_tree(root=root)
+            display.render_dot_tree(root=fleet_simulator)
             return
 
         try:
-            MAX_SUCCESS_DELIVERIES = 1
-            count = 0
-            while count < MAX_SUCCESS_DELIVERIES:
+            while behaviour_tree.root.status != Status.SUCCESS:
                 behaviour_tree.tick(
                     pre_tick_handler=None,
                     post_tick_handler=print_tree,
                 )
-                if behaviour_tree.root.status == Status.SUCCESS:
-                    count += 1
-                sleep(1)
+                sleep(0.1)
         except KeyboardInterrupt:
             behaviour_tree.interrupt()
