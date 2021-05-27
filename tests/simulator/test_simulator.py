@@ -20,7 +20,7 @@ def test_simulator_spawn_multi_riders(mock_simulator_add_children):
 
 @patch("ras.simulator.management.commands.run_behaviour_tree.call_on_rider_action_change")
 @patch("ras.simulator.management.commands.run_behaviour_tree.call_on_rider_location_change")
-def test_simulator_call_triggers(mock_action_trigger, mock_location_trigger):
+def test_simulator_call_triggers(mock_location_trigger, mock_action_trigger):
     # When: 시뮬레이터 실행 시,
     options = {"debug": False, "export": False, "num": 1, "max": 1}  # default
     Command().handle(**options)
