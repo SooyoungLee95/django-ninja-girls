@@ -1,4 +1,5 @@
 import logging
+from functools import partial
 from typing import Optional
 from urllib.parse import urljoin
 
@@ -29,3 +30,6 @@ async def call_jungleworks_api(
             return None
         else:
             return JungleworksResponseBody(**await response.json())
+
+
+on_off_duty = partial(call_jungleworks_api, path_namespace=ON_OFF_DUTY)
