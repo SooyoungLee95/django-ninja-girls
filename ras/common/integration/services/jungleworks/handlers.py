@@ -29,7 +29,7 @@ async def call_jungleworks_api(
             logger.error(f"[Jungleworks] {e!r}")
             return None
         else:
-            return JungleworksResponseBody(**await response.json())
+            return JungleworksResponseBody(**response.json())
 
 
 on_off_duty = partial(call_jungleworks_api, path_namespace=ON_OFF_DUTY)

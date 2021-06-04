@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, patch
+from unittest.mock import Mock, patch
 
 import httpx
 import pytest
@@ -21,8 +21,8 @@ class MockRequestBody(JungleworksRequestBody):
 async def test_call_jungleworks_api_with_valid_namespace(mock_request):
     # Given: 요청/응답 함수를 mocking하고, 정의된 요청 및 응답값을 반환하도록 설정한 경우
     expected_response = {"message": "", "status": 200, "data": {}}
-    mock_response = AsyncMock()
-    mock_response.json.side_effect = AsyncMock(return_value=expected_response)
+    mock_response = Mock()
+    mock_response.json.side_effect = Mock(return_value=expected_response)
     mock_request.return_value = mock_response
     body = MockRequestBody(dummy_field="blahblah")
 
@@ -50,8 +50,8 @@ async def test_call_jungleworks_api_with_valid_namespace(mock_request):
 async def test_call_jungleworks_api_with_invalid_namespace(mock_request):
     # Given: 요청/응답 함수를 mocking하고, 정의된 요청 및 응답값을 반환하도록 설정한 경우
     expected_response = {"message": "", "status": 200, "data": {}}
-    mock_response = AsyncMock()
-    mock_response.json.side_effect = AsyncMock(return_value=expected_response)
+    mock_response = Mock()
+    mock_response.json.side_effect = Mock(return_value=expected_response)
     mock_request.return_value = mock_response
     body = MockRequestBody(dummy_field="blahblah")
 
