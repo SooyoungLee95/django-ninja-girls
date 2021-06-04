@@ -131,4 +131,4 @@ AWS_SNS_ENDPOINT_URL = env.str("AWS_SNS_ENDPOINT_URL", default="http://0.0.0.0:4
 
 # Jungleworks
 JUNGLEWORKS_BASE_URL = env.str("JUNGLEWORKS_BASE_URL", default="https://api.tookanapp.com")
-JUNGLEWORKS_API_KEY = env.str("JUNGLEWORKS_API_KEY", default="7fed9dc6f41eb088bb49ab5344685d13")
+JUNGLEWORKS_API_KEY = env.str("JUNGLEWORKS_API_KEY", default="")
