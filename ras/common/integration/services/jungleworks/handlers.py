@@ -43,3 +43,7 @@ async def on_off_duty(rider_availability: RiderAvailability):
         is_available=rider_availability.is_available,
     )
     return await call_jungleworks_api(path_namespace=ON_OFF_DUTY, body=request_body)
+
+
+def should_connect_jungleworks(request):
+    return settings.JUNGLEWORKS_ENABLE or (settings.DEBUG and request.META["QUERY_STRING"] == "JW")
