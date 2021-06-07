@@ -5,7 +5,7 @@ import pytest
 from django.test import Client
 from django.urls import reverse
 
-from ras.rider.schemas import EventType, RiderState
+from ras.rideryo.schemas import EventType, RiderState
 from ras.simulator.schemas import RiderShiftSimulatedAction, RiderSimulatedAction
 
 

@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class RiderConfig(AppConfig):
+class RideryoConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "ras.rider"
+    name = "ras.rideryo"

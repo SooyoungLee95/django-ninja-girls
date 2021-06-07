@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "ras.rider.apps.RiderConfig",
+    "ras.rideryo.apps.RideryoConfig",
     "ras.simulator.apps.SimulatorConfig",
 ]
 

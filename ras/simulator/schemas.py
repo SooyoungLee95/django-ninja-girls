@@ -4,7 +4,7 @@ from typing import Optional
 
 from ninja.schema import Schema
 
-from ras.rider.schemas import Location
+from ras.rideryo.schemas import Location
 
 
 class LocationTriggerPayload(Schema):

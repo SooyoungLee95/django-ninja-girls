@@ -1,7 +1,7 @@
 import orjson
 from ninja.router import Router
 
-from ras.rider.schemas import EventMsgRiderUpdated, EventType, RiderState
+from ras.rideryo.schemas import EventMsgRiderUpdated, EventType, RiderState
 from ras.simulator.schemas import (
     LocationTriggerPayload,
     RiderShiftTriggerPayload,

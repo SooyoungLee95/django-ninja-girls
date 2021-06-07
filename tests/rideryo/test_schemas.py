@@ -2,7 +2,7 @@ from uuid import UUID
 
 import pytest
 
-from ras.rider.schemas import EventMsg, EventType
+from ras.rideryo.schemas import EventMsg, EventType
 
 
 @pytest.mark.parametrize(

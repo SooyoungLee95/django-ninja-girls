@@ -1,7 +1,7 @@
 from random import random
 
 from ras.common.messaging import SNSMessage, publish_message
-from ras.rider.schemas import EventMsgRiderUpdated, EventType, Location, RiderState
+from ras.rideryo.schemas import EventMsgRiderUpdated, EventType, Location, RiderState
 from ras.simulator.consts import RIDER_UPDATED_TOPIC_ARN
 from ras.simulator.schemas import RiderShiftSimulatedAction, RiderSimulatedAction
 
