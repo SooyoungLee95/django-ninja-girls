@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "ras.rideryo.apps.RideryoConfig",
     "ras.simulator.apps.SimulatorConfig",
+    "ras.rider_app.apps.RiderAppConfig",
 ]
 
 MIDDLEWARE = [
