@@ -95,12 +95,6 @@ class VehicleType(CommonTimeStamp):
     is_active = models.BooleanField(default=True, help_text="활성화 여부")
 
 
-class RiderStatus(CommonTimeStamp):
-    """라이더 상태"""
-
-    name = models.CharField(max_length=150, choices=RiderStatusEnum.choices, help_text="라이더 상태명")
-
-
 class RiderDispatchResultHistory(CommonTimeStamp):
     """라이더 배차 이력 기록"""
 
@@ -116,7 +110,7 @@ class RiderStatusHistory(CommonTimeStamp):
     dispatch_result = models.ForeignKey(
         RiderDispatchResultHistory, on_delete=models.DO_NOTHING, help_text="라이더 배차 이력 ID"
     )
-    status = models.ForeignKey("RiderStatus", on_delete=models.DO_NOTHING, help_text="라이더 상태 ID")
+    status = models.CharField(max_length=150, choices=RiderStatusEnum.choices, help_text="라이더 상태명")
 
 
 class DeliveryCommission(CommonTimeStamp):
@@ -141,8 +135,9 @@ class RiderPaymentResult(CommonTimeStamp):
 
     rider = models.ForeignKey("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
     rider_evaluation = models.ForeignKey("RiderEvaluation", on_delete=models.DO_NOTHING, help_text="라이더 주문 당 평가 기록 ID")
-    dispatch_id = models.CharField(max_length=100, help_text="배차 ID")
-    order_created_at = models.DateTimeField()
+    dispatch_result = models.ForeignKey(
+        RiderDispatchResultHistory, on_delete=models.DO_NOTHING, help_text="라이더 배차 이력 ID"
+    )
     amount = models.PositiveIntegerField(help_text="배차에 대한 수수료 요금의 합")
 
 
@@ -150,8 +145,9 @@ class RiderEvaluation(CommonTimeStamp):
     """각 주문에 대한 라이더의 운행 평가 정보 기록"""
 
     rider = models.ForeignKey("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
-    last_status = models.ForeignKey("RiderStatus", on_delete=models.DO_NOTHING, help_text="라이더의 최종 상태")
-    dispatch_id = models.CharField(max_length=100, help_text="배차 ID")
+    dispatch_result = models.ForeignKey(
+        RiderDispatchResultHistory, on_delete=models.DO_NOTHING, help_text="라이더 배차 이력 ID"
+    )
     start_at = models.DateTimeField(help_text="배달 시작 시간")
     end_at = models.DateTimeField(help_text="배달 완료 시간")
     delivery_distance = models.PositiveSmallIntegerField(help_text="총 배달 거리(km)")
