@@ -58,9 +58,6 @@ class DeliveryZone(CommonTimeStamp):
     name = models.CharField(max_length=100, help_text="배달구역명")
     is_active = models.BooleanField(default=True, help_text="활성화 여부")
 
-    class Meta:
-        unique_together = ["zone_id", "name"]
-
 
 class RiderDeliveryZone(CommonTimeStamp):
     """라이더의 배달 구역 정보"""
