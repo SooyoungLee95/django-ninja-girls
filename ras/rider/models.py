@@ -54,8 +54,12 @@ class DeliveryZone(CommonTimeStamp):
     """배달 구역"""
 
     delivery_city = models.ForeignKey("DeliveryCity", on_delete=models.DO_NOTHING, help_text="배달도시 ID")
+    targetyo_zone_id = models.CharField(max_length=10, help_text="targetyo로 부터 받은 배달구역 ID")
     name = models.CharField(max_length=100, help_text="배달구역명")
     is_active = models.BooleanField(default=True, help_text="활성화 여부")
+
+    class Meta:
+        unique_together = ["zone_id", "name"]
 
 
 class RiderDeliveryZone(CommonTimeStamp):
