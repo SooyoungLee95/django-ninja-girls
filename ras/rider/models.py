@@ -120,7 +120,7 @@ class RiderStatusHistory(CommonTimeStamp):
     )
 
 
-class Commission(CommonTimeStamp):
+class DeliveryCommission(CommonTimeStamp):
     """라이더 수수료"""
 
     name = models.CharField(max_length=150, help_text="라이더 커미션 명")
@@ -132,7 +132,7 @@ class RiderPaymentHistory(CommonTimeStamp):
     """라이더의 정산 정보 기록"""
 
     rider = models.ForeignKey("RiderAccount", on_delete=models.DO_NOTHING, help_text="라이더 ID")
-    commission = models.ForeignKey(Commission, on_delete=models.DO_NOTHING, help_text="라이더 커미션 ID")
+    delivery_commission = models.ForeignKey(DeliveryCommission, on_delete=models.DO_NOTHING, help_text="라이더 커미션 ID")
     dispatch_id = models.CharField(max_length=100, help_text="배차 ID")
 
 
