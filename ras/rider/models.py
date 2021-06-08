@@ -62,7 +62,7 @@ class DeliveryZone(CommonTimeStamp):
 class RiderDeliveryZone(CommonTimeStamp):
     """라이더의 배달 구역 정보"""
 
-    rider = models.ForeignKey("RiderAccount", on_delete=models.DO_NOTHING, help_text="라이더 ID")
+    rider = models.ForeignKey("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
     delivery_zone = models.ForeignKey("DeliveryZone", on_delete=models.DO_NOTHING, help_text="배달구역 ID")
     is_main = models.BooleanField(default=False, help_text="메인희망구역 여부")
     is_active = models.BooleanField(default=True, help_text="활성화 여부")
@@ -71,7 +71,7 @@ class RiderDeliveryZone(CommonTimeStamp):
 class RiderBankAccount(CommonTimeStamp):
     """라이더의 은행 계좌 정보"""
 
-    rider = models.OneToOneField("RiderAccount", primary_key=True, on_delete=models.DO_NOTHING, help_text="라이더 ID")
+    rider = models.ForeignKey("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
     bank_code = models.CharField(max_length=10, choices=Bank.choices, help_text="은행 코드")
     account_number = models.CharField(max_length=150, help_text="계좌번호")
     account_owner_name = models.CharField(max_length=50, help_text="예금주명")
@@ -81,7 +81,7 @@ class RiderBankAccount(CommonTimeStamp):
 class RiderVehicle(CommonTimeStamp):
     """라이더의 운송수단 정보"""
 
-    rider = models.ForeignKey("RiderAccount", on_delete=models.DO_NOTHING, help_text="라이더 ID")
+    rider = models.ForeignKey("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
     vehicle_type = models.ForeignKey("VehicleType", on_delete=models.DO_NOTHING, help_text="운송수단 타입 ID")
     vehicle_plate_number = models.CharField(max_length=10, help_text="차량번호(운송수단이 자동차/스쿠터 등 일때)")
     is_rental = models.BooleanField(default=False, help_text="렌탈여부(ygy에서 렌탈해주는 경우 있음)")
@@ -104,7 +104,7 @@ class RiderStatus(CommonTimeStamp):
 class RiderDispatchResultHistory(CommonTimeStamp):
     """라이더 배차 이력 기록"""
 
-    rider = models.ForeignKey("RiderAccount", on_delete=models.DO_NOTHING, help_text="라이더 ID")
+    rider = models.ForeignKey("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
     vendor_id = models.CharField(max_length=100, help_text="벤더 ID")
     order_id = models.CharField(max_length=100, help_text="주문 ID")
     dispatch_id = models.CharField(max_length=100, unique=True, help_text="배차 ID")
@@ -113,7 +113,7 @@ class RiderDispatchResultHistory(CommonTimeStamp):
 class RiderStatusHistory(CommonTimeStamp):
     """라이더 상태 이력 기록"""
 
-    rider = models.ForeignKey("RiderAccount", on_delete=models.DO_NOTHING, help_text="라이더 ID")
+    rider = models.ForeignKey("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
     status = models.ForeignKey("RiderStatus", on_delete=models.DO_NOTHING, help_text="라이더 상태 ID")
     dispatch_result = models.ForeignKey(
         RiderDispatchResultHistory, on_delete=models.DO_NOTHING, help_text="라이더 배차 이력 ID"
@@ -140,7 +140,7 @@ class RiderPaymentHistory(CommonTimeStamp):
 class RiderPaymentResult(CommonTimeStamp):
     """라이더의 정산 정보 조회"""
 
-    rider = models.ForeignKey("RiderAccount", on_delete=models.DO_NOTHING, help_text="라이더 ID")
+    rider = models.ForeignKey("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
     rider_evaluation = models.ForeignKey("RiderEvaluation", on_delete=models.DO_NOTHING, help_text="라이더 주문 당 평가 기록 ID")
     dispatch_id = models.CharField(max_length=100, help_text="배차 ID")
     order_created_at = models.DateTimeField()
@@ -150,7 +150,7 @@ class RiderPaymentResult(CommonTimeStamp):
 class RiderEvaluation(CommonTimeStamp):
     """각 주문에 대한 라이더의 운행 평가 정보 기록"""
 
-    rider = models.ForeignKey("RiderAccount", on_delete=models.DO_NOTHING, help_text="라이더 ID")
+    rider = models.ForeignKey("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
     last_status = models.ForeignKey("RiderStatus", on_delete=models.DO_NOTHING, help_text="라이더의 최종 상태")
     dispatch_id = models.CharField(max_length=100, help_text="배차 ID")
     start_at = models.DateTimeField(help_text="배달 시작 시간")
