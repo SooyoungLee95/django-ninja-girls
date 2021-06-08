@@ -30,8 +30,8 @@ class RiderProfile(CommonTimeStamp):
     rider = models.OneToOneField("RiderAccount", primary_key=True, on_delete=models.DO_NOTHING, help_text="라이더 ID")
     contract = models.ForeignKey("Contract", on_delete=models.DO_NOTHING, help_text="계약정보")
     full_name = models.CharField(max_length=100, help_text="이름")
-    phone_number = models.CharField(max_length=16, unique=True, null=True, help_text="휴대폰 번호")
-    date_of_birth = models.DateField(null=True, help_text="생년월일")
+    phone_number = models.CharField(max_length=16, help_text="휴대폰 번호")
+    date_of_birth = models.DateField(help_text="생년월일")
     address = models.CharField(max_length=200, help_text="주소")
 
 
@@ -83,7 +83,7 @@ class RiderVehicle(CommonTimeStamp):
 
     rider = models.ForeignKey("RiderAccount", on_delete=models.DO_NOTHING, help_text="라이더 ID")
     vehicle_type = models.ForeignKey("VehicleType", on_delete=models.DO_NOTHING, help_text="운송수단 타입 ID")
-    vehicle_plate_number = models.CharField(max_length=10, null=True, help_text="차량번호(운송수단이 자동차/스쿠터 등 일때)")
+    vehicle_plate_number = models.CharField(max_length=10, help_text="차량번호(운송수단이 자동차/스쿠터 등 일때)")
     is_rental = models.BooleanField(default=False, help_text="렌탈여부(ygy에서 렌탈해주는 경우 있음)")
     is_active = models.BooleanField(default=True, help_text="활성화 여부")
 
