@@ -36,14 +36,14 @@ class Contract(CommonTimeStamp):
 
 
 class DeliveryCity(CommonTimeStamp):
-    """ 배달 도시"""
+    """배달 도시"""
 
     name = models.CharField(max_length=100, help_text="배달도시명")
     is_active = models.BooleanField(default=True, help_text="활성화여부")
 
 
 class DeliveryZone(CommonTimeStamp):
-    """ 배달 구역"""
+    """배달 구역"""
 
     delivery_city = models.ForeignKey("DeliveryCity", on_delete=models.DO_NOTHING, help_text="배달도시 ID")
     name = models.CharField(max_length=100, help_text="배달구역명")
