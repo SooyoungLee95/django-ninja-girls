@@ -17,7 +17,7 @@ class RiderAccount(CommonTimeStamp):
     """라이더 계정정보"""
 
     email_address = models.CharField(max_length=100, unique=True, help_text="이메일")
-    password = models.CharField(max_length=200)
+    password = models.CharField(max_length=200, help_text="비밀번호")
 
     def save(self, *args, **kwargs):
         self.password = make_password(self.password)
@@ -27,9 +27,7 @@ class RiderAccount(CommonTimeStamp):
 class RiderProfile(CommonTimeStamp):
     """라이더 프로필"""
 
-    rider_account = models.OneToOneField(
-        "RiderAccount", primary_key=True, on_delete=models.DO_NOTHING, help_text="라이더ID"
-    )
+    rider = models.OneToOneField("RiderAccount", primary_key=True, on_delete=models.DO_NOTHING, help_text="라이더 ID")
     contract = models.ForeignKey("Contract", on_delete=models.DO_NOTHING, help_text="계약정보")
     full_name = models.CharField(max_length=100, help_text="이름")
     phone_number = models.CharField(max_length=16, unique=True, null=True, help_text="휴대폰 번호")
@@ -42,14 +40,14 @@ class Contract(CommonTimeStamp):
 
     delivery_zone = models.ForeignKey("DeliveryZone", on_delete=models.DO_NOTHING, help_text="배달구역 ID")
     vehicle_type = models.ForeignKey("VehicleType", on_delete=models.DO_NOTHING, help_text="운송수단 ID")
-    is_active = models.BooleanField(default=True, help_text="활성화여부")
+    is_active = models.BooleanField(default=True, help_text="활성화 여부")
 
 
 class DeliveryCity(CommonTimeStamp):
     """배달 도시"""
 
     name = models.CharField(max_length=100, help_text="배달도시명")
-    is_active = models.BooleanField(default=True, help_text="활성화여부")
+    is_active = models.BooleanField(default=True, help_text="활성화 여부")
 
 
 class DeliveryZone(CommonTimeStamp):
@@ -57,26 +55,26 @@ class DeliveryZone(CommonTimeStamp):
 
     delivery_city = models.ForeignKey("DeliveryCity", on_delete=models.DO_NOTHING, help_text="배달도시 ID")
     name = models.CharField(max_length=100, help_text="배달구역명")
-    is_active = models.BooleanField(default=True, help_text="활성화여부")
+    is_active = models.BooleanField(default=True, help_text="활성화 여부")
 
 
 class RiderDeliveryZone(CommonTimeStamp):
     """라이더의 배달 구역 정보"""
 
-    rider = models.ForeignKey("RiderAccount", on_delete=models.DO_NOTHING, help_text="라이더 고유ID")
-    delivery_zone = models.ForeignKey("DeliveryZone", on_delete=models.DO_NOTHING, help_text="배달구역 고유ID")
+    rider = models.ForeignKey("RiderAccount", on_delete=models.DO_NOTHING, help_text="라이더 ID")
+    delivery_zone = models.ForeignKey("DeliveryZone", on_delete=models.DO_NOTHING, help_text="배달구역 ID")
     is_main = models.BooleanField(default=False, help_text="메인희망구역 여부")
-    is_active = models.BooleanField(default=True, help_text="활성화여부")
+    is_active = models.BooleanField(default=True, help_text="활성화 여부")
 
 
 class RiderBankAccount(CommonTimeStamp):
     """라이더의 은행 계좌 정보"""
 
-    rider = models.OneToOneField("RiderAccount", primary_key=True, on_delete=models.DO_NOTHING, help_text="라이더ID")
+    rider = models.OneToOneField("RiderAccount", primary_key=True, on_delete=models.DO_NOTHING, help_text="라이더 ID")
     bank_code = models.CharField(max_length=10, choices=Bank.choices, help_text="은행 코드")
     account_number = models.CharField(max_length=150, help_text="계좌번호")
     account_owner_name = models.CharField(max_length=50, help_text="예금주명")
-    is_active = models.BooleanField(default=True, help_text="활성화여부")
+    is_active = models.BooleanField(default=True, help_text="활성화 여부")
 
 
 class RiderVehicle(CommonTimeStamp):
