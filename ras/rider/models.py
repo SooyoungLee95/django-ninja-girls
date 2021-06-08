@@ -110,7 +110,7 @@ class RiderDispatchResultHistory(CommonTimeStamp):
     rider = models.ForeignKey("RiderAccount", on_delete=models.DO_NOTHING, help_text="라이더 ID")
     vendor_id = models.CharField(max_length=100, help_text="벤더 ID")
     order_id = models.CharField(max_length=100, help_text="주문 ID")
-    dispatch_id = models.CharField(max_length=100, help_text="배차 ID")
+    dispatch_id = models.CharField(max_length=100, unique=True, help_text="배차 ID")
 
 
 class RiderStatusHistory(CommonTimeStamp):
