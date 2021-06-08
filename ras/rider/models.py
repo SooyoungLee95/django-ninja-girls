@@ -136,7 +136,7 @@ class RiderPaymentHistory(CommonTimeStamp):
 
     rider = models.ForeignKey("RiderAccount", on_delete=models.DO_NOTHING, help_text="라이더 ID")
     commission = models.ForeignKey(Commission, on_delete=models.DO_NOTHING, help_text="라이더 커미션 ID")
-    order_id = models.CharField(max_length=100, help_text="주문 ID")
+    dispatch_id = models.CharField(max_length=100, help_text="배차 ID")
 
 
 class RiderPaymentResult(CommonTimeStamp):
@@ -144,9 +144,9 @@ class RiderPaymentResult(CommonTimeStamp):
 
     rider = models.ForeignKey("RiderAccount", on_delete=models.DO_NOTHING, help_text="라이더 ID")
     rider_evaluation = models.ForeignKey("RiderEvaluation", on_delete=models.DO_NOTHING, help_text="라이더 주문 당 평가 기록 ID")
-    order_id = models.CharField(max_length=100, help_text="주문 ID")
+    dispatch_id = models.CharField(max_length=100, help_text="배차 ID")
     order_created_at = models.DateTimeField()
-    amount = models.PositiveIntegerField(help_text="주문에 대한 수수료 요금의 합")
+    amount = models.PositiveIntegerField(help_text="배차에 대한 수수료 요금의 합")
 
 
 class RiderEvaluation(CommonTimeStamp):
@@ -154,7 +154,7 @@ class RiderEvaluation(CommonTimeStamp):
 
     rider = models.ForeignKey("RiderAccount", on_delete=models.DO_NOTHING, help_text="라이더 ID")
     last_status = models.ForeignKey("RiderStatus", on_delete=models.DO_NOTHING, help_text="라이더의 최종 상태")
-    order_id = models.CharField(max_length=100, help_text="주문 ID")
+    dispatch_id = models.CharField(max_length=100, help_text="배차 ID")
     start_at = models.DateTimeField(help_text="배달 시작 시간")
     end_at = models.DateTimeField(help_text="배달 완료 시간")
     delivery_distance = models.PositiveSmallIntegerField(help_text="총 배달 거리(km)")
