@@ -113,11 +113,10 @@ class RiderDispatchResultHistory(CommonTimeStamp):
 class RiderStatusHistory(CommonTimeStamp):
     """라이더 상태 이력 기록"""
 
-    rider = models.ForeignKey("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
-    status = models.ForeignKey("RiderStatus", on_delete=models.DO_NOTHING, help_text="라이더 상태 ID")
     dispatch_result = models.ForeignKey(
         RiderDispatchResultHistory, on_delete=models.DO_NOTHING, help_text="라이더 배차 이력 ID"
     )
+    status = models.ForeignKey("RiderStatus", on_delete=models.DO_NOTHING, help_text="라이더 상태 ID")
 
 
 class DeliveryCommission(CommonTimeStamp):
