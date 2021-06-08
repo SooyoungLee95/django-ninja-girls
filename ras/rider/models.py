@@ -16,13 +16,24 @@ class CommonTimeStamp(models.Model):
 class RiderAccount(CommonTimeStamp):
     """라이더 계정정보"""
 
+    contract = models.ForeignKey("Contract", on_delete=models.DO_NOTHING, help_text="계약정보")
     email_address = models.CharField(max_length=100, unique=True, help_text="이메일")
     password = models.CharField(max_length=200)
-    contract = models.ForeignKey("Contract", on_delete=models.DO_NOTHING, help_text="계약정보")
 
     def save(self, *args, **kwargs):
         self.password = make_password(self.password)
         super().save(*args, **kwargs)
+
+
+class RiderProfile(CommonTimeStamp):
+    """라이더 프로필"""
+
+    rider_account = models.OneToOneField(
+        "RiderAccount", primary_key=True, on_delete=models.DO_NOTHING, help_text="라이더ID"
+    )
+    full_name = models.CharField(max_length=100, help_text="이름")
+    phone_number = models.CharField(max_length=16, unique=True, null=True, help_text="휴대폰 번호")
+    date_of_birth = models.DateField(null=True, help_text="생년월일")
 
 
 class Contract(CommonTimeStamp):
@@ -30,8 +41,6 @@ class Contract(CommonTimeStamp):
 
     delivery_zone = models.ForeignKey("DeliveryZone", on_delete=models.DO_NOTHING, help_text="배달구역 ID")
     vehicle_type = models.ForeignKey("VehicleType", on_delete=models.DO_NOTHING, help_text="운송수단 ID")
-    phone_number = models.CharField(max_length=16, unique=True, null=True, help_text="휴대폰 번호")
-    date_of_birth = models.DateField(null=True, help_text="생년월일")
     is_active = models.BooleanField(default=True, help_text="활성화여부")
 
 
