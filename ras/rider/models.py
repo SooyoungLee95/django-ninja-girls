@@ -120,11 +120,11 @@ class RiderStatusHistory(CommonTimeStamp):
 
 
 class DeliveryCommission(CommonTimeStamp):
-    """라이더 수수료"""
+    """배달 수수료"""
 
-    name = models.CharField(max_length=150, help_text="라이더 커미션 명")
-    delivery_fee = models.PositiveIntegerField(help_text="라이더 배달 요금")
-    is_active = models.BooleanField(default=True, help_text="라이더 커미션 활성화 여부")
+    name = models.CharField(max_length=150, help_text="수수료 명")
+    fee = models.PositiveIntegerField(help_text="수수료 금액")
+    is_active = models.BooleanField(default=True, help_text="배달 수수료 활성화 여부")
 
 
 class RiderPaymentHistory(CommonTimeStamp):
