@@ -133,7 +133,9 @@ class RiderPaymentHistory(CommonTimeStamp):
 
     rider = models.ForeignKey("RiderAccount", on_delete=models.DO_NOTHING, help_text="라이더 ID")
     delivery_commission = models.ForeignKey(DeliveryCommission, on_delete=models.DO_NOTHING, help_text="라이더 커미션 ID")
-    dispatch_id = models.CharField(max_length=100, help_text="배차 ID")
+    dispatch_result = models.ForeignKey(
+        RiderDispatchResultHistory, on_delete=models.DO_NOTHING, help_text="라이더 배차 이력 ID"
+    )
 
 
 class RiderPaymentResult(CommonTimeStamp):
