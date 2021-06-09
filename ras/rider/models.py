@@ -107,7 +107,7 @@ class DeliveryCommission(CommonTimeStamp):
 class RiderPaymentHistory(CommonTimeStamp):
     """라이더의 정산 정보 기록"""
 
-    dispatch_request = models.ForeignKey("RiderDispatchResultHistory", on_delete=models.DO_NOTHING, help_text="배차 ID")
+    dispatch_request = models.ForeignKey("RiderDispatchRequestHistory", on_delete=models.DO_NOTHING, help_text="배차 ID")
     delivery_commission = models.ForeignKey(DeliveryCommission, on_delete=models.DO_NOTHING, help_text="라이더 커미션 ID")
 
 
@@ -116,7 +116,7 @@ class RiderPaymentResult(CommonTimeStamp):
 
     rider = models.ForeignKey("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
     rider_evaluation = models.ForeignKey("RiderEvaluation", on_delete=models.DO_NOTHING, help_text="라이더 주문 당 평가 기록 ID")
-    dispatch_request = models.ForeignKey("RiderDispatchResultHistory", on_delete=models.DO_NOTHING, help_text="배차 ID")
+    dispatch_request = models.ForeignKey("RiderDispatchRequestHistory", on_delete=models.DO_NOTHING, help_text="배차 ID")
     amount = models.PositiveIntegerField(help_text="배차에 대한 수수료 요금의 합")
 
 
@@ -124,7 +124,7 @@ class RiderEvaluation(CommonTimeStamp):
     """각 주문에 대한 라이더의 운행 평가 정보 기록"""
 
     rider = models.ForeignKey("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
-    dispatch_request = models.ForeignKey("RiderDispatchResultHistory", on_delete=models.DO_NOTHING, help_text="배차 ID")
+    dispatch_request = models.ForeignKey("RiderDispatchRequestHistory", on_delete=models.DO_NOTHING, help_text="배차 ID")
     start_at = models.DateTimeField(help_text="배달 시작 시간")
     end_at = models.DateTimeField(help_text="배달 완료 시간")
     delivery_distance = models.PositiveSmallIntegerField(help_text="총 배달 거리(km)")
@@ -156,14 +156,14 @@ class RiderDispatchRequestHistory(CommonTimeStamp):
 class RiderDispatchResponseHistory(CommonTimeStamp):
     """배차에 대한 라이더의 Response(ACCEPTED/REJECTED/IGNORED) 이력"""
 
-    dispatch_request = models.ForeignKey("RiderDispatchResultHistory", on_delete=models.DO_NOTHING, help_text="배차 ID")
+    dispatch_request = models.ForeignKey("RiderDispatchRequestHistory", on_delete=models.DO_NOTHING, help_text="배차 ID")
     response = models.CharField(max_length=150, choices=RiderResponseEnum.choices, help_text="배차에 대한 라이더의 response")
 
 
 class RiderDeliveryStateHistory(CommonTimeStamp):
     """라이더의 배달 상태(RESTAURANT_ARRIVED/PICKED_UP/DESTINATION_ARRIVED/COMPLETED/NOT_COMPLETED) 이력"""
 
-    dispatch_request = models.ForeignKey("RiderDispatchResultHistory", on_delete=models.DO_NOTHING, help_text="배차 ID")
+    dispatch_request = models.ForeignKey("RiderDispatchRequestHistory", on_delete=models.DO_NOTHING, help_text="배차 ID")
     from_delivery_state = models.CharField(
         max_length=150, choices=RiderDeliveryStateEnum.choices, help_text="변경 전 라이더의 배달 상태"
     )
