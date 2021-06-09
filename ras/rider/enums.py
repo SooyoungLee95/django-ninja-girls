@@ -50,11 +50,15 @@ class Bank(TextChoices):
     KAKAO = ("090", "카카오뱅크")
 
 
-class RiderStatus(TextChoices):
+class RiderStaus(TextChoices):
     NOTIFIED = "NOTIFIED", "라이더 배차 알림"
     ACCEPTED = "ACCEPTED", "라이더 주문 수락"
     REJECTED = "REJECTED", "라이더 주문 거절"
-    NEAR_PICK_UP = "NEAR_PICK_UP", "레스토랑 150M 이내 접근"
-    PICKED_UP = "PICKED_UP", "라이더 픽업"
-    NEAR_DROP_OFF = "NEAR_DROP_OFF", "고객 150M 이내 접근"
-    COMPLETED = "COMPLETED", "라이더 배달 완료"
+    IGNORED = "IGNORED", "라이더 주문 거절"
+
+
+class RiderDeliveryState(TextChoices):
+    RESTAURANT_ARRIVED = "RESTAURANT_ARRIVED", "레스토랑 근처 도착"
+    PICKED_UP = "PICKED_UP", "픽업 완료"
+    DESTINATION_ARRIVED = "DESTINATION_ARRIVED", "고객 근처 도착"
+    COMPLETED = "COMPLETED", "고객 배달 완료"

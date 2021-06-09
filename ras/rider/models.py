@@ -2,7 +2,8 @@ from django.contrib.auth.hashers import make_password
 from django.db import models
 
 from ras.rider.enums import Bank
-from ras.rider.enums import RiderStatus as RiderStatusEnum
+from ras.rider.enums import RiderDeliveryState as RiderStateEnum
+from ras.rider.enums import RiderStaus as RiderStatusEnum
 
 
 class CommonTimeStamp(models.Model):
@@ -104,15 +105,6 @@ class RiderDispatchResultHistory(CommonTimeStamp):
     dispatch_id = models.CharField(max_length=100, unique=True, help_text="배차 ID")
 
 
-class RiderStatusHistory(CommonTimeStamp):
-    """라이더 상태 이력 기록"""
-
-    dispatch_result = models.ForeignKey(
-        RiderDispatchResultHistory, on_delete=models.DO_NOTHING, help_text="라이더 배차 이력 ID"
-    )
-    status = models.CharField(max_length=150, choices=RiderStatusEnum.choices, help_text="라이더 상태명")
-
-
 class DeliveryCommission(CommonTimeStamp):
     """배달 수수료"""
 
@@ -151,3 +143,38 @@ class RiderEvaluation(CommonTimeStamp):
     start_at = models.DateTimeField(help_text="배달 시작 시간")
     end_at = models.DateTimeField(help_text="배달 완료 시간")
     delivery_distance = models.PositiveSmallIntegerField(help_text="총 배달 거리(km)")
+
+
+class RiderAvailability(CommonTimeStamp):
+    """라이더의 운행 가능여부(운행 가능 / 불가능)"""
+
+    rider = models.OneToOneField("RiderProfile", primary_key=True, on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
+    is_delivery_available = models.BooleanField(default=False)
+
+
+class RiderAvailabilityHistory(CommonTimeStamp):
+    """라이더의 운행 가능여부(운행 가능 / 불가능) 변경 이력"""
+
+    rider = models.ForeignKey("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
+    last_delivery_availability = models.BooleanField()
+
+
+class RiderStatusHistory(CommonTimeStamp):
+    """라이더의 배달 전 status(NOTIFIED/ACCEPTED/REJECTED/IGNORED) 이력"""
+
+    dispatch_result = models.ForeignKey(
+        RiderDispatchResultHistory, on_delete=models.DO_NOTHING, help_text="라이더 배차 이력 ID"
+    )
+    last_status = models.CharField(max_length=150, choices=RiderStatusEnum.choices, help_text="최근 배달 전 라이더의 status")
+
+
+class RiderDeliveryStateHistory(CommonTimeStamp):
+    """라이더의 배달 시작 이후 state(RESTAURANT_ARRIVED/PICKED_UP/DESTINATION_ARRIVED/COMPLETED) 이력"""
+
+    dispatch_result = models.ForeignKey(
+        RiderDispatchResultHistory, on_delete=models.DO_NOTHING, help_text="라이더 배차 이력 ID"
+    )
+    from_delivery_state = models.CharField(
+        max_length=150, choices=RiderStateEnum.choices, help_text="변경 전 라이더의 배달 state"
+    )
+    to_delivery_state = models.CharField(max_length=150, choices=RiderStateEnum.choices, help_text="변경 후 라이더의 배달 state")
