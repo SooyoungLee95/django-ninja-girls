@@ -141,7 +141,7 @@ class RiderAvailabilityHistory(CommonTimeStamp):
     """라이더의 운행 가능여부(운행 가능 / 불가능) 변경 이력"""
 
     rider = models.ForeignKey("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
-    delivery_availability = models.BooleanField()
+    is_available = models.BooleanField()
 
 
 class RiderDispatchRequestHistory(CommonTimeStamp):
@@ -164,9 +164,4 @@ class RiderDeliveryStateHistory(CommonTimeStamp):
     """라이더의 배달 상태(RESTAURANT_ARRIVED/PICKED_UP/DESTINATION_ARRIVED/COMPLETED/NOT_COMPLETED) 이력"""
 
     dispatch_request = models.ForeignKey("RiderDispatchRequestHistory", on_delete=models.DO_NOTHING, help_text="배차 ID")
-    from_delivery_state = models.CharField(
-        max_length=150, choices=RiderDeliveryStateEnum.choices, help_text="변경 전 라이더의 배달 상태"
-    )
-    to_delivery_state = models.CharField(
-        max_length=150, choices=RiderDeliveryStateEnum.choices, help_text="변경 후 라이더의 배달 상태"
-    )
+    delivery_state = models.CharField(max_length=150, choices=RiderDeliveryStateEnum.choices, help_text="라이더의 배달 상태")
