@@ -60,15 +60,6 @@ class DeliveryZone(CommonTimeStamp):
     is_active = models.BooleanField(default=True, help_text="활성화 여부")
 
 
-class RiderDeliveryZone(CommonTimeStamp):
-    """라이더의 배달 구역 정보"""
-
-    rider = models.ForeignKey("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
-    delivery_zone = models.ForeignKey("DeliveryZone", on_delete=models.DO_NOTHING, help_text="배달구역 ID")
-    is_main = models.BooleanField(default=False, help_text="메인희망구역 여부")
-    is_active = models.BooleanField(default=True, help_text="활성화 여부")
-
-
 class RiderBankAccount(CommonTimeStamp):
     """라이더의 은행 계좌 정보"""
 
@@ -76,16 +67,6 @@ class RiderBankAccount(CommonTimeStamp):
     bank_code = models.CharField(max_length=10, choices=Bank.choices, help_text="은행 코드")
     account_number = models.CharField(max_length=150, help_text="계좌번호")
     account_owner_name = models.CharField(max_length=50, help_text="예금주명")
-    is_active = models.BooleanField(default=True, help_text="활성화 여부")
-
-
-class RiderVehicle(CommonTimeStamp):
-    """라이더의 운송수단 정보"""
-
-    rider = models.ForeignKey("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
-    vehicle_type = models.ForeignKey("VehicleType", on_delete=models.DO_NOTHING, help_text="운송수단 타입 ID")
-    vehicle_plate_number = models.CharField(max_length=10, help_text="차량번호(운송수단이 자동차/스쿠터 등 일때)")
-    is_rental = models.BooleanField(default=False, help_text="렌탈여부(ygy에서 렌탈해주는 경우 있음)")
     is_active = models.BooleanField(default=True, help_text="활성화 여부")
 
 
@@ -134,13 +115,13 @@ class RiderAvailability(CommonTimeStamp):
     """라이더의 운행 가능여부(운행 가능 / 불가능)"""
 
     rider = models.OneToOneField("RiderProfile", primary_key=True, on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
-    is_delivery_available = models.BooleanField(default=False)
+    is_available = models.BooleanField(default=False)
 
 
 class RiderAvailabilityHistory(CommonTimeStamp):
     """라이더의 운행 가능여부(운행 가능 / 불가능) 변경 이력"""
 
-    rider = models.ForeignKey("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
+    rider = models.ForeignKey("RiderAvailability", on_delete=models.DO_NOTHING, help_text="라이더 운행가능여부 ID")
     is_available = models.BooleanField()
 
 
