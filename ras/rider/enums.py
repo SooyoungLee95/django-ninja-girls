@@ -50,8 +50,7 @@ class Bank(TextChoices):
     KAKAO = ("090", "카카오뱅크")
 
 
-class RiderStaus(TextChoices):
-    NOTIFIED = "NOTIFIED", "라이더 배차 알림"
+class RiderResponse(TextChoices):
     ACCEPTED = "ACCEPTED", "라이더 주문 수락"
     REJECTED = "REJECTED", "라이더 주문 거절"
     IGNORED = "IGNORED", "라이더 주문 거절"
@@ -62,3 +61,4 @@ class RiderDeliveryState(TextChoices):
     PICKED_UP = "PICKED_UP", "픽업 완료"
     DESTINATION_ARRIVED = "DESTINATION_ARRIVED", "고객 근처 도착"
     COMPLETED = "COMPLETED", "고객 배달 완료"
+    NOT_COMPLETED = "NOT_COMPLETED", "배달이 완료 되지 않음"
