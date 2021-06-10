@@ -22,7 +22,7 @@ rider_router = Router()
 )
 def update_rider_availability(request, data: RiderAvailabilitySchema):
     is_jungleworks = should_connect_jungleworks(request)
-    status, message = handle_rider_availability_updates(data, jungleworks=is_jungleworks)
+    status, message = handle_rider_availability_updates(data, is_jungleworks)
 
     if status != HTTPStatus.OK:
         return status, ErrorResponse(errors=[{"name": "reason", "message": message}])

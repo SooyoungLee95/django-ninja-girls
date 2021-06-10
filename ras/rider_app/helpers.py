@@ -12,8 +12,8 @@ from .schemas import RiderAvailability as RiderAvailabilitySchema
 logger = logging.getLogger(__name__)
 
 
-def handle_rider_availability_updates(data: RiderAvailabilitySchema, jungleworks: bool):
-    if jungleworks:
+def handle_rider_availability_updates(data: RiderAvailabilitySchema, is_jungleworks: bool):
+    if is_jungleworks:
         jw_response = async_to_sync(on_off_duty)(data)
         return jw_response.relevant_http_status(), jw_response.message
     else:
