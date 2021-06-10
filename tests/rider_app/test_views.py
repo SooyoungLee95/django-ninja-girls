@@ -29,7 +29,7 @@ def test_update_rider_availability(mock_use_jungleworks, jungleworks_enabled):
         expected_jungleworks_response = JungleworksResponseBody(message="test-message", status=200, data={})
 
         # When: 라이더 업무 시작/종료 API 호출 시,
-        with patch("ras.rider_app.views.on_off_duty") as mock_on_off_duty:
+        with patch("ras.rider_app.helpers.on_off_duty") as mock_on_off_duty:
             mock_on_off_duty.return_value = expected_jungleworks_response
             response = call_api()
 
@@ -71,7 +71,7 @@ def test_update_rider_availability_error(mock_use_jungleworks, jungleworks_enabl
         expected_jungleworks_response = JungleworksResponseBody(message="invalid", status=100, data={})
 
         # When: 라이더 업무 시작/종료 API 호출 시,
-        with patch("ras.rider_app.views.on_off_duty") as mock_on_off_duty:
+        with patch("ras.rider_app.helpers.on_off_duty") as mock_on_off_duty:
             mock_on_off_duty.return_value = expected_jungleworks_response
             response = call_api()
 
