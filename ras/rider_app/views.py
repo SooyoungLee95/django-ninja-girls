@@ -20,9 +20,9 @@ rider_router = Router()
     summary="업무시작/종료",
     response={200: RiderAvailabilitySchema, codes_4xx: ErrorResponse},
 )
-async def update_rider_availability(request, data: RiderAvailabilitySchema):
+def update_rider_availability(request, data: RiderAvailabilitySchema):
     is_jungleworks = should_connect_jungleworks(request)
-    status, message = await handle_rider_availability_updates(data, jungleworks=is_jungleworks)
+    status, message = handle_rider_availability_updates(data, jungleworks=is_jungleworks)
 
     if status != HTTPStatus.OK:
         return status, ErrorResponse(errors=[{"name": "reason", "message": message}])

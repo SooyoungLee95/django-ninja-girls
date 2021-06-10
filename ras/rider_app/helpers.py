@@ -1,6 +1,7 @@
 import logging
 from http import HTTPStatus
 
+from asgiref.sync import async_to_sync
 from django.db.utils import IntegrityError, OperationalError
 
 from ras.common.integration.services.jungleworks.handlers import on_off_duty
@@ -11,13 +12,13 @@ from .schemas import RiderAvailability as RiderAvailabilitySchema
 logger = logging.getLogger(__name__)
 
 
-async def handle_rider_availability_updates(data: RiderAvailabilitySchema, jungleworks: bool):
+def handle_rider_availability_updates(data: RiderAvailabilitySchema, jungleworks: bool):
     if jungleworks:
-        jw_response = await on_off_duty(data)
+        jw_response = async_to_sync(on_off_duty)(data)
         return jw_response.relevant_http_status(), jw_response.message
     else:
         try:
-            await query_update_rider_availability(data)  # type: ignore[misc,arg-type]
+            query_update_rider_availability(data)
             return HTTPStatus.OK, ""
         except IntegrityError as e:
             logger.error(f"[RiderAvailability] {e!r} {data}")
