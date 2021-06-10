@@ -2,6 +2,7 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
+from django.db.utils import IntegrityError
 from django.test import Client
 from django.urls import reverse
 
@@ -9,9 +10,10 @@ from ras.common.integration.services.jungleworks.schemas import JungleworksRespo
 from ras.rider_app.schemas import RiderAvailability
 
 
+@pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize("jungleworks_enabled", [(True,), (False,)])
 @patch("ras.rider_app.views.should_connect_jungleworks")
-def test_update_rider_availability(mock_use_jungleworks, jungleworks_enabled):
+def test_update_rider_availability(mock_use_jungleworks, jungleworks_enabled, rider_profile):
     def call_api():
         return client.put(
             reverse("ninja:rider_app_update_rider_availability"),
@@ -20,7 +22,7 @@ def test_update_rider_availability(mock_use_jungleworks, jungleworks_enabled):
         )
 
     client = Client()
-    input_body = RiderAvailability(rider_id=1, is_available=True)
+    input_body = RiderAvailability(rider_id=rider_profile.pk, is_available=True)
 
     if jungleworks_enabled:
         # Given: Jungleworks 기능이 활성화되고,
@@ -41,7 +43,9 @@ def test_update_rider_availability(mock_use_jungleworks, jungleworks_enabled):
         mock_use_jungleworks.return_value = False
 
         # When: 라이더 업무 시작/종료 API 호출 시,
-        response = call_api()
+        with patch("ras.rider_app.helpers.query_update_rider_availability") as mock_query_update:
+            response = call_api()
+            mock_query_update.assert_called_once()
 
         # Then: 200 응답코드가 반환되고,
         assert response.status_code == HTTPStatus.OK
@@ -51,9 +55,10 @@ def test_update_rider_availability(mock_use_jungleworks, jungleworks_enabled):
     assert response.json() == input_body.dict()
 
 
+@pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize("jungleworks_enabled", [(True,), (False,)])
 @patch("ras.rider_app.views.should_connect_jungleworks")
-def test_update_rider_availability_error(mock_use_jungleworks, jungleworks_enabled):
+def test_update_rider_availability_error(mock_use_jungleworks, jungleworks_enabled, rider_profile):
     def call_api():
         return client.put(
             reverse("ninja:rider_app_update_rider_availability"),
@@ -62,7 +67,7 @@ def test_update_rider_availability_error(mock_use_jungleworks, jungleworks_enabl
         )
 
     client = Client()
-    input_body = RiderAvailability(rider_id=1, is_available=True)
+    input_body = RiderAvailability(rider_id=rider_profile.pk, is_available=True)
 
     if jungleworks_enabled:
         # Given: Jungleworks 기능이 활성화되고,
@@ -82,5 +87,15 @@ def test_update_rider_availability_error(mock_use_jungleworks, jungleworks_enabl
         assert response.json() == {"errors": [{"name": "reason", "message": "invalid"}]}
 
     else:
-        # TODO: 모델링 코드 반영 이후 테스트 추가
-        pass
+        # Given: Jungleworks 기능이 비활성화된 경우
+        mock_use_jungleworks.return_value = False
+
+        # When: 라이더 업무 시작/종료 API 호출 시,
+        with patch("ras.rider_app.helpers.query_update_rider_availability") as mock_query_update:
+            # DB 조회시 에러 발생
+            mock_query_update.side_effect = IntegrityError()
+            response = call_api()
+
+        # Then: 400 응답코드가 반환되고,
+        assert response.status_code == HTTPStatus.BAD_REQUEST
+        assert response.json() == {"errors": [{"name": "reason", "message": "라이더를 식별할 수 없습니다."}]}
