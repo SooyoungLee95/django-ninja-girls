@@ -1,13 +1,18 @@
 import logging
-from functools import partial
 from typing import Optional
 from urllib.parse import urljoin
 
 import httpx
 from django.conf import settings
 
+from ras.rider_app.schemas import RiderAvailability
+
 from ...connection import AsyncExternalClient
-from .schemas import JungleworksRequestBody, JungleworksResponseBody
+from .schemas import (
+    JungleworksRequestBody,
+    JungleworksResponseBody,
+    OnOffDutyRequestBody,
+)
 
 ON_OFF_DUTY = "on_off_duty"
 JUNGLEWORKS_PATHS = {
@@ -32,4 +37,13 @@ async def call_jungleworks_api(
             return JungleworksResponseBody(**response.json())
 
 
-on_off_duty = partial(call_jungleworks_api, path_namespace=ON_OFF_DUTY)
+async def on_off_duty(rider_availability: RiderAvailability):
+    request_body = OnOffDutyRequestBody(
+        fleet_ids=[rider_availability.rider_id],
+        is_available=rider_availability.is_available,
+    )
+    return await call_jungleworks_api(path_namespace=ON_OFF_DUTY, body=request_body)
+
+
+def should_connect_jungleworks(request):
+    return settings.JUNGLEWORKS_ENABLE or (settings.DEBUG and request.META["QUERY_STRING"].startswith("JW"))

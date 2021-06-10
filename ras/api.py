@@ -1,5 +1,6 @@
 from ninja import NinjaAPI
 
+from ras.rider_app.router import router as rider_app_router
 from ras.simulator.router import router as simulator_router
 
 api = NinjaAPI(
@@ -8,4 +9,5 @@ api = NinjaAPI(
     version="0.0.1",
 )
 
+api.add_router("rider-app", rider_app_router)
 api.add_router("simulator", simulator_router)

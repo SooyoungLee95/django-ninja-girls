@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "ras.rideryo.apps.RideryoConfig",
     "ras.simulator.apps.SimulatorConfig",
+    "ras.rider_app.apps.RiderAppConfig",
 ]
 
 MIDDLEWARE = [
@@ -132,3 +133,4 @@ AWS_SNS_ENDPOINT_URL = env.str("AWS_SNS_ENDPOINT_URL", default="http://0.0.0.0:4
 # Jungleworks
 JUNGLEWORKS_BASE_URL = env.str("JUNGLEWORKS_BASE_URL", default="https://api.tookanapp.com")
 JUNGLEWORKS_API_KEY = env.str("JUNGLEWORKS_API_KEY", default="")
+JUNGLEWORKS_ENABLE = env.bool("JUNGLEWORKS_ENABLE", default=False)
