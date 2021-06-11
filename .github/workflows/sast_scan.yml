@@ -1,0 +1,23 @@
+name: SL Scan
+
+on: push
+
+jobs:
+  NextGen-Static-Analysis:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Perform Scan
+      uses: ShiftLeftSecurity/scan-action@master
+      env:
+        WORKSPACE: ""
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SCAN_AUTO_BUILD: true
+      with:
+        output: reports
+
+    - name: Upload report
+      uses: actions/upload-artifact@v2
+      with:
+        name: shiftleft-scan-reports
+        path: reports
