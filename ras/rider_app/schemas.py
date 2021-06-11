@@ -1,6 +1,6 @@
-from ninja.schema import Schema
+from ninja.schema import Field, Schema
 
 
 class RiderAvailability(Schema):
-    rider_id: int
+    rider_id: int = Field(..., gt=0)
     is_available: bool
