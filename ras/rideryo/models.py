@@ -1,9 +1,22 @@
 from django.contrib.auth.hashers import make_password
 from django.db import models
 
+from ras.rideryo.cryto import decrypt, encrypt
 from ras.rideryo.enums import Bank
 from ras.rideryo.enums import RiderDeliveryState as RiderDeliveryStateEnum
 from ras.rideryo.enums import RiderResponse as RiderResponseEnum
+
+
+class EncryptCharField(models.CharField):
+    def from_db_value(self, value):
+        if value is not None:
+            return decrypt(value)
+        return value
+
+    def get_prep_value(self, value):
+        if value is not None:
+            return encrypt(value)
+        return value
 
 
 class CommonTimeStamp(models.Model):
@@ -146,3 +159,10 @@ class RiderDeliveryStateHistory(CommonTimeStamp):
 
     dispatch_request = models.ForeignKey("RiderDispatchRequestHistory", on_delete=models.DO_NOTHING, help_text="배차 ID")
     delivery_state = models.CharField(max_length=150, choices=RiderDeliveryStateEnum.choices, help_text="라이더의 배달 상태")
+
+
+class RiderToken(CommonTimeStamp):
+    """라이더 토큰"""
+
+    rider = models.ForeignKey("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
+    registration_token = EncryptCharField(max_length=512, help_text="FCM 발송에 사용되는 토큰")
