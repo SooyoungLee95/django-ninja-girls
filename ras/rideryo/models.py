@@ -1,7 +1,7 @@
 from django.contrib.auth.hashers import make_password
 from django.db import models
 
-from ras.rideryo.cryto import decrypt, encrypt
+from ras.crypto import decrypt, encrypt
 from ras.rideryo.enums import Bank
 from ras.rideryo.enums import RiderDeliveryState as RiderDeliveryStateEnum
 from ras.rideryo.enums import RiderResponse as RiderResponseEnum
