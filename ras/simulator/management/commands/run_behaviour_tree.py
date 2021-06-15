@@ -12,7 +12,7 @@ from py_trees.composites import Parallel, Sequence
 from ras.simulator.schemas import RiderSimulatedAction
 
 blackboard.Blackboard.enable_activity_stream(maximum_size=100)
-blackboard = blackboard.Client(name="Global")
+blackboard = blackboard.Client(name="Global")  # type: ignore[assignment]
 
 
 def call_on_rider_action_change(new_action: RiderSimulatedAction):
@@ -133,11 +133,11 @@ class RiderSimulatorParallel(Parallel):
 
 class RiderWorkingChecker(decorators.Decorator):
     def __init__(self, child, rider_id, max_deliveries, name="운행완료 여부 확인", *args, **kwargs):
-        super().__init__(child, f"[{rider_id}] {name}", *args, **kwargs)
+        super().__init__(child, f"[{rider_id}] {name}", *args, **kwargs)  # type: ignore[call-arg]
         self.max_deliveries = max_deliveries
 
     def update(self):
-        if self.decorated.success_delivery < self.max_deliveries:
+        if self.decorated.success_delivery < self.max_deliveries:  # type: ignore[attr-defined]
             return Status.RUNNING
         else:
             self.feedback_message = "done."
@@ -172,10 +172,12 @@ class Command(BaseCommand):
         #   2. 배차 수락/거절
         #   3. 배달 진행
         delivery_process = Sequence(name=f"[{rider_id}] 배달 프로세스", memory=True)
-        blackboard.register_key(key=f"{rider_id}/action", access=Access.WRITE)
+        blackboard.register_key(key=f"{rider_id}/action", access=Access.WRITE)  # type: ignore[attr-defined]
         setattr(blackboard, f"{rider_id}/action", RiderSimulatedAction.LOGIN)
 
-        blackboard.register_key(key=f"{rider_id}/successful-delivery", access=Access.WRITE)
+        blackboard.register_key(  # type: ignore[attr-defined]
+            key=f"{rider_id}/successful-delivery", access=Access.WRITE
+        )
         setattr(blackboard, f"{rider_id}/successful-delivery", 0)
 
         rider_notified = RiderNotifiedBehaviour(rider_id)
