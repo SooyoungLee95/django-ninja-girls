@@ -1,4 +1,4 @@
-me: ras code quality check
+name: ras code quality check
 
 on: [push]
 
