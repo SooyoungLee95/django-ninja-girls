@@ -161,7 +161,7 @@ class RiderDeliveryStateHistory(CommonTimeStamp):
     delivery_state = models.CharField(max_length=150, choices=RiderDeliveryStateEnum.choices, help_text="라이더의 배달 상태")
 
 
-class RiderToken(CommonTimeStamp):
+class RiderFCMToken(CommonTimeStamp):
     """라이더 토큰"""
 
     rider = models.ForeignKey("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
