@@ -1,1 +1,4 @@
-from .base import *  # noqa: F401,F403
+from .base import env
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = env("DJANGO_SECRET_KEY")
