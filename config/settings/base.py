@@ -130,3 +130,7 @@ AWS_SNS_ENDPOINT_URL = env.str("AWS_SNS_ENDPOINT_URL", default="http://0.0.0.0:4
 JUNGLEWORKS_BASE_URL = env.str("JUNGLEWORKS_BASE_URL", default="https://api.tookanapp.com")
 JUNGLEWORKS_API_KEY = env.str("JUNGLEWORKS_API_KEY", default="")
 JUNGLEWORKS_ENABLE = env.bool("JUNGLEWORKS_ENABLE", default=False)
+
+
+# 개인정보 암호화/복호화 키
+FERNET_CRYPTO_KEY = env.str("FERNET_CRYPTO_KEY", default="CkjxwCCPDYkrS0d6-bmhDsuIcnajgutUDkqeZE-PkSw=").encode()
