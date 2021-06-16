@@ -41,8 +41,6 @@ jobs:
     - name: Static type check
       run: |
         poetry run mypy --config-file setup.cfg .    
-    - name: Run migrations
-      run: python manage.py migrate        
     - name: unit test
       run: |
         poetry run pytest
