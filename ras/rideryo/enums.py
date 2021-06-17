@@ -1,11 +1,5 @@
 from django.db.models import TextChoices
 
-JungleworksTaskStatus = {
-    "ACCEPTED": "7",
-    "DECLINED": "8",
-    "IGNORE": "8",
-}
-
 
 class ContractStatus(TextChoices):
     CONTRACT_REQUEST = "CONTRACT_REQUEST", "계약요청"
