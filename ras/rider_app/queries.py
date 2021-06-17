@@ -20,10 +20,7 @@ def query_update_rider_availability(data: RiderAvailabilitySchema):
 
 
 def query_update_rider_dispatch_response(data: RiderDispatchResponseSchema):
-    with transaction.atomic():
-        dispatch, _ = RiderDispatchResponseHistory.objects.select_for_update(nowait=True).get_or_create(
-            dispatch_request_id=data.dispatch_request_id
-        )
-        dispatch.response = data.response
-        dispatch.save()
-    return dispatch
+    return RiderDispatchResponseHistory.objects.create(
+        dispatch_request_id=data.dispatch_request_id,
+        response=data.response,
+    )

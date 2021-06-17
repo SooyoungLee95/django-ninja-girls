@@ -25,7 +25,6 @@ JOB_STATUS_MAPPING = {
     "ACCEPTED": "7",
     "DECLINE": "8",
     "IGNORE": "8",
-    "CANCEL": "9",
 }
 
 logger = logging.getLogger(__name__)

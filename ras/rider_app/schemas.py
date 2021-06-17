@@ -12,7 +12,6 @@ class DispatchState(str, Enum):
     ACCEPTED = "ACCEPTED"
     DECLINE = "DECLINE"
     IGNORE = "IGNORE"
-    CANCEL = "CANCEL"
 
 
 class RiderDispatchResponse(Schema):
