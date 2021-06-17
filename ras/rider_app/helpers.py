@@ -43,6 +43,6 @@ def handle_rider_dispatch_response(data: RiderDispatchResponse, is_jungleworks: 
         try:
             query_create_rider_dispatch_response(data)
             return HTTPStatus.OK, ""
-        except Exception as e:
+        except IntegrityError as e:
             logger.error(f"[RiderDispatchResponse] {e!r} {data}")
-            return HTTPStatus.CONFLICT, "상태값 저장 중 오류가 발생하였습니다."
+            return HTTPStatus.BAD_REQUEST, "유효한 ID 값이 아닙니다."
