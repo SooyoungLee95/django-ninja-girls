@@ -9,8 +9,8 @@ from ras.common.integration.services.jungleworks.handlers import (
     update_task_status,
 )
 from ras.rider_app.queries import (
+    query_create_rider_dispatch_response,
     query_update_rider_availability,
-    query_update_rider_dispatch_response,
 )
 
 from .schemas import RiderAvailability as RiderAvailabilitySchema
@@ -35,17 +35,14 @@ def handle_rider_availability_updates(data: RiderAvailabilitySchema, is_junglewo
             return HTTPStatus.CONFLICT, "업무상태를 변경 중입니다."
 
 
-def handle_rider_dispatch_updates(data: RiderDispatchResponse, is_jungleworks: bool):
+def handle_rider_dispatch_response(data: RiderDispatchResponse, is_jungleworks: bool):
     if is_jungleworks:
         jw_response = async_to_sync(update_task_status)(data)
         return jw_response.relevant_http_status(), jw_response.message
     else:
         try:
-            query_update_rider_dispatch_response(data)
+            query_create_rider_dispatch_response(data)
             return HTTPStatus.OK, ""
-        except IntegrityError as e:
-            logger.error(f"[RiderDispatchUpdate] {e!r} {data}")
-            return HTTPStatus.BAD_REQUEST, "배차 정보를 확인할 수 없습니다."
-        except OperationalError as e:
-            logger.error(f"[RiderDispatchUpdate] {e!r} {data}")
-            return HTTPStatus.CONFLICT, "상태값을 변경 중입니다."
+        except Exception as e:
+            logger.error(f"[RiderDispatchResponse] {e!r} {data}")
+            return HTTPStatus.CONFLICT, "상태값 저장 중 오류가 발생하였습니다."

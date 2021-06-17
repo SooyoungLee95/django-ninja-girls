@@ -1,6 +1,6 @@
-from enum import Enum
-
 from ninja.schema import Field, Schema
+
+from ras.rideryo.enums import RiderResponse as RiderResponseEnum
 
 
 class RiderAvailability(Schema):
@@ -8,12 +8,6 @@ class RiderAvailability(Schema):
     is_available: bool
 
 
-class DispatchState(str, Enum):
-    ACCEPTED = "ACCEPTED"
-    DECLINE = "DECLINE"
-    IGNORE = "IGNORE"
-
-
 class RiderDispatchResponse(Schema):
     dispatch_request_id: int
-    response: DispatchState
+    response: RiderResponseEnum

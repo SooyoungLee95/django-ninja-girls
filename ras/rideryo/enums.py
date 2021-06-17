@@ -1,5 +1,11 @@
 from django.db.models import TextChoices
 
+JungleworksTaskStatus = {
+    "ACCEPTED": "7",
+    "DECLINED": "8",
+    "IGNORE": "8",
+}
+
 
 class ContractStatus(TextChoices):
     CONTRACT_REQUEST = "CONTRACT_REQUEST", "계약요청"
@@ -51,9 +57,10 @@ class Bank(TextChoices):
 
 
 class RiderResponse(TextChoices):
+    NOTIFIED = "NOTIFIED", "라이더 배차 전달 완료"
     ACCEPTED = "ACCEPTED", "라이더 주문 수락"
-    REJECTED = "REJECTED", "라이더 주문 거절"
-    IGNORED = "IGNORED", "라이더 주문 거절"
+    DECLINED = "DECLINED", "라이더 주문 거절"
+    IGNORED = "IGNORED", "라이더 주문 무시"
 
 
 class RiderDeliveryState(TextChoices):

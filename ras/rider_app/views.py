@@ -9,7 +9,7 @@ from ras.common.integration.services.jungleworks.handlers import (
 from ras.common.schemas import ErrorResponse
 from ras.rider_app.helpers import (
     handle_rider_availability_updates,
-    handle_rider_dispatch_updates,
+    handle_rider_dispatch_response,
 )
 
 from .schemas import RiderAvailability as RiderAvailabilitySchema
@@ -34,14 +34,14 @@ def update_rider_availability(request, data: RiderAvailabilitySchema):
 
 
 @rider_router.put(
-    "/create_rider_dispatch_response",
-    url_name="rider_app_dispatch_response",
+    "/dispatch-response",
+    url_name="create_rider_dispatch_response",
     summary="배차수락/거절/무시",
     response={200: RiderDispatchResponseSchema, codes_4xx: ErrorResponse},
 )
-def update_rider_dispatch(request, data: RiderDispatchResponseSchema):
+def create_rider_dispatch_response(request, data: RiderDispatchResponseSchema):
     is_jungleworks = should_connect_jungleworks(request)
-    status, message = handle_rider_dispatch_updates(data, is_jungleworks)
+    status, message = handle_rider_dispatch_response(data, is_jungleworks)
 
     if status != HTTPStatus.OK:
         return status, ErrorResponse(errors=[{"name": "reason", "message": message}])

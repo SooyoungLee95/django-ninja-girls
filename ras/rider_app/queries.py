@@ -19,7 +19,7 @@ def query_update_rider_availability(data: RiderAvailabilitySchema):
     return availability
 
 
-def query_update_rider_dispatch_response(data: RiderDispatchResponseSchema):
+def query_create_rider_dispatch_response(data: RiderDispatchResponseSchema):
     return RiderDispatchResponseHistory.objects.create(
         dispatch_request_id=data.dispatch_request_id,
         response=data.response,

@@ -6,6 +6,7 @@ import httpx
 from django.conf import settings
 
 from ras.rider_app.schemas import RiderAvailability, RiderDispatchResponse
+from ras.rideryo.enums import JungleworksTaskStatus as JungleworksTaskStatusEnum
 
 from ...connection import AsyncExternalClient
 from .schemas import (
@@ -20,11 +21,6 @@ UPDATE_TASK_STATUS = "update_task_status"
 JUNGLEWORKS_PATHS = {
     ON_OFF_DUTY: "/v2/change_fleet_availability",
     UPDATE_TASK_STATUS: "/v2/update_task_status",
-}
-JOB_STATUS_MAPPING = {
-    "ACCEPTED": "7",
-    "DECLINE": "8",
-    "IGNORE": "8",
 }
 
 logger = logging.getLogger(__name__)
@@ -55,7 +51,7 @@ async def on_off_duty(rider_availability: RiderAvailability):
 async def update_task_status(task_status: RiderDispatchResponse):
     request_body = TaskStatusRequestBody(
         job_id=task_status.dispatch_request_id,
-        job_status=JOB_STATUS_MAPPING[task_status.response],
+        job_status=JungleworksTaskStatusEnum[task_status.response],
     )
     return await call_jungleworks_api(path_namespace=UPDATE_TASK_STATUS, body=request_body)
 

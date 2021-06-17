@@ -104,10 +104,10 @@ def test_update_rider_availability_error(mock_use_jungleworks, jungleworks_enabl
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize("jungleworks_enabled", [(True,), (False,)])
 @patch("ras.rider_app.views.should_connect_jungleworks")
-def test_update_rider_dispatch(mock_use_jungleworks, jungleworks_enabled, rider_dispatch_request):
+def test_create_rider_dispatch(mock_use_jungleworks, jungleworks_enabled, rider_dispatch_request):
     def call_api():
         return client.put(
-            reverse("ninja:rider_app_dispatch_response"),
+            reverse("ninja:create_rider_dispatch_response"),
             data=input_body.dict(),
             content_type="application/json",
         )
@@ -134,9 +134,9 @@ def test_update_rider_dispatch(mock_use_jungleworks, jungleworks_enabled, rider_
         mock_use_jungleworks.return_value = False
 
         # When: 라이더 배차 수락/거절/무시 API 호출 시,
-        with patch("ras.rider_app.helpers.query_update_rider_dispatch_response") as mock_query_update:
+        with patch("ras.rider_app.helpers.query_create_rider_dispatch_response") as mock_query_create:
             response = call_api()
-            mock_query_update.assert_called_once()
+            mock_query_create.assert_called_once()
 
         # Then: 200 응답코드가 반환되고,
         assert response.status_code == HTTPStatus.OK
@@ -152,7 +152,7 @@ def test_update_rider_dispatch(mock_use_jungleworks, jungleworks_enabled, rider_
 def test_update_rider_dispatch_error(mock_use_jungleworks, jungleworks_enabled, rider_dispatch_request):
     def call_api():
         return client.put(
-            reverse("ninja:rider_app_dispatch_response"),
+            reverse("ninja:create_rider_dispatch_response"),
             data=input_body.dict(),
             content_type="application/json",
         )
@@ -182,9 +182,9 @@ def test_update_rider_dispatch_error(mock_use_jungleworks, jungleworks_enabled, 
         mock_use_jungleworks.return_value = False
 
         # When: 라이더 업무 시작/종료 API 호출 시,
-        with patch("ras.rider_app.helpers.query_update_rider_dispatch_response") as mock_query_update:
+        with patch("ras.rider_app.helpers.query_create_rider_dispatch_response") as mock_query_create:
             # DB 조회시 에러 발생
-            mock_query_update.side_effect = IntegrityError()
+            mock_query_create.side_effect = IntegrityError()
             response = call_api()
 
         # Then: 400 응답코드가 반환되고,
