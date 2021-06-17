@@ -2,12 +2,17 @@ import logging
 from http import HTTPStatus
 
 from asgiref.sync import async_to_sync
-from django.db.utils import IntegrityError, OperationalError
+from django.db.utils import DatabaseError, IntegrityError, OperationalError
 
 from ras.common.integration.services.jungleworks.handlers import on_off_duty
-from ras.rider_app.queries import query_update_rider_availability
+from ras.rider_app.queries import (
+    query_create_dispatch_request_with_task,
+    query_update_rider_availability,
+)
 
+from ..rideryo.models import RiderProfile
 from .schemas import RiderAvailability as RiderAvailabilitySchema
+from .schemas import RiderDispatch as RiderDispatchSchema
 
 logger = logging.getLogger(__name__)
 
@@ -26,3 +31,15 @@ def handle_rider_availability_updates(data: RiderAvailabilitySchema, is_junglewo
         except OperationalError as e:
             logger.error(f"[RiderAvailability] {e!r} {data}")
             return HTTPStatus.CONFLICT, "업무상태를 변경 중입니다."
+
+
+def handle_rider_dispatch_request_creates(data: RiderDispatchSchema):
+    try:
+        query_create_dispatch_request_with_task(data)
+        return HTTPStatus.OK, ""
+    except RiderProfile.DoesNotExist as e:
+        logger.error(f"[RiderDispatchRequest] {e!r} {data}")
+        return HTTPStatus.NOT_FOUND, "라이더를 찾을 수 없습니다"
+    except DatabaseError as e:
+        logger.error(f"[RiderDispatchRequest] {e!r} {data}")
+        return HTTPStatus.INTERNAL_SERVER_ERROR, "배차요청을 저장하는 중 에러가 발생하였습니"

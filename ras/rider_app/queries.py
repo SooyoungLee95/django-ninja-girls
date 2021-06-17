@@ -1,8 +1,15 @@
 from django.db import transaction
 
-from ras.rideryo.models import RiderAvailability, RiderAvailabilityHistory
+from ras.rideryo.models import (
+    JungleWorksTaskHistory,
+    RiderAvailability,
+    RiderAvailabilityHistory,
+    RiderDispatchRequestHistory,
+    RiderProfile,
+)
 
 from .schemas import RiderAvailability as RiderAvailabilitySchema
+from .schemas import RiderDispatch as RiderDispatchResultSchema
 
 
 def query_update_rider_availability(data: RiderAvailabilitySchema):
@@ -12,3 +19,14 @@ def query_update_rider_availability(data: RiderAvailabilitySchema):
         availability.save()
         RiderAvailabilityHistory.objects.create(rider=availability, is_available=data.is_available)
     return availability
+
+
+def query_create_dispatch_request_with_task(data: RiderDispatchResultSchema):
+    rider = RiderProfile.objects.get(pk=data.rider_id)
+    with transaction.atomic():
+        dispatch_request = RiderDispatchRequestHistory.objects.create(rider=rider, order_id=data.order_id)
+        JungleWorksTaskHistory.objects.create(
+            dispatch_request=dispatch_request,
+            pickup_task_id=data.pickup_task_id,
+            delivery_task_id=data.delivery_task_id,
+        )
