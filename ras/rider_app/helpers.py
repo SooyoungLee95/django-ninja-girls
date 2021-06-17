@@ -36,10 +36,7 @@ def handle_rider_availability_updates(data: RiderAvailabilitySchema, is_junglewo
 def handle_rider_dispatch_request_creates(data: RiderDispatchSchema):
     try:
         query_create_dispatch_request_with_task(data)
-        return HTTPStatus.OK, ""
     except RiderProfile.DoesNotExist as e:
         logger.error(f"[RiderDispatchRequest] {e!r} {data}")
-        return HTTPStatus.NOT_FOUND, "라이더를 찾을 수 없습니다"
     except DatabaseError as e:
         logger.error(f"[RiderDispatchRequest] {e!r} {data}")
-        return HTTPStatus.INTERNAL_SERVER_ERROR, "배차요청을 저장하는 중 에러가 발생하였습니"
