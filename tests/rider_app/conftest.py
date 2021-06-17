@@ -17,15 +17,7 @@ def rider_profile():
 
 
 @pytest.fixture
-def rider_dispatch_request():
-    rider_account = RiderAccount.objects.create(email_address="test@test.com", password="TestTest")
-    rider_profile = RiderProfile.objects.create(
-        rider=rider_account,
-        full_name="라이더",
-        phone_number="01012341234",
-        date_of_birth="1999-10-10",
-        address="서울시 서초구 방배동",
-    )
+def rider_dispatch_request(rider_profile):
     rider_dispatch_request = RiderDispatchRequestHistory.objects.create(
         rider=rider_profile,
         vendor_id="Test",

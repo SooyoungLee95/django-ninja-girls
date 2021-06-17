@@ -44,8 +44,8 @@ def handle_rider_dispatch_updates(data: RiderDispatchResponse, is_jungleworks: b
             query_update_rider_dispatch_response(data)
             return HTTPStatus.OK, ""
         except IntegrityError as e:
-            logger.error(f"[RiderAvailability] {e!r} {data}")
+            logger.error(f"[RiderDispatchUpdate] {e!r} {data}")
             return HTTPStatus.BAD_REQUEST, "배차 정보를 확인할 수 없습니다."
         except OperationalError as e:
-            logger.error(f"[RiderAvailability] {e!r} {data}")
+            logger.error(f"[RiderDispatchUpdate] {e!r} {data}")
             return HTTPStatus.CONFLICT, "상태값을 변경 중입니다."
