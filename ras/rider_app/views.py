@@ -34,7 +34,7 @@ def update_rider_availability(request, data: RiderAvailabilitySchema):
 
 
 @rider_router.put(
-    "/dispatch/response",
+    "/create_rider_dispatch_response",
     url_name="rider_app_dispatch_response",
     summary="배차수락/거절/무시",
     response={200: RiderDispatchResponseSchema, codes_4xx: ErrorResponse},
