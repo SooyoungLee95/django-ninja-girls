@@ -44,6 +44,8 @@ jobs:
     - name: Make migrations files
       run: |
         poetry run python manage.py makemigrations        
+      env:
+        DJANGO_SECRET_KEY: test_django_secret_key      
     - name: unit test
       run: |
         poetry run pytest
