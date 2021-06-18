@@ -40,7 +40,10 @@ jobs:
         poetry run flake8 --config=setup.cfg .
     - name: Static type check
       run: |
-        poetry run mypy --config-file setup.cfg .    
+        poetry run mypy --config-file setup.cfg .        
+    - name: Make migrations files
+      run: |
+        poetry run python manage.py makemigrations        
     - name: unit test
       run: |
         poetry run pytest
