@@ -50,10 +50,11 @@ def handle_rider_dispatch_response(data: RiderDispatchResponse, is_jungleworks: 
         if is_jungleworks:
             handle_update_task_status(data)
         query_create_rider_dispatch_response(data)
-        return HTTPStatus.OK, ""
     except IntegrityError as e:
         logger.error(f"[RiderDispatchResponse] {e!r} {data}")
         return HTTPStatus.BAD_REQUEST, "유효한 ID 값이 아닙니다."
     except ValueError as e:
         logger.error(f"[RiderDispatchResponse] {e!r} {data}")
         return HTTPStatus.BAD_REQUEST, str(e)
+    else:
+        return HTTPStatus.OK, ""

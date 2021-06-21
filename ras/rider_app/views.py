@@ -33,7 +33,7 @@ def update_rider_availability(request, data: RiderAvailabilitySchema):
     return status, data
 
 
-@rider_router.put(
+@rider_router.post(
     "/dispatch-response",
     url_name="create_rider_dispatch_response",
     summary="배차 확인/수락/거절/무시",
