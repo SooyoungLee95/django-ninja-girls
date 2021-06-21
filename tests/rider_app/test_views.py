@@ -122,7 +122,7 @@ class TestRiderDispatchResponse:
         # And: Jungleworks API에서 성공 응답을 반환하는 경우
         expected_jungleworks_response = JungleworksResponseBody(message="test-message", status=200, data={})
 
-        # When: 라이더 배차 수락/거질/무시 API 호출 시,
+        # When: 라이더 배차 수락 API 호출 시,
         with patch("ras.rider_app.helpers.update_task_status") as mock_update_task_status:
             mock_update_task_status.return_value = expected_jungleworks_response
             input_body = self._make_request_body(rider_dispatch_request.id, "ACCEPTED")
@@ -141,7 +141,7 @@ class TestRiderDispatchResponse:
         # Given: Jungleworks 기능이 비활성화된 경우
         mock_use_jungleworks.return_value = False
 
-        # When: 라이더 배차 수락/거절/무시 API 호출 시,
+        # When: 라이더 배차 수락 API 호출 시,
         with patch("ras.rider_app.helpers.query_create_rider_dispatch_response") as mock_query_create:
             input_body = self._make_request_body(rider_dispatch_request.id, "ACCEPTED")
             response = self._call_api_create_rider_dispatch_response(input_body)
@@ -162,7 +162,7 @@ class TestRiderDispatchResponse:
         # And: Jungleworks API에서 에러 응답을 반환하는 경우
         expected_jungleworks_response = JungleworksResponseBody(message="invalid", status=100, data={})
 
-        # When: 라이더 배차 수락/거질/무시 API 호출 시,
+        # When: 라이더 배차 수락 API 호출 시,
         with patch("ras.rider_app.helpers.update_task_status") as mock_update_task_status:
             mock_update_task_status.return_value = expected_jungleworks_response
             input_body = self._make_request_body(rider_dispatch_request.id, "ACCEPTED")
@@ -180,7 +180,7 @@ class TestRiderDispatchResponse:
         # Given: Jungleworks 기능이 비활성화된 경우
         mock_use_jungleworks.return_value = False
 
-        # When: 라이더 업무 시작/종료 API 호출 시,
+        # When: 라이더 배차 수락 API 호출 시,
         with patch("ras.rider_app.helpers.query_create_rider_dispatch_response") as mock_query_create:
             # DB 조회시 에러 발생
             mock_query_create.side_effect = IntegrityError()
@@ -199,7 +199,7 @@ class TestRiderDispatchResponse:
         # And: Jungleworks API에서 성공 응답을 반환하는 경우
         expected_jungleworks_response = JungleworksResponseBody(message="test-message", status=200, data={})
 
-        # When: 라이더 배차 수락/거질/무시 API 호출 시,
+        # When: 라이더 배차 확인 완료 API 호출 시,
         with patch("ras.rider_app.helpers.update_task_status") as mock_update_task_status:
             mock_update_task_status.return_value = expected_jungleworks_response
             input_body = self._make_request_body(rider_dispatch_request.id, "NOTIFIED")
@@ -220,7 +220,7 @@ class TestRiderDispatchResponse:
         # Given: Jungleworks 기능이 비활성화된 경우
         mock_use_jungleworks.return_value = False
 
-        # When: 라이더 배차 수락/거절/무시 API 호출 시,
+        # When: 라이더 배차 확인 완료 API 호출 시,
         with patch("ras.rider_app.helpers.query_create_rider_dispatch_response") as mock_query_create:
             input_body = self._make_request_body(rider_dispatch_request.id, "NOTIFIED")
             response = self._call_api_create_rider_dispatch_response(input_body)
