@@ -30,9 +30,15 @@ def test_rider_app_dispatch_request_webhook(rider_profile):
     # When: dispatch_request_webhook 를 호출 하면,
     call_api(input_body)
 
-    # Then: RiderDispatchRequestHistory 와 DispatchRequestJungleworksTask 값이 생성되어야 한다
-    assert RiderDispatchRequestHistory.objects.count() == 1
-    assert DispatchRequestJungleworksTask.objects.count() == 1
+    # Then: RiderDispatchRequestHistory 값이 생성되어야 한다
+    rider_dispatch_request = RiderDispatchRequestHistory.objects.get(rider_id=input_body.rider_id)
+    assert rider_dispatch_request.order_id == input_body.order_id
+    # And: DispatchRequestJungleworksTask 값이 생성되어야 한다
+    dispatch_request_jungleworks_task = DispatchRequestJungleworksTask.objects.get(
+        dispatch_request=rider_dispatch_request
+    )
+    assert dispatch_request_jungleworks_task.pickup_task_id == input_body.pickup_task_id
+    assert dispatch_request_jungleworks_task.pickup_task_id == input_body.delivery_task_id
 
 
 @pytest.mark.django_db(transaction=True)
