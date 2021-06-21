@@ -187,7 +187,7 @@ class TestRiderDispatchResponse:
             input_body = self._make_request_body(rider_dispatch_request.id, "ACCEPTED")
             response = self._call_api_create_rider_dispatch_response(input_body)
 
-        # Then: 400 응답코드가 반환되고,
+        # Then: 400 응답코드가 반환된다.
         assert response.status_code == HTTPStatus.BAD_REQUEST
         assert response.json() == {"errors": [{"name": "reason", "message": "유효한 ID 값이 아닙니다."}]}
 
