@@ -13,7 +13,7 @@ client = Client()
 
 def call_api(input_body):
     return client.post(
-        reverse("ninja:rider_app_dispatch_request_webhook"),
+        reverse("ninja:rider_app_webhook_auto_allocation_success"),
         data=input_body.json(),
         content_type="application/json",
     )

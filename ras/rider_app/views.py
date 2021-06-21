@@ -34,12 +34,12 @@ def update_rider_availability(request, data: RiderAvailabilitySchema):
 
 
 @rider_router.post(
-    "jungleworks/webhook/dispatch_request",
-    url_name="rider_app_dispatch_request_webhook",
+    "jungleworks/webhook/auto_allocation_success",
+    url_name="rider_app_webhook_auto_allocation_success",
     summary="라이더 배차 완료 event web hook API",
     response={200: RiderDispatchResultSchema},
 )
-def dispatch_request_webhook(request, data: RiderDispatchResultSchema):
+def webhook_handler_auto_allocation_success(request, data: RiderDispatchResultSchema):
     handle_rider_dispatch_request_creates(data)
     # TODO: Send FCM push method 호출 - async
     return HTTPStatus.OK, data
