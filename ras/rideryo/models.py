@@ -132,8 +132,8 @@ class RiderDispatchRequestHistory(CommonTimeStamp):
     order_id = models.CharField(max_length=100, help_text="주문 ID")
 
 
-class JungleWorksTaskHistory(CommonTimeStamp):
-    """정글웍스로 부터 전달 받은 픽업, 배달 task ID의 이력"""
+class DispatchRequestJungleworksTask(CommonTimeStamp):
+    """정글웍스로 부터 전달 받은 픽업, 배달 task ID"""
 
     dispatch_request = models.ForeignKey("RiderDispatchRequestHistory", on_delete=models.DO_NOTHING, help_text="배차 ID")
     pickup_task_id = models.CharField(max_length=20, help_text="정글웍스 픽업 Task ID")

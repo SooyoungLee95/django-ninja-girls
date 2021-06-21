@@ -6,7 +6,10 @@ from django.test import Client
 from django.urls import reverse
 
 from ras.rider_app.schemas import RiderDispatch
-from ras.rideryo.models import JungleWorksTaskHistory, RiderDispatchRequestHistory
+from ras.rideryo.models import (
+    DispatchRequestJungleworksTask,
+    RiderDispatchRequestHistory,
+)
 
 client = Client()
 
@@ -27,9 +30,9 @@ def test_rider_app_dispatch_request_webhook(rider_profile):
     # When: dispatch_request_webhook 를 호출 하면,
     call_api(input_body)
 
-    # Then: RiderDispatchRequestHistory 와 JungleWorksTaskHistory 값이 생성되어야 한다
+    # Then: RiderDispatchRequestHistory 와 DispatchRequestJungleworksTask 값이 생성되어야 한다
     assert RiderDispatchRequestHistory.objects.count() == 1
-    assert JungleWorksTaskHistory.objects.count() == 1
+    assert DispatchRequestJungleworksTask.objects.count() == 1
 
 
 @pytest.mark.django_db(transaction=True)
@@ -46,9 +49,9 @@ def test_rider_app_dispatch_request_webhook_on_404_error(rider_profile):
 
     # Then: status는 200, logger.error 가 호출 되어야 한다
     assert response.status_code == 200
-    # And: RiderDispatchRequestHistory 와 JungleWorksTaskHistory 값은 생성되지 않아야 한다.
+    # And: RiderDispatchRequestHistory 와 DispatchRequestJungleworksTask 값은 생성되지 않아야 한다.
     assert RiderDispatchRequestHistory.objects.count() == 0
-    assert JungleWorksTaskHistory.objects.count() == 0
+    assert DispatchRequestJungleworksTask.objects.count() == 0
 
 
 @pytest.mark.django_db(transaction=True)
@@ -65,6 +68,6 @@ def test_rider_app_dispatch_request_webhook_on_database_error(mock_logger_error,
     # Then: status는 200, logger.error 가 호출 되어야 한다
     assert response.status_code == 200
     mock_logger_error.assert_called_once()
-    # And: RiderDispatchRequestHistory 와 JungleWorksTaskHistory 값은 생성되지 않아야 한다.
+    # And: RiderDispatchRequestHistory 와 DispatchRequestJungleworksTask 값은 생성되지 않아야 한다.
     assert RiderDispatchRequestHistory.objects.count() == 0
-    assert JungleWorksTaskHistory.objects.count() == 0
+    assert DispatchRequestJungleworksTask.objects.count() == 0
