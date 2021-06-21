@@ -36,7 +36,5 @@ def handle_rider_availability_updates(data: RiderAvailabilitySchema, is_junglewo
 def handle_rider_dispatch_request_creates(data: RiderDispatchSchema):
     try:
         query_create_dispatch_request_with_task(data)
-    except RiderProfile.DoesNotExist as e:
-        logger.error(f"[RiderDispatchRequest] {e!r} {data}")
-    except DatabaseError as e:
+    except (RiderProfile.DoesNotExist, DatabaseError) as e:
         logger.error(f"[RiderDispatchRequest] {e!r} {data}")
