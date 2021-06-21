@@ -96,7 +96,7 @@ def test_update_rider_availability_error(mock_use_jungleworks, jungleworks_enabl
             mock_query_update.side_effect = IntegrityError()
             response = call_api()
 
-        # Then: 400 응답코드가 반환되고,
+        # Then: 400 응답코드가 반환된다.
         assert response.status_code == HTTPStatus.BAD_REQUEST
         assert response.json() == {"errors": [{"name": "reason", "message": "라이더를 식별할 수 없습니다."}]}
 
