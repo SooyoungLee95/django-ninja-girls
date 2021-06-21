@@ -12,7 +12,7 @@ from ras.rider_app.queries import (
 
 from ..rideryo.models import RiderProfile
 from .schemas import RiderAvailability as RiderAvailabilitySchema
-from .schemas import RiderDispatch as RiderDispatchSchema
+from .schemas import RiderDispatch
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ def handle_rider_availability_updates(data: RiderAvailabilitySchema, is_junglewo
             return HTTPStatus.CONFLICT, "업무상태를 변경 중입니다."
 
 
-def handle_rider_dispatch_request_creates(data: RiderDispatchSchema):
+def handle_rider_dispatch_request_creates(data: RiderDispatch):
     try:
         query_create_dispatch_request_with_task(data)
     except (RiderProfile.DoesNotExist, DatabaseError) as e:
