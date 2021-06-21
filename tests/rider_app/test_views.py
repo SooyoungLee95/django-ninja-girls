@@ -115,113 +115,119 @@ class TestRiderDispatchResponse:
         return RiderDispatchResponse(dispatch_request_id=dispatch_request_id, response=response)
 
     @pytest.mark.django_db(transaction=True)
-    @pytest.mark.parametrize("jungleworks_enabled", [(True,), (False,)])
     @patch("ras.rider_app.views.should_connect_jungleworks")
-    def test_create_rider_dispatch(self, mock_use_jungleworks, jungleworks_enabled, rider_dispatch_request):
-        if jungleworks_enabled:
-            # Given: Jungleworks 기능이 활성화되고,
-            mock_use_jungleworks.return_value = True
-            # And: Jungleworks API에서 성공 응답을 반환하는 경우
-            expected_jungleworks_response = JungleworksResponseBody(message="test-message", status=200, data={})
+    def test_create_rider_dispatch_when_jw_enabled(self, mock_use_jungleworks, rider_dispatch_request):
+        # Given: Jungleworks 기능이 활성화되고,
+        mock_use_jungleworks.return_value = True
+        # And: Jungleworks API에서 성공 응답을 반환하는 경우
+        expected_jungleworks_response = JungleworksResponseBody(message="test-message", status=200, data={})
 
-            # When: 라이더 배차 수락/거질/무시 API 호출 시,
-            with patch("ras.rider_app.helpers.update_task_status") as mock_update_task_status:
-                mock_update_task_status.return_value = expected_jungleworks_response
-                input_body = self._make_request_body(rider_dispatch_request.id, "ACCEPTED")
-                response = self._call_api_create_rider_dispatch_response(input_body)
+        # When: 라이더 배차 수락/거질/무시 API 호출 시,
+        with patch("ras.rider_app.helpers.update_task_status") as mock_update_task_status:
+            mock_update_task_status.return_value = expected_jungleworks_response
+            input_body = self._make_request_body(rider_dispatch_request.id, "ACCEPTED")
+            response = self._call_api_create_rider_dispatch_response(input_body)
 
-            # Then: Jungleworks 응답코드에 상응하는 응답코드가 반환된다.
-            assert response.status_code == expected_jungleworks_response.relevant_http_status()
-
-        else:
-            # Given: Jungleworks 기능이 비활성화된 경우
-            mock_use_jungleworks.return_value = False
-
-            # When: 라이더 배차 수락/거절/무시 API 호출 시,
-            with patch("ras.rider_app.helpers.query_create_rider_dispatch_response") as mock_query_create:
-                input_body = self._make_request_body(rider_dispatch_request.id, "ACCEPTED")
-                response = self._call_api_create_rider_dispatch_response(input_body)
-                mock_query_create.assert_called_once()
-
-            # Then: 200 응답코드가 반환되고,
-            assert response.status_code == HTTPStatus.OK
+        # Then: Jungleworks 응답코드에 상응하는 응답코드가 반환된다.
+        assert response.status_code == expected_jungleworks_response.relevant_http_status()
 
         # And: Jungleworks 활성화 체크 함수 및 응답값이 올바른지 확인한다.
         mock_use_jungleworks.assert_called_once()
         assert response.json() == input_body.dict()
 
     @pytest.mark.django_db(transaction=True)
-    @pytest.mark.parametrize("jungleworks_enabled", [(True,), (False,)])
     @patch("ras.rider_app.views.should_connect_jungleworks")
-    def test_update_rider_dispatch_error(self, mock_use_jungleworks, jungleworks_enabled, rider_dispatch_request):
-        if jungleworks_enabled:
-            # Given: Jungleworks 기능이 활성화되고,
-            mock_use_jungleworks.return_value = True
-            # And: Jungleworks API에서 에러 응답을 반환하는 경우
-            expected_jungleworks_response = JungleworksResponseBody(message="invalid", status=100, data={})
+    def test_create_rider_dispatch_when_jw_not_enabled(self, mock_use_jungleworks, rider_dispatch_request):
+        # Given: Jungleworks 기능이 비활성화된 경우
+        mock_use_jungleworks.return_value = False
 
-            # When: 라이더 배차 수락/거질/무시 API 호출 시,
-            with patch("ras.rider_app.helpers.update_task_status") as mock_update_task_status:
-                mock_update_task_status.return_value = expected_jungleworks_response
-                input_body = self._make_request_body(rider_dispatch_request.id, "ACCEPTED")
-                response = self._call_api_create_rider_dispatch_response(input_body)
+        # When: 라이더 배차 수락/거절/무시 API 호출 시,
+        with patch("ras.rider_app.helpers.query_create_rider_dispatch_response") as mock_query_create:
+            input_body = self._make_request_body(rider_dispatch_request.id, "ACCEPTED")
+            response = self._call_api_create_rider_dispatch_response(input_body)
+            mock_query_create.assert_called_once()
 
-            # Then: Jungleworks 응답코드에 상응하는 응답코드가 반환되고,
-            assert response.status_code == expected_jungleworks_response.relevant_http_status()
-            # And: Jungleworks 활성화 체크 함수 및 응답값이 올바른지 확인한다.
-            mock_use_jungleworks.assert_called_once()
-            assert response.json() == {"errors": [{"name": "reason", "message": "invalid"}]}
+        # Then: 200 응답코드가 반환되고,
+        assert response.status_code == HTTPStatus.OK
 
-        else:
-            # Given: Jungleworks 기능이 비활성화된 경우
-            mock_use_jungleworks.return_value = False
-
-            # When: 라이더 업무 시작/종료 API 호출 시,
-            with patch("ras.rider_app.helpers.query_create_rider_dispatch_response") as mock_query_create:
-                # DB 조회시 에러 발생
-                mock_query_create.side_effect = IntegrityError()
-                input_body = self._make_request_body(rider_dispatch_request.id, "ACCEPTED")
-                response = self._call_api_create_rider_dispatch_response(input_body)
-
-            # Then: 400 응답코드가 반환되고,
-            assert response.status_code == HTTPStatus.BAD_REQUEST
-            assert response.json() == {"errors": [{"name": "reason", "message": "배차 정보를 확인할 수 없습니다."}]}
+        # And: Jungleworks 활성화 체크 함수 및 응답값이 올바른지 확인한다.
+        mock_use_jungleworks.assert_called_once()
+        assert response.json() == input_body.dict()
 
     @pytest.mark.django_db(transaction=True)
-    @pytest.mark.parametrize("jungleworks_enabled", [(True,), (False,)])
     @patch("ras.rider_app.views.should_connect_jungleworks")
-    def test_create_rider_dispatch_when_notified(
-        self, mock_use_jungleworks, jungleworks_enabled, rider_dispatch_request
-    ):
-        if jungleworks_enabled:
-            # Given: Jungleworks 기능이 활성화되고,
-            mock_use_jungleworks.return_value = True
-            # And: Jungleworks API에서 성공 응답을 반환하는 경우
-            expected_jungleworks_response = JungleworksResponseBody(message="test-message", status=200, data={})
+    def test_update_rider_dispatch_error_when_jw_enabled(self, mock_use_jungleworks, rider_dispatch_request):
+        # Given: Jungleworks 기능이 활성화되고,
+        mock_use_jungleworks.return_value = True
+        # And: Jungleworks API에서 에러 응답을 반환하는 경우
+        expected_jungleworks_response = JungleworksResponseBody(message="invalid", status=100, data={})
 
-            # When: 라이더 배차 수락/거질/무시 API 호출 시,
-            with patch("ras.rider_app.helpers.update_task_status") as mock_update_task_status:
-                mock_update_task_status.return_value = expected_jungleworks_response
-                input_body = self._make_request_body(rider_dispatch_request.id, "NOTIFIED")
-                response = self._call_api_create_rider_dispatch_response(input_body)
+        # When: 라이더 배차 수락/거질/무시 API 호출 시,
+        with patch("ras.rider_app.helpers.update_task_status") as mock_update_task_status:
+            mock_update_task_status.return_value = expected_jungleworks_response
+            input_body = self._make_request_body(rider_dispatch_request.id, "ACCEPTED")
+            response = self._call_api_create_rider_dispatch_response(input_body)
 
-            # Then: Jungleworks update_task_status API가 호출되지 않고,
-            assert mock_update_task_status.call_count == 0
-            # AND: Jungleworks 응답코드에 상응하는 응답코드가 반환된다.
-            assert response.status_code == expected_jungleworks_response.relevant_http_status()
+        # Then: Jungleworks 응답코드에 상응하는 응답코드가 반환되고,
+        assert response.status_code == expected_jungleworks_response.relevant_http_status()
+        # And: Jungleworks 활성화 체크 함수 및 응답값이 올바른지 확인한다.
+        mock_use_jungleworks.assert_called_once()
+        assert response.json() == {"errors": [{"name": "reason", "message": "invalid"}]}
 
-        else:
-            # Given: Jungleworks 기능이 비활성화된 경우
-            mock_use_jungleworks.return_value = False
+    @pytest.mark.django_db(transaction=True)
+    @patch("ras.rider_app.views.should_connect_jungleworks")
+    def test_update_rider_dispatch_error_when_jw_not_enabled(self, mock_use_jungleworks, rider_dispatch_request):
+        # Given: Jungleworks 기능이 비활성화된 경우
+        mock_use_jungleworks.return_value = False
 
-            # When: 라이더 배차 수락/거절/무시 API 호출 시,
-            with patch("ras.rider_app.helpers.query_create_rider_dispatch_response") as mock_query_create:
-                input_body = self._make_request_body(rider_dispatch_request.id, "NOTIFIED")
-                response = self._call_api_create_rider_dispatch_response(input_body)
-                mock_query_create.assert_called_once()
+        # When: 라이더 업무 시작/종료 API 호출 시,
+        with patch("ras.rider_app.helpers.query_create_rider_dispatch_response") as mock_query_create:
+            # DB 조회시 에러 발생
+            mock_query_create.side_effect = IntegrityError()
+            input_body = self._make_request_body(rider_dispatch_request.id, "ACCEPTED")
+            response = self._call_api_create_rider_dispatch_response(input_body)
 
-            # Then: 200 응답코드가 반환되고,
-            assert response.status_code == HTTPStatus.OK
+        # Then: 400 응답코드가 반환되고,
+        assert response.status_code == HTTPStatus.BAD_REQUEST
+        assert response.json() == {"errors": [{"name": "reason", "message": "유효한 ID 값이 아닙니다."}]}
+
+    @pytest.mark.django_db(transaction=True)
+    @patch("ras.rider_app.views.should_connect_jungleworks")
+    def test_create_rider_dispatch_notified_when_jw_enabled(self, mock_use_jungleworks, rider_dispatch_request):
+        # Given: Jungleworks 기능이 활성화되고,
+        mock_use_jungleworks.return_value = True
+        # And: Jungleworks API에서 성공 응답을 반환하는 경우
+        expected_jungleworks_response = JungleworksResponseBody(message="test-message", status=200, data={})
+
+        # When: 라이더 배차 수락/거질/무시 API 호출 시,
+        with patch("ras.rider_app.helpers.update_task_status") as mock_update_task_status:
+            mock_update_task_status.return_value = expected_jungleworks_response
+            input_body = self._make_request_body(rider_dispatch_request.id, "NOTIFIED")
+            response = self._call_api_create_rider_dispatch_response(input_body)
+
+        # Then: Jungleworks update_task_status API가 호출되지 않고,
+        assert mock_update_task_status.call_count == 0
+        # AND: Jungleworks 응답코드에 상응하는 응답코드가 반환된다.
+        assert response.status_code == expected_jungleworks_response.relevant_http_status()
+
+        # And: Jungleworks 활성화 체크 함수 및 응답값이 올바른지 확인한다.
+        mock_use_jungleworks.assert_called_once()
+        assert response.json() == input_body.dict()
+
+    @pytest.mark.django_db(transaction=True)
+    @patch("ras.rider_app.views.should_connect_jungleworks")
+    def test_create_rider_dispatch_notified_when_jw_not_enabled(self, mock_use_jungleworks, rider_dispatch_request):
+        # Given: Jungleworks 기능이 비활성화된 경우
+        mock_use_jungleworks.return_value = False
+
+        # When: 라이더 배차 수락/거절/무시 API 호출 시,
+        with patch("ras.rider_app.helpers.query_create_rider_dispatch_response") as mock_query_create:
+            input_body = self._make_request_body(rider_dispatch_request.id, "NOTIFIED")
+            response = self._call_api_create_rider_dispatch_response(input_body)
+            mock_query_create.assert_called_once()
+
+        # Then: 200 응답코드가 반환되고,
+        assert response.status_code == HTTPStatus.OK
 
         # And: Jungleworks 활성화 체크 함수 및 응답값이 올바른지 확인한다.
         mock_use_jungleworks.assert_called_once()
