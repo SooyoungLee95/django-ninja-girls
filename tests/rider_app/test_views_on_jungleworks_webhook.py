@@ -50,8 +50,8 @@ def test_rider_app_dispatch_request_webhook_on_404_error(rider_profile):
     # Then: status는 200, logger.error 가 호출 되어야 한다
     assert response.status_code == 200
     # And: RiderDispatchRequestHistory 와 DispatchRequestJungleworksTask 값은 생성되지 않아야 한다.
-    assert RiderDispatchRequestHistory.objects.count() == 0
-    assert DispatchRequestJungleworksTask.objects.count() == 0
+    assert not RiderDispatchRequestHistory.objects.exists()
+    assert not DispatchRequestJungleworksTask.objects.exists()
 
 
 @pytest.mark.django_db(transaction=True)
