@@ -34,3 +34,8 @@ class JungleworksRequestBody(Schema):
 class OnOffDutyRequestBody(JungleworksRequestBody):
     fleet_ids: list[int]
     is_available: int
+
+
+class TaskStatusRequestBody(JungleworksRequestBody):
+    job_id: str
+    job_status: str

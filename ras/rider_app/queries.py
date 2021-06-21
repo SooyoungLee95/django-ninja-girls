@@ -1,8 +1,13 @@
 from django.db import transaction
 
-from ras.rideryo.models import RiderAvailability, RiderAvailabilityHistory
+from ras.rideryo.models import (
+    RiderAvailability,
+    RiderAvailabilityHistory,
+    RiderDispatchResponseHistory,
+)
 
 from .schemas import RiderAvailability as RiderAvailabilitySchema
+from .schemas import RiderDispatchResponse as RiderDispatchResponseSchema
 
 
 def query_update_rider_availability(data: RiderAvailabilitySchema):
@@ -12,3 +17,10 @@ def query_update_rider_availability(data: RiderAvailabilitySchema):
         availability.save()
         RiderAvailabilityHistory.objects.create(rider=availability, is_available=data.is_available)
     return availability
+
+
+def query_create_rider_dispatch_response(data: RiderDispatchResponseSchema):
+    return RiderDispatchResponseHistory.objects.create(
+        dispatch_request_id=data.dispatch_request_id,
+        response=data.response,
+    )
