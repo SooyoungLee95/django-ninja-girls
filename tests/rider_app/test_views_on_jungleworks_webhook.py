@@ -86,7 +86,7 @@ def test_rider_app_webhook_handler_on_invalid_webhook_type(rider_profile):
     # And: 유효하지 않은 webhook type을 전달 받았을 때,
     invalid_webhook_type = "invalid_webhook_type"
 
-    # When: invalid_webhook_type과 함꼐 auto_allocation_success webhook handler 를 호출 하면,
+    # When: invalid_webhook_type과 함께 auto_allocation_success webhook handler 를 호출 하면,
     response = call_api(webhook_type=invalid_webhook_type, input_body=input_body)
 
     # Then: 422 상태 코드를 리턴한다
