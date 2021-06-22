@@ -1,12 +1,16 @@
 from django.db import transaction
 
 from ras.rideryo.models import (
+    DispatchRequestJungleworksTask,
     RiderAvailability,
     RiderAvailabilityHistory,
+    RiderDispatchRequestHistory,
     RiderDispatchResponseHistory,
+    RiderProfile,
 )
 
 from .schemas import RiderAvailability as RiderAvailabilitySchema
+from .schemas import RiderDispatch as RiderDispatchResultSchema
 from .schemas import RiderDispatchResponse as RiderDispatchResponseSchema
 
 
@@ -24,3 +28,14 @@ def query_create_rider_dispatch_response(data: RiderDispatchResponseSchema):
         dispatch_request_id=data.dispatch_request_id,
         response=data.response,
     )
+
+
+def query_create_dispatch_request_with_task(data: RiderDispatchResultSchema):
+    rider = RiderProfile.objects.get(pk=data.rider_id)
+    with transaction.atomic():
+        dispatch_request = RiderDispatchRequestHistory.objects.create(rider=rider, order_id=data.order_id)
+        DispatchRequestJungleworksTask.objects.create(
+            dispatch_request=dispatch_request,
+            pickup_task_id=data.pickup_task_id,
+            delivery_task_id=data.delivery_task_id,
+        )

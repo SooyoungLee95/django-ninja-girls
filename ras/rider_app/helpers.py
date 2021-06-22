@@ -2,20 +2,22 @@ import logging
 from http import HTTPStatus
 
 from asgiref.sync import async_to_sync
-from django.db.utils import IntegrityError, OperationalError
+from django.db.utils import DatabaseError, IntegrityError, OperationalError
 
 from ras.common.integration.services.jungleworks.handlers import (
     on_off_duty,
     update_task_status,
 )
 from ras.rider_app.queries import (
+    query_create_dispatch_request_with_task,
     query_create_rider_dispatch_response,
     query_update_rider_availability,
 )
 from ras.rideryo.enums import RiderResponse
 
+from ..rideryo.models import RiderProfile
 from .schemas import RiderAvailability as RiderAvailabilitySchema
-from .schemas import RiderDispatchResponse
+from .schemas import RiderDispatch, RiderDispatchResponse
 
 logger = logging.getLogger(__name__)
 
@@ -58,3 +60,11 @@ def handle_rider_dispatch_response(data: RiderDispatchResponse, is_jungleworks: 
         return HTTPStatus.BAD_REQUEST, str(e)
     else:
         return HTTPStatus.OK, ""
+
+
+def handle_rider_dispatch_request_creates(data: RiderDispatch):
+    try:
+        query_create_dispatch_request_with_task(data)
+        # TODO: Send FCM push method 호출 - async
+    except (RiderProfile.DoesNotExist, DatabaseError) as e:
+        logger.error(f"[RiderDispatchRequest] {e!r} {data}")

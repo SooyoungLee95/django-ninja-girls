@@ -11,3 +11,10 @@ class RiderAvailability(Schema):
 class RiderDispatchResponse(Schema):
     dispatch_request_id: int
     response: RiderResponseEnum
+
+
+class RiderDispatch(Schema):
+    rider_id: int = Field(..., gt=0)
+    order_id: str
+    pickup_task_id: str
+    delivery_task_id: str

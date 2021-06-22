@@ -154,6 +154,14 @@ class RiderDispatchResponseHistory(CommonTimeStamp):
     response = models.CharField(max_length=150, choices=RiderResponseEnum.choices, help_text="배차에 대한 라이더의 response")
 
 
+class DispatchRequestJungleworksTask(CommonTimeStamp):
+    """정글웍스로 부터 전달 받은 픽업, 배달 task ID"""
+
+    dispatch_request = models.ForeignKey("RiderDispatchRequestHistory", on_delete=models.DO_NOTHING, help_text="배차 ID")
+    pickup_task_id = models.CharField(max_length=20, help_text="정글웍스 픽업 Task ID")
+    delivery_task_id = models.CharField(max_length=20, help_text="정글웍스 배달 Task ID")
+
+
 class RiderDeliveryStateHistory(CommonTimeStamp):
     """라이더의 배달 상태(RESTAURANT_ARRIVED/PICKED_UP/DESTINATION_ARRIVED/COMPLETED/NOT_COMPLETED) 이력"""
 
