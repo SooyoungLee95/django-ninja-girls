@@ -13,12 +13,14 @@ from ras.rider_app.helpers import (
     handle_rider_dispatch_request_creates,
 )
 
+from .enums import WebhookName
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import RiderDispatch as RiderDispatchResultSchema
 
 rider_router = Router()
 
-WEBHOOK_MAP: dict[str, Callable] = {"auto_allocation_success": handle_rider_dispatch_request_creates}
+
+WEBHOOK_MAP: dict[str, Callable] = {WebhookName.auto_allocation_success: handle_rider_dispatch_request_creates}
 
 
 @rider_router.put(
@@ -42,7 +44,6 @@ def update_rider_availability(request, data: RiderAvailabilitySchema):
     summary="라이더 web hook API",
     response={200: RiderDispatchResultSchema},
 )
-def webhook_handler(request, webhook_type: str, data: RiderDispatchResultSchema):
-    if webhook := WEBHOOK_MAP.get(webhook_type):
-        webhook(data)
+def webhook_handler(request, webhook_type: WebhookName, data: RiderDispatchResultSchema):
+    WEBHOOK_MAP[webhook_type](data)
     return HTTPStatus.OK, data

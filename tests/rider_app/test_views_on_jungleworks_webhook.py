@@ -77,3 +77,17 @@ def test_rider_app_auto_allocation_success_on_database_error(mock_logger_error, 
     # And: RiderDispatchRequestHistory 와 DispatchRequestJungleworksTask 값은 생성되지 않아야 한다.
     assert RiderDispatchRequestHistory.objects.count() == 0
     assert DispatchRequestJungleworksTask.objects.count() == 0
+
+
+@pytest.mark.django_db(transaction=True)
+def test_rider_app_webhook_handler_on_invalid_webhook_type(rider_profile):
+    # Given: 정글웍스로부터 배차완료 event를 받고,
+    input_body = RiderDispatch(rider_id=rider_profile.pk, order_id="1", pickup_task_id="1", delivery_task_id="1")
+    # And: 유효하지 않은 webhook type을 전달 받았을 때,
+    invalid_webhook_type = "invalid_webhook_type"
+
+    # When: invalid_webhook_type과 함꼐 auto_allocation_success webhook handler 를 호출 하면,
+    response = call_api(webhook_type=invalid_webhook_type, input_body=input_body)
+
+    # Then: 422 상태 코드를 리턴한다
+    assert response.status_code == 422
