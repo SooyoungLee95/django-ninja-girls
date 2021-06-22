@@ -36,5 +36,6 @@ def handle_rider_availability_updates(data: RiderAvailabilitySchema, is_junglewo
 def handle_rider_dispatch_request_creates(data: RiderDispatch):
     try:
         query_create_dispatch_request_with_task(data)
+        # TODO: Send FCM push method 호출 - async
     except (RiderProfile.DoesNotExist, DatabaseError) as e:
         logger.error(f"[RiderDispatchRequest] {e!r} {data}")

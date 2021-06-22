@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from typing import Callable
 
 from ninja.responses import codes_4xx
 from ninja.router import Router
@@ -17,6 +18,8 @@ from .schemas import RiderDispatch as RiderDispatchResultSchema
 
 rider_router = Router()
 
+WEBHOOK_MAP: dict[str, Callable] = {"auto_allocation_success": handle_rider_dispatch_request_creates}
+
 
 @rider_router.put(
     "/availability",
@@ -34,12 +37,12 @@ def update_rider_availability(request, data: RiderAvailabilitySchema):
 
 
 @rider_router.post(
-    "jungleworks/webhook/auto_allocation_success",
-    url_name="rider_app_webhook_auto_allocation_success",
-    summary="라이더 배차 완료 event web hook API",
+    "jungleworks/webhook/{webhook_type}",
+    url_name="rider_app_webhook",
+    summary="라이더 web hook API",
     response={200: RiderDispatchResultSchema},
 )
-def webhook_handler_auto_allocation_success(request, data: RiderDispatchResultSchema):
-    handle_rider_dispatch_request_creates(data)
-    # TODO: Send FCM push method 호출 - async
+def webhook_handler(request, webhook_type: str, data: RiderDispatchResultSchema):
+    if webhook := WEBHOOK_MAP.get(webhook_type):
+        webhook(data)
     return HTTPStatus.OK, data
