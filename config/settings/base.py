@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     "ras.rideryo.apps.RideryoConfig",
     "ras.simulator.apps.SimulatorConfig",
     "ras.rider_app.apps.RiderAppConfig",
-    "fcm.apps.FcmConfig",
 ]
 
 MIDDLEWARE = [
