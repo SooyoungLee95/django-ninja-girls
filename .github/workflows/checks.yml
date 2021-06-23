@@ -40,12 +40,12 @@ jobs:
         poetry run flake8 --config=setup.cfg .
     - name: Static type check
       run: |
-        poetry run mypy --config-file setup.cfg .        
+        poetry run mypy --install-types --non-interactive --config-file setup.cfg .
     - name: Make migrations files
       run: |
-        poetry run python manage.py makemigrations        
+        poetry run python manage.py makemigrations
       env:
-        DJANGO_SECRET_KEY: test_django_secret_key      
+        DJANGO_SECRET_KEY: test_django_secret_key
     - name: unit test
       run: |
         poetry run pytest
