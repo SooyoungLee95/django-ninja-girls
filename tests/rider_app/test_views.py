@@ -10,21 +10,20 @@ from ras.common.integration.services.jungleworks.schemas import JungleworksRespo
 from ras.rider_app.schemas import RiderDispatchResponse
 
 
-@pytest.mark.django_db(transaction=True)
-@pytest.mark.parametrize("jungleworks_enabled", [(True,), (False,)])
-@patch("ras.rider_app.views.should_connect_jungleworks")
-def test_update_rider_availability(mock_use_jungleworks, jungleworks_enabled, rider_profile):
-    def call_api():
+class TestUpdateRiderAvailability:
+    def call_api(self, input_body: dict):
+        client = Client()
         return client.put(
             reverse("ninja:rider_app_update_rider_availability"),
             data=input_body,
             content_type="application/json",
         )
 
-    client = Client()
-    input_body = {"is_available": True}
+    @pytest.mark.django_db(transaction=True)
+    @patch("ras.rider_app.views.should_connect_jungleworks")
+    def test_update_rider_availability_when_jw_enabled(self, mock_use_jungleworks):
+        input_body = {"is_available": True}
 
-    if jungleworks_enabled:
         # Given: Jungleworks 기능이 활성화되고,
         mock_use_jungleworks.return_value = True
         # And: Jungleworks API에서 성공 응답을 반환하는 경우
@@ -33,43 +32,40 @@ def test_update_rider_availability(mock_use_jungleworks, jungleworks_enabled, ri
         # When: 라이더 업무 시작/종료 API 호출 시,
         with patch("ras.rider_app.helpers.on_off_duty") as mock_on_off_duty:
             mock_on_off_duty.return_value = expected_jungleworks_response
-            response = call_api()
+            response = self.call_api(input_body)
 
         # Then: Jungleworks 응답코드에 상응하는 응답코드가 반환되고,
         assert response.status_code == expected_jungleworks_response.relevant_http_status()
 
-    else:
+        # And: Jungleworks 활성화 체크 함수 및 응답값이 올바른지 확인한다.
+        mock_use_jungleworks.assert_called_once()
+        assert response.json() == input_body
+
+    @pytest.mark.django_db(transaction=True)
+    @patch("ras.rider_app.views.should_connect_jungleworks")
+    def test_update_rider_availability_when_jw_disabled(self, mock_use_jungleworks):
+        input_body = {"is_available": True}
+
         # Given: Jungleworks 기능이 비활성화된 경우
         mock_use_jungleworks.return_value = False
 
         # When: 라이더 업무 시작/종료 API 호출 시,
         with patch("ras.rider_app.helpers.query_update_rider_availability") as mock_query_update:
-            response = call_api()
+            response = self.call_api(input_body)
             mock_query_update.assert_called_once()
 
         # Then: 200 응답코드가 반환되고,
         assert response.status_code == HTTPStatus.OK
 
-    # And: Jungleworks 활성화 체크 함수 및 응답값이 올바른지 확인한다.
-    mock_use_jungleworks.assert_called_once()
-    assert response.json() == input_body
+        # And: Jungleworks 활성화 체크 함수 및 응답값이 올바른지 확인한다.
+        mock_use_jungleworks.assert_called_once()
+        assert response.json() == input_body
 
+    @pytest.mark.django_db(transaction=True)
+    @patch("ras.rider_app.views.should_connect_jungleworks")
+    def test_update_rider_availability_error_when_jw_enabled(self, mock_use_jungleworks):
+        input_body = {"is_available": True}
 
-@pytest.mark.django_db(transaction=True)
-@pytest.mark.parametrize("jungleworks_enabled", [(True,), (False,)])
-@patch("ras.rider_app.views.should_connect_jungleworks")
-def test_update_rider_availability_error(mock_use_jungleworks, jungleworks_enabled, rider_profile):
-    def call_api():
-        return client.put(
-            reverse("ninja:rider_app_update_rider_availability"),
-            data=input_body,
-            content_type="application/json",
-        )
-
-    client = Client()
-    input_body = {"is_available": True}
-
-    if jungleworks_enabled:
         # Given: Jungleworks 기능이 활성화되고,
         mock_use_jungleworks.return_value = True
         # And: Jungleworks API에서 에러 응답을 반환하는 경우
@@ -78,7 +74,7 @@ def test_update_rider_availability_error(mock_use_jungleworks, jungleworks_enabl
         # When: 라이더 업무 시작/종료 API 호출 시,
         with patch("ras.rider_app.helpers.on_off_duty") as mock_on_off_duty:
             mock_on_off_duty.return_value = expected_jungleworks_response
-            response = call_api()
+            response = self.call_api(input_body)
 
         # Then: Jungleworks 응답코드에 상응하는 응답코드가 반환되고,
         assert response.status_code == expected_jungleworks_response.relevant_http_status()
@@ -86,7 +82,11 @@ def test_update_rider_availability_error(mock_use_jungleworks, jungleworks_enabl
         mock_use_jungleworks.assert_called_once()
         assert response.json() == {"errors": [{"name": "reason", "message": "invalid"}]}
 
-    else:
+    @pytest.mark.django_db(transaction=True)
+    @patch("ras.rider_app.views.should_connect_jungleworks")
+    def test_update_rider_availability_error_when_jw_disabled(self, mock_use_jungleworks):
+        input_body = {"is_available": True}
+
         # Given: Jungleworks 기능이 비활성화된 경우
         mock_use_jungleworks.return_value = False
 
@@ -94,7 +94,7 @@ def test_update_rider_availability_error(mock_use_jungleworks, jungleworks_enabl
         with patch("ras.rider_app.helpers.query_update_rider_availability") as mock_query_update:
             # DB 조회시 에러 발생
             mock_query_update.side_effect = IntegrityError()
-            response = call_api()
+            response = self.call_api(input_body)
 
         # Then: 400 응답코드가 반환된다.
         assert response.status_code == HTTPStatus.BAD_REQUEST
