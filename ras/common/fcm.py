@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Dict, Union
 
 import firebase_admin
 from firebase_admin import credentials, messaging
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 class FCMSender:
     def send(self, data, retries=3):
-        result = {
+        result: Dict[str, Union[bool, str]] = {
             "success": False,
         }
         message = messaging.Message(
