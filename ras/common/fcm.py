@@ -1,8 +1,19 @@
 import logging
+import os
 
-from firebase_admin import messaging
-from firebase_admin.exceptions import FirebaseError, InvalidArgumentError, OutOfRangeError
+import firebase_admin
+from firebase_admin import credentials, messaging
+from firebase_admin.exceptions import (
+    FirebaseError,
+    InvalidArgumentError,
+    OutOfRangeError,
+)
 
+from config.settings.base import BASE_DIR, FCM_SERVICE_ACCOUNT_KEY_FILENAME
+
+cred_path = os.path.join(BASE_DIR, FCM_SERVICE_ACCOUNT_KEY_FILENAME)
+cred = credentials.Certificate(cred_path)
+firebase_admin.initialize_app(cred)
 logger = logging.getLogger(__name__)
 
 
@@ -10,6 +21,7 @@ class FCMSender:
     def send(self, data, retries=3):
         result = {
             "success": False,
+            "exception": "",
         }
         message = messaging.Message(
             token=data.pop("registration_token"),
@@ -21,13 +33,16 @@ class FCMSender:
         )
         for try_count in range(retries):
             try:
-                messaging.send(message)
+                response = messaging.send(message)
             except (InvalidArgumentError, OutOfRangeError, ValueError) as e:
                 result["exception"] = f"{e!s}"
-                return result
+                break
             except (FirebaseError, IOError) as e:
                 logger.error(f"[Firebase] retry: {try_count}, {e!r}")
             else:
-                result["success"] = True
-                return result
-
+                if response.success:
+                    result["success"] = response.success
+                    break
+        else:
+            result["exception"] = f"{response.exception!s}"
+        return result
