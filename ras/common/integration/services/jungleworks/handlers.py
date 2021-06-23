@@ -45,10 +45,10 @@ async def call_jungleworks_api(
             return JungleworksResponseBody(**response.json())
 
 
-async def on_off_duty(rider_availability: RiderAvailability):
+async def on_off_duty(rider_id, availability: RiderAvailability):
     request_body = OnOffDutyRequestBody(
-        fleet_ids=[rider_availability.rider_id],
-        is_available=rider_availability.is_available,
+        fleet_ids=[rider_id],
+        is_available=availability.is_available,
     )
     return await call_jungleworks_api(path_namespace=ON_OFF_DUTY, body=request_body)
 
