@@ -21,7 +21,6 @@ class FCMSender:
     def send(self, data, retries=3):
         result = {
             "success": False,
-            "exception": "",
         }
         message = messaging.Message(
             token=data.pop("registration_token"),
@@ -39,10 +38,10 @@ class FCMSender:
                 break
             except (FirebaseError, IOError) as e:
                 logger.error(f"[Firebase] retry: {try_count}, {e!r}")
+                if try_count == retries - 1:
+                    result["exception"] = f"{e!s}"
             else:
-                if response.success:
-                    result["success"] = response.success
+                if response:
+                    result["success"] = True
                     break
-        else:
-            result["exception"] = f"{response.exception!s}"
         return result
