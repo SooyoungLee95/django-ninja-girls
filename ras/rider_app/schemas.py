@@ -4,7 +4,6 @@ from ras.rideryo.enums import RiderResponse as RiderResponseEnum
 
 
 class RiderAvailability(Schema):
-    rider_id: int = Field(..., gt=0)
     is_available: bool
 
 

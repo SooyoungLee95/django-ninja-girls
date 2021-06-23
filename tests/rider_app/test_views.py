@@ -7,7 +7,7 @@ from django.test import Client
 from django.urls import reverse
 
 from ras.common.integration.services.jungleworks.schemas import JungleworksResponseBody
-from ras.rider_app.schemas import RiderAvailability, RiderDispatchResponse
+from ras.rider_app.schemas import RiderDispatchResponse
 
 
 @pytest.mark.django_db(transaction=True)
@@ -17,12 +17,12 @@ def test_update_rider_availability(mock_use_jungleworks, jungleworks_enabled, ri
     def call_api():
         return client.put(
             reverse("ninja:rider_app_update_rider_availability"),
-            data=input_body.dict(),
+            data=input_body,
             content_type="application/json",
         )
 
     client = Client()
-    input_body = RiderAvailability(rider_id=rider_profile.pk, is_available=True)
+    input_body = {"is_available": True}
 
     if jungleworks_enabled:
         # Given: Jungleworks 기능이 활성화되고,
@@ -52,7 +52,7 @@ def test_update_rider_availability(mock_use_jungleworks, jungleworks_enabled, ri
 
     # And: Jungleworks 활성화 체크 함수 및 응답값이 올바른지 확인한다.
     mock_use_jungleworks.assert_called_once()
-    assert response.json() == input_body.dict()
+    assert response.json() == input_body
 
 
 @pytest.mark.django_db(transaction=True)
@@ -62,12 +62,12 @@ def test_update_rider_availability_error(mock_use_jungleworks, jungleworks_enabl
     def call_api():
         return client.put(
             reverse("ninja:rider_app_update_rider_availability"),
-            data=input_body.dict(),
+            data=input_body,
             content_type="application/json",
         )
 
     client = Client()
-    input_body = RiderAvailability(rider_id=rider_profile.pk, is_available=True)
+    input_body = {"is_available": True}
 
     if jungleworks_enabled:
         # Given: Jungleworks 기능이 활성화되고,
