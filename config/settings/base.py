@@ -9,7 +9,6 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
-
 from pathlib import Path
 
 import environ
@@ -128,3 +127,7 @@ JUNGLEWORKS_ENABLE = env.bool("JUNGLEWORKS_ENABLE", default=False)
 
 # 개인정보 암호화/복호화 키
 FERNET_CRYPTO_KEY = env.str("FERNET_CRYPTO_KEY", default="CkjxwCCPDYkrS0d6-bmhDsuIcnajgutUDkqeZE-PkSw=").encode()
+
+
+# FCM Credentials
+FCM_SERVICE_ACCOUNT_KEY_FILENAME = env.str("FCM_SERVICE_ACCOUNT_KEY_FILENAME", default="serviceAccountKey.json")
