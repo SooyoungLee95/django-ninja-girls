@@ -12,18 +12,25 @@ from firebase_admin.exceptions import (
 
 from config.settings.base import BASE_DIR, FCM_SERVICE_ACCOUNT_KEY_FILENAME
 
-cred_path = os.path.join(BASE_DIR, FCM_SERVICE_ACCOUNT_KEY_FILENAME)
-cred = credentials.Certificate(cred_path)
-firebase_admin.initialize_app(cred)
 logger = logging.getLogger(__name__)
 
 
 class FCMSender:
-    def send(self, data, retries=3):
-        result: dict[str, Union[bool, str]] = {
-            "success": False,
-        }
-        message = messaging.Message(
+    def __new__(cls, *args, **kwargs):
+        if not hasattr(cls, "_instance"):
+            cred_path = os.path.join(BASE_DIR, FCM_SERVICE_ACCOUNT_KEY_FILENAME)
+            cred = credentials.Certificate(cred_path)
+            firebase_admin.initialize_app(cred)
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self, *args, **kwargs):
+        cls = type(self)
+        if not hasattr(cls, "_init"):
+            cls._init = True  # type: ignore[attr-defined]
+
+    def _create_fcm(self, data):
+        return messaging.Message(
             token=data.pop("registration_token"),
             data=data,
             notification=messaging.Notification(
@@ -31,6 +38,12 @@ class FCMSender:
                 body=data.pop("body"),
             ),
         )
+
+    def send(self, data, retries=3):
+        result: dict[str, Union[bool, str]] = {
+            "success": False,
+        }
+        message = self._create_fcm(data)
         for try_count in range(retries):
             try:
                 messaging.send(message)
