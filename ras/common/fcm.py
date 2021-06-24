@@ -33,16 +33,15 @@ class FCMSender:
         )
         for try_count in range(retries):
             try:
-                response = messaging.send(message)
+                messaging.send(message)
             except (InvalidArgumentError, OutOfRangeError, ValueError) as e:
                 result["exception"] = f"{e!s}"
                 break
-            except (FirebaseError, IOError) as e:
+            except (FirebaseError, Exception) as e:
                 logger.error(f"[Firebase] retry: {try_count}, {e!r}")
                 if try_count == retries - 1:
                     result["exception"] = f"{e!s}"
             else:
-                if response:
-                    result["success"] = True
-                    break
+                result["success"] = True
+                break
         return result
