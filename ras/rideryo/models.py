@@ -7,6 +7,11 @@ from ras.rideryo.enums import RiderDeliveryState as RiderDeliveryStateEnum
 from ras.rideryo.enums import RiderResponse as RiderResponseEnum
 
 
+class ActiveQuerySet(models.QuerySet):
+    def active(self):
+        return self.filter(is_active=True)
+
+
 class EncryptCharField(models.CharField):
     def from_db_value(self, value):
         if value is not None:
@@ -32,6 +37,9 @@ class RiderAccount(CommonTimeStamp):
 
     email_address = models.CharField(max_length=100, unique=True, help_text="이메일")
     password = models.CharField(max_length=200, help_text="비밀번호")
+    is_active = models.BooleanField(default=True, help_text="라이더 계정 활성화 여부")
+
+    objects = ActiveQuerySet.as_manager()
 
     def save(self, *args, **kwargs):
         self.password = make_password(self.password)
@@ -49,6 +57,7 @@ class RiderProfile(CommonTimeStamp):
     phone_number = models.CharField(max_length=16, help_text="휴대폰 번호")
     date_of_birth = models.DateField(help_text="생년월일")
     address = models.CharField(max_length=200, help_text="주소")
+    is_active = models.BooleanField(default=True, help_text="라이더 프로필 활성화 여부")
 
 
 class RiderContract(CommonTimeStamp):

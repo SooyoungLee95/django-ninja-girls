@@ -81,7 +81,7 @@ def webhook_handler(request, webhook_type: WebhookName, data: RiderDispatchResul
 def login(request, data: RiderLoginRequest):
     request_body = data.dict()
     try:
-        rider = RiderAccount.objects.get(email_address=request_body["email_address"])
+        rider = RiderAccount.objects.active().get(email_address=request_body["email_address"])
     except RiderAccount.DoesNotExist:
         return HTTPStatus.BAD_REQUEST, ErrorResponse(message="이메일이 존재하지 않습니다.")
 
