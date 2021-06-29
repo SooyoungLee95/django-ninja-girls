@@ -26,7 +26,7 @@ def _call_login_api(input_body):
 @patch(
     "ras.common.authentication.helpers.AuthyoTokenAuthenticator.get_encrypted_payload", Mock(return_value="mock_token")
 )
-def test_login_api_on_success(rider_profile):
+def test_login_api_on_success_with_initial_password(rider_profile):
     input_body = RiderLoginRequest(email_address="test@test.com", password=RIDER_APP_INITIAL_PASSWORD)
     encrypted_payload = "mock_token"
     response = _call_login_api(input_body)
@@ -37,12 +37,34 @@ def test_login_api_on_success(rider_profile):
 
 
 @pytest.mark.django_db(transaction=True)
-@pytest.mark.parametrize(
-    "email_address, password", [("INVALID_EMAIL", RIDER_APP_INITIAL_PASSWORD), ("test@test.com", "INVALID_PASSWORD")]
+@patch(
+    "ras.common.authentication.helpers.AuthyoTokenAuthenticator.get_encrypted_payload", Mock(return_value="mock_token")
 )
-def test_login_api_on_fail_with_auth_info_is_not_matched(email_address, password, rider_profile):
-    response = _call_login_api(RiderLoginRequest(email_address=email_address, password=password))
+def test_login_api_on_success_with_no_initial_password(rider_profile):
+    rider_account = rider_profile.rider
+    rider_account.password = "new_password"
+    rider_account.save()
+    input_body = RiderLoginRequest(email_address="test@test.com", password="new_password")
+    encrypted_payload = "mock_token"
+    response = _call_login_api(input_body)
+    data = json.loads(response.content)
+    assert response.status_code == 200
+    assert data["authorization_url"] == f"{AUTHYO.BASE_URL}{AUTHYO_LOGIN_URL}?code={encrypted_payload}"
+    assert data["password_change_required"] == "False"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_login_api_on_fail_with_invalid_email_address_format(rider_profile):
+    with pytest.raises(ValidationError) as e:
+        _call_login_api(RiderLoginRequest(email_address="invalid_email_address", password="test_password"))
+    assert json.loads(e.value.json())[0]["msg"] == "이메일이 유효하지 않습니다."
+
+
+@pytest.mark.django_db(transaction=True)
+def test_login_api_on_fail_with_invalid_password(rider_profile):
+    response = _call_login_api(RiderLoginRequest(email_address="test@test.com", password="invalid_password"))
     assert response.status_code == 400
+    assert json.loads(response.content)["message"] == "패스워드가 일치하지 않습니다."
 
 
 @pytest.mark.django_db(transaction=True)
