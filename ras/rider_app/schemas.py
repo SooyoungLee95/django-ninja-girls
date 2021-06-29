@@ -29,8 +29,8 @@ class RiderLoginResponse(Schema):
     password_change_required: str
 
 
-class AuthorizationCode(Schema):
+class AuthyoPayload(Schema):
+    sub_id: int  # rider id
     platform: str = "rideryo-dev"
     role: str = "rider"
-    sub_id: str
-    base_url: str = "http://rideryo_base_url"
+    base_url: str = "http://rideryo-dev"

@@ -6,7 +6,8 @@ from django.test import Client
 from django.urls import reverse
 from pydantic import ValidationError
 
-from ras.rider_app.constants import AUTHYO_BASE_URL, AUTHYO_LOGIN_URL
+from config.settings.local import AUTHYO
+from ras.rider_app.constants import AUTHYO_LOGIN_URL
 from ras.rider_app.schemas import RiderLoginRequest
 from ras.rider_app.views import RIDER_APP_INITIAL_PASSWORD
 
@@ -22,14 +23,16 @@ def _call_login_api(input_body):
 
 
 @pytest.mark.django_db(transaction=True)
-@patch("ras.rider_app.views._generate_encrypted_token", Mock(return_value="mock_token"))
+@patch(
+    "ras.common.authentication.helpers.AuthyoTokenAuthenticator.get_encrypted_payload", Mock(return_value="mock_token")
+)
 def test_login_api_on_success(rider_profile):
     input_body = RiderLoginRequest(email_address="test@test.com", password=RIDER_APP_INITIAL_PASSWORD)
     encrypted_payload = "mock_token"
     response = _call_login_api(input_body)
     data = json.loads(response.content)
     assert response.status_code == 200
-    assert data["authorization_url"] == f"{AUTHYO_BASE_URL}{AUTHYO_LOGIN_URL}?code={encrypted_payload}"
+    assert data["authorization_url"] == f"{AUTHYO.BASE_URL}{AUTHYO_LOGIN_URL}?code={encrypted_payload}"
     assert data["password_change_required"] == "True"
 
 

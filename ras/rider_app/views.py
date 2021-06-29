@@ -1,13 +1,11 @@
-import json
 from http import HTTPStatus
 from typing import Callable
 
-from cryptography.fernet import Fernet
 from django.contrib.auth.hashers import check_password
 from ninja.responses import codes_4xx
 from ninja.router import Router
 
-from config.settings.base import FERNET_CRYPTO_KEY
+from config.settings.local import AUTHYO
 from ras.common.integration.services.jungleworks.handlers import (
     should_connect_jungleworks,
 )
@@ -18,10 +16,11 @@ from ras.rider_app.helpers import (
     handle_rider_dispatch_response,
 )
 
+from ..common.authentication.helpers import AuthyoTokenAuthenticator
 from ..rideryo.models import RiderAccount
-from .constants import AUTHYO_BASE_URL, AUTHYO_LOGIN_URL
+from .constants import AUTHYO_LOGIN_URL, RIDER_APP_INITIAL_PASSWORD
 from .enums import WebhookName
-from .schemas import AuthorizationCode
+from .schemas import AuthyoPayload
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import RiderDispatch as RiderDispatchResultSchema
 from .schemas import RiderDispatchResponse as RiderDispatchResponseSchema
@@ -31,11 +30,6 @@ rider_router = Router()
 
 
 WEBHOOK_MAP: dict[str, Callable] = {WebhookName.auto_allocation_success: handle_rider_dispatch_request_creates}
-
-RIDER_APP_INITIAL_PASSWORD = "TestTest"
-
-
-CIPHER = Fernet(key=FERNET_CRYPTO_KEY)
 
 
 @rider_router.put(
@@ -95,18 +89,9 @@ def login(request, data: RiderLoginRequest):
     if not check_password(request_body["password"], rider.password):
         return HTTPStatus.BAD_REQUEST, ErrorResponse(message="패스워드가 일치하지 않습니다.")
 
-    password_change_required = True
-    if request_body["password"] != RIDER_APP_INITIAL_PASSWORD:
-        password_change_required = False
-
-    payload = AuthorizationCode(sub_id=rider.id).dict()
-    token = _generate_encrypted_token(payload)
+    encrypted_payload = AuthyoTokenAuthenticator.get_encrypted_payload(payload=AuthyoPayload(sub_id=rider.id))
 
     return HTTPStatus.OK, RiderLoginResponse(
-        authorization_url=f"{AUTHYO_BASE_URL}{AUTHYO_LOGIN_URL}?code={token}",
-        password_change_required=password_change_required,
+        authorization_url=f"{AUTHYO.BASE_URL}{AUTHYO_LOGIN_URL}?code={encrypted_payload}",
+        password_change_required=request_body["password"] == RIDER_APP_INITIAL_PASSWORD,
     )
-
-
-def _generate_encrypted_token(payload):
-    return CIPHER.encrypt(json.dumps(payload).encode("utf-8")).decode("utf-8")
