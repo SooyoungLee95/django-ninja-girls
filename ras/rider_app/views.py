@@ -18,6 +18,7 @@ from .enums import WebhookName
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import RiderDispatch as RiderDispatchResultSchema
 from .schemas import RiderDispatchResponse as RiderDispatchResponseSchema
+from .schemas import RiderLoginRequest, RiderLoginResponse
 
 rider_router = Router()
 
@@ -64,3 +65,13 @@ def create_rider_dispatch_response(request, data: RiderDispatchResponseSchema):
 def webhook_handler(request, webhook_type: WebhookName, data: RiderDispatchResultSchema):
     WEBHOOK_MAP[webhook_type](data)
     return HTTPStatus.OK, data
+
+
+@rider_router.post(
+    "account/login",
+    url_name="rider_app_login",
+    summary="라이더 앱 Login API",
+    response={200: RiderLoginResponse},
+)
+def login_rider_app(request, data: RiderLoginRequest):
+    return HTTPStatus.OK, RiderLoginResponse(authorization_url="authorization_url", password_change_required=True)

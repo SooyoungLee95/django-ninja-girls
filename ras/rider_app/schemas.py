@@ -17,3 +17,13 @@ class RiderDispatch(Schema):
     order_id: str
     pickup_task_id: str
     delivery_task_id: str
+
+
+class RiderLoginRequest(Schema):
+    email_address: str
+    password: str
+
+
+class RiderLoginResponse(Schema):
+    authorization_url: str
+    password_change_required: str
