@@ -1,4 +1,4 @@
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import check_password, make_password
 from django.db import models
 
 from ras.crypto import decrypt, encrypt
@@ -36,6 +36,9 @@ class RiderAccount(CommonTimeStamp):
     def save(self, *args, **kwargs):
         self.password = make_password(self.password)
         super().save(*args, **kwargs)
+
+    def is_valid_password(self, input_password):
+        return check_password(input_password, self.password)
 
 
 class RiderProfile(CommonTimeStamp):

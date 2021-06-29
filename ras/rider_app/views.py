@@ -1,7 +1,6 @@
 from http import HTTPStatus
 from typing import Callable
 
-from django.contrib.auth.hashers import check_password
 from ninja.responses import codes_4xx
 from ninja.router import Router
 
@@ -86,7 +85,7 @@ def login(request, data: RiderLoginRequest):
     except RiderAccount.DoesNotExist:
         return HTTPStatus.BAD_REQUEST, ErrorResponse(message="이메일이 존재하지 않습니다.")
 
-    if not check_password(request_body["password"], rider.password):
+    if not rider.is_valid_password(input_password=request_body["password"]):
         return HTTPStatus.BAD_REQUEST, ErrorResponse(message="패스워드가 일치하지 않습니다.")
 
     encrypted_payload = AuthyoTokenAuthenticator.get_encrypted_payload(payload=AuthyoPayload(sub_id=rider.id))
