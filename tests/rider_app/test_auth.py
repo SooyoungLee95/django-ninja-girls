@@ -6,11 +6,9 @@ from django.test import Client
 from django.urls import reverse
 from pydantic import ValidationError
 
+from ras.rider_app.constants import AUTHYO_BASE_URL, AUTHYO_LOGIN_URL
 from ras.rider_app.schemas import RiderLoginRequest
 from ras.rider_app.views import RIDER_APP_INITIAL_PASSWORD
-
-AUTHYO_BASE_URL = "https://staging-authyo.yogiyo.co.kr"
-AUTHYO_LOGIN_URL = "/api/v1/auth/authorize"
 
 client = Client()
 

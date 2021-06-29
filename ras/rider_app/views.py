@@ -19,7 +19,9 @@ from ras.rider_app.helpers import (
 )
 
 from ..rideryo.models import RiderAccount
+from .constants import AUTHYO_BASE_URL, AUTHYO_LOGIN_URL
 from .enums import WebhookName
+from .schemas import AuthorizationCode
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import RiderDispatch as RiderDispatchResultSchema
 from .schemas import RiderDispatchResponse as RiderDispatchResponseSchema
@@ -85,26 +87,23 @@ def webhook_handler(request, webhook_type: WebhookName, data: RiderDispatchResul
 )
 def login(request, data: RiderLoginRequest):
     request_body = data.dict()
-    password_change_required = True
     try:
         rider = RiderAccount.objects.get(email_address=request_body["email_address"])
     except RiderAccount.DoesNotExist:
         return HTTPStatus.BAD_REQUEST, ErrorResponse(message="이메일이 존재하지 않습니다.")
+
     if not check_password(request_body["password"], rider.password):
         return HTTPStatus.BAD_REQUEST, ErrorResponse(message="패스워드가 일치하지 않습니다.")
 
+    password_change_required = True
     if request_body["password"] != RIDER_APP_INITIAL_PASSWORD:
         password_change_required = False
-    payload = {
-        "platform": "rideryo-dev",
-        "role": "rider",
-        "sub_id": "1",
-        "base_url": "http://rideryo_base_url",
-    }
+
+    payload = AuthorizationCode(sub_id=rider.id).dict()
     token = _generate_encrypted_token(payload)
 
     return HTTPStatus.OK, RiderLoginResponse(
-        authorization_url=f"https://staging-authyo.yogiyo.co.kr/api/v1/auth/authorize?code={token}",
+        authorization_url=f"{AUTHYO_BASE_URL}{AUTHYO_LOGIN_URL}?code={token}",
         password_change_required=password_change_required,
     )
 
