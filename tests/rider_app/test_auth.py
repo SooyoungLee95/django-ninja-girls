@@ -35,7 +35,9 @@ def test_login_api_on_success(rider_profile):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_login_api_on_fail_with_auth_info_is_not_matched(rider_profile):
-    input_body = RiderLoginRequest(email_address="test@test.com", password="INITIAL_PASSWORD!@")
-    response = _call_login_api(input_body)
+@pytest.mark.parametrize(
+    "email_address, password", [("INVALID_EMAIL", RIDER_APP_INITIAL_PASSWORD), ("test@test.com", "INVALID_PASSWORD")]
+)
+def test_login_api_on_fail_with_auth_info_is_not_matched(email_address, password, rider_profile):
+    response = _call_login_api(RiderLoginRequest(email_address=email_address, password=password))
     assert response.status_code == 400
