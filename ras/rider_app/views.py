@@ -48,7 +48,7 @@ def update_rider_availability(request, data: RiderAvailabilitySchema):
     status, message = handle_rider_availability_updates(rider_id, data, is_jungleworks)
 
     if status != HTTPStatus.OK:
-        return status, ErrorResponse(errors=[{"name": "reason", "message": message}])
+        return status, ErrorResponse(message=message)
     return status, data
 
 
@@ -62,7 +62,7 @@ def create_rider_dispatch_response(request, data: RiderDispatchResponseSchema):
     is_jungleworks = should_connect_jungleworks(request)
     status, message = handle_rider_dispatch_response(data, is_jungleworks)
     if status != HTTPStatus.OK:
-        return status, ErrorResponse(errors=[{"name": "reason", "message": message}])
+        return status, ErrorResponse(message=message)
     return status, data
 
 
@@ -81,17 +81,20 @@ def webhook_handler(request, webhook_type: WebhookName, data: RiderDispatchResul
     "account/login",
     url_name="rider_app_login",
     summary="라이더 앱 Login API",
-    response={200: RiderLoginResponse, 400: None},
+    response={200: RiderLoginResponse, codes_4xx: ErrorResponse},
 )
-def login_rider_app(request, data: RiderLoginRequest):
+def login(request, data: RiderLoginRequest):
     request_body = data.dict()
     password_change_required = True
     try:
         rider = RiderAccount.objects.get(email_address=request_body["email_address"])
     except RiderAccount.DoesNotExist:
-        return HTTPStatus.BAD_REQUEST, None
+        return HTTPStatus.BAD_REQUEST, ErrorResponse(message="이메일이 존재하지 않습니다.")
     if not check_password(request_body["password"], rider.password):
-        return HTTPStatus.BAD_REQUEST, None
+        return HTTPStatus.BAD_REQUEST, ErrorResponse(message="패스워드가 일치하지 않습니다.")
+
+    if request_body["password"] != RIDER_APP_INITIAL_PASSWORD:
+        password_change_required = False
     payload = {
         "platform": "rideryo-dev",
         "role": "rider",
@@ -99,8 +102,7 @@ def login_rider_app(request, data: RiderLoginRequest):
         "base_url": "http://rideryo_base_url",
     }
     token = _generate_encrypted_token(payload)
-    if request_body["password"] != RIDER_APP_INITIAL_PASSWORD:
-        password_change_required = False
+
     return HTTPStatus.OK, RiderLoginResponse(
         authorization_url=f"https://staging-authyo.yogiyo.co.kr/api/v1/auth/authorize?code={token}",
         password_change_required=password_change_required,

@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 import pytest
 from django.test import Client
 from django.urls import reverse
+from pydantic import ValidationError
 
 from ras.rider_app.schemas import RiderLoginRequest
 from ras.rider_app.views import RIDER_APP_INITIAL_PASSWORD
@@ -41,3 +42,10 @@ def test_login_api_on_success(rider_profile):
 def test_login_api_on_fail_with_auth_info_is_not_matched(email_address, password, rider_profile):
     response = _call_login_api(RiderLoginRequest(email_address=email_address, password=password))
     assert response.status_code == 400
+
+
+@pytest.mark.django_db(transaction=True)
+def test_login_api_on_fail_with_invalid_request_body(rider_profile):
+    with pytest.raises(ValidationError):
+        invalid_request_body = {"email": "test@test.com", "passwd": "testpasswd"}
+        _call_login_api(RiderLoginRequest(**invalid_request_body))
