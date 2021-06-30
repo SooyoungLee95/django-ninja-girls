@@ -4,6 +4,7 @@ from typing import Callable
 from ninja.responses import codes_4xx
 from ninja.router import Router
 
+from config.settings.base import RIDERYO_BASE_URL, RIDERYO_ENV
 from ras.common.integration.services.jungleworks.handlers import (
     should_connect_jungleworks,
 )
@@ -90,7 +91,9 @@ def login(request, data: RiderLoginRequest):
     if not rider.is_valid_password(input_password=request_body["password"]):
         return HTTPStatus.BAD_REQUEST, ErrorResponse(message="패스워드가 일치하지 않습니다.")
 
-    encrypted_payload = token_authenticator.get_encrypted_payload(payload=AuthyoPayload(sub_id=rider.id))
+    encrypted_payload = token_authenticator.get_encrypted_payload(
+        payload=AuthyoPayload(sub_id=rider.id, platform=RIDERYO_ENV, base_url=RIDERYO_BASE_URL)
+    )
 
     return HTTPStatus.OK, RiderLoginResponse(
         authorization_url=f"{AUTHYO_LOGIN_URL}?code={encrypted_payload}",
