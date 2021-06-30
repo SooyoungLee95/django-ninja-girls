@@ -49,3 +49,5 @@ jobs:
     - name: unit test
       run: |
         poetry run pytest
+      env:
+        DJANGO_SECRET_KEY: test_django_secret_key
