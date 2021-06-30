@@ -7,6 +7,5 @@ CIPHER = Fernet(key=AUTHYO.AUTHORIZATION_CODE_FERNET_KEY)
 
 
 class AuthyoTokenAuthenticator:
-    @classmethod
-    def get_encrypted_payload(cls, payload: AuthyoPayload):
+    def get_encrypted_payload(self, payload: AuthyoPayload):
         return CIPHER.encrypt(payload.json().encode("utf-8")).decode("utf-8")

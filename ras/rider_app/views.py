@@ -31,6 +31,8 @@ auth_router = Router()
 
 WEBHOOK_MAP: dict[str, Callable] = {WebhookName.auto_allocation_success: handle_rider_dispatch_request_creates}
 
+token_authenticator = AuthyoTokenAuthenticator()
+
 
 @rider_router.put(
     "/availability",
@@ -89,7 +91,7 @@ def login(request, data: RiderLoginRequest):
     if not rider.is_valid_password(input_password=request_body["password"]):
         return HTTPStatus.BAD_REQUEST, ErrorResponse(message="패스워드가 일치하지 않습니다.")
 
-    encrypted_payload = AuthyoTokenAuthenticator.get_encrypted_payload(payload=AuthyoPayload(sub_id=rider.id))
+    encrypted_payload = token_authenticator.get_encrypted_payload(payload=AuthyoPayload(sub_id=rider.id))
 
     return HTTPStatus.OK, RiderLoginResponse(
         authorization_url=f"{AUTHYO.BASE_URL}{AUTHYO_LOGIN_URL}?code={encrypted_payload}",
