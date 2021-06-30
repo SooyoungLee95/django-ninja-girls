@@ -26,6 +26,7 @@ from .schemas import RiderDispatchResponse as RiderDispatchResponseSchema
 from .schemas import RiderLoginRequest, RiderLoginResponse
 
 rider_router = Router()
+auth_router = Router()
 
 
 WEBHOOK_MAP: dict[str, Callable] = {WebhookName.auto_allocation_success: handle_rider_dispatch_request_creates}
@@ -72,8 +73,8 @@ def webhook_handler(request, webhook_type: WebhookName, data: RiderDispatchResul
     return HTTPStatus.OK, data
 
 
-@rider_router.post(
-    "account/login",
+@auth_router.post(
+    "login",
     url_name="rider_app_login",
     summary="라이더 앱 Login API",
     response={200: RiderLoginResponse, codes_4xx: ErrorResponse},
