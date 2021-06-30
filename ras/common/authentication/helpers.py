@@ -1,9 +1,9 @@
 from cryptography.fernet import Fernet
 
-from config.settings.local import AUTHYO
+from config.settings.base import AUTHYO_FERNET_CRYPTO_KEY
 from ras.rider_app.schemas import AuthyoPayload
 
-CIPHER = Fernet(key=AUTHYO.AUTHORIZATION_CODE_FERNET_KEY)
+CIPHER = Fernet(key=AUTHYO_FERNET_CRYPTO_KEY)
 
 
 class AuthyoTokenAuthenticator:

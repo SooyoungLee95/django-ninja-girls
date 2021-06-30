@@ -6,7 +6,6 @@ from django.test import Client
 from django.urls import reverse
 from pydantic import ValidationError
 
-from config.settings.local import AUTHYO
 from ras.rider_app.constants import AUTHYO_LOGIN_URL
 from ras.rider_app.schemas import RiderLoginRequest
 from ras.rider_app.views import RIDER_APP_INITIAL_PASSWORD
@@ -37,7 +36,7 @@ def test_login_api_on_success_with_initial_password(rider_profile):
     # Then: 200 응답을 주어야 하고, authorization_url과 password_change_required는 True를 리턴해야한다
     data = json.loads(response.content)
     assert response.status_code == 200
-    assert data["authorization_url"] == f"{AUTHYO.BASE_URL}{AUTHYO_LOGIN_URL}?code={encrypted_payload}"
+    assert data["authorization_url"] == f"{AUTHYO_LOGIN_URL}?code={encrypted_payload}"
     assert data["password_change_required"] == "True"
 
 
@@ -60,7 +59,7 @@ def test_login_api_on_success_with_no_initial_password(rider_profile):
     # Then: 200 응답을 주어야 하고, authorization_url과 password_change_required는 False를 리턴해야한다
     data = json.loads(response.content)
     assert response.status_code == 200
-    assert data["authorization_url"] == f"{AUTHYO.BASE_URL}{AUTHYO_LOGIN_URL}?code={encrypted_payload}"
+    assert data["authorization_url"] == f"{AUTHYO_LOGIN_URL}?code={encrypted_payload}"
     assert data["password_change_required"] == "False"
 
 

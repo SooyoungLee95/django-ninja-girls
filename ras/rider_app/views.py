@@ -4,7 +4,6 @@ from typing import Callable
 from ninja.responses import codes_4xx
 from ninja.router import Router
 
-from config.settings.local import AUTHYO
 from ras.common.integration.services.jungleworks.handlers import (
     should_connect_jungleworks,
 )
@@ -94,6 +93,6 @@ def login(request, data: RiderLoginRequest):
     encrypted_payload = token_authenticator.get_encrypted_payload(payload=AuthyoPayload(sub_id=rider.id))
 
     return HTTPStatus.OK, RiderLoginResponse(
-        authorization_url=f"{AUTHYO.BASE_URL}{AUTHYO_LOGIN_URL}?code={encrypted_payload}",
+        authorization_url=f"{AUTHYO_LOGIN_URL}?code={encrypted_payload}",
         password_change_required=request_body["password"] == RIDER_APP_INITIAL_PASSWORD,
     )
