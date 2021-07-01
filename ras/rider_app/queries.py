@@ -1,15 +1,18 @@
+from asgiref.sync import sync_to_async
 from django.db import transaction
 
 from ras.rideryo.models import (
     DispatchRequestJungleworksTask,
     RiderAvailability,
     RiderAvailabilityHistory,
+    RiderDeliveryStateHistory,
     RiderDispatchRequestHistory,
     RiderDispatchResponseHistory,
     RiderProfile,
 )
 
 from .schemas import RiderAvailability as RiderAvailabilitySchema
+from .schemas import RiderDeliveryState
 from .schemas import RiderDispatch as RiderDispatchResultSchema
 from .schemas import RiderDispatchResponse as RiderDispatchResponseSchema
 
@@ -39,3 +42,15 @@ def query_create_dispatch_request_with_task(data: RiderDispatchResultSchema):
             pickup_task_id=data.pickup_task_id,
             delivery_task_id=data.delivery_task_id,
         )
+
+
+@sync_to_async
+def query_get_dispatch_jungleworks_tasks(dispatch_request_id: int):
+    return DispatchRequestJungleworksTask.objects.get(dispatch_request_id=dispatch_request_id)
+
+
+def query_create_rider_delivery_state(data: RiderDeliveryState):
+    return RiderDeliveryStateHistory.objects.create(
+        dispatch_request_id=data.dispatch_request_id,
+        delivery_state=data.state,
+    )

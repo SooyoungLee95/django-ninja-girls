@@ -5,8 +5,13 @@ from urllib.parse import urljoin
 import httpx
 from django.conf import settings
 
-from ras.rider_app.schemas import RiderAvailability, RiderDispatchResponse
-from ras.rideryo.enums import RiderResponse
+from ras.rider_app.queries import query_get_dispatch_jungleworks_tasks
+from ras.rider_app.schemas import (
+    RiderAvailability,
+    RiderDeliveryState,
+    RiderDispatchResponse,
+)
+from ras.rideryo.enums import DeliveryState, JungleworksTaskStatus, RiderResponse
 
 from ...connection import AsyncExternalClient
 from .schemas import (
@@ -22,7 +27,7 @@ JUNGLEWORKS_PATHS = {
     ON_OFF_DUTY: "/v2/change_fleet_availability",
     UPDATE_TASK_STATUS: "/v2/update_task_status",
 }
-JungleworksTaskStatus = {
+response_to_junglework_status = {
     RiderResponse.ACCEPTED: "7",
     RiderResponse.DECLINED: "8",
     RiderResponse.IGNORED: "8",
@@ -53,12 +58,28 @@ async def on_off_duty(rider_id, availability: RiderAvailability):
     return await call_jungleworks_api(path_namespace=ON_OFF_DUTY, body=request_body)
 
 
-async def update_task_status(task_status: RiderDispatchResponse):
-    request_body = TaskStatusRequestBody(
-        job_id=task_status.dispatch_request_id,
-        job_status=JungleworksTaskStatus[task_status.response],
-    )
+async def _update_task_status(task_id, task_status):
+    request_body = TaskStatusRequestBody(job_id=task_id, job_status=task_status)
     return await call_jungleworks_api(path_namespace=UPDATE_TASK_STATUS, body=request_body)
+
+
+async def update_task_status(data: RiderDispatchResponse):
+    tasks = await query_get_dispatch_jungleworks_tasks(data.dispatch_request_id)  # type: ignore[misc,arg-type]
+    return await _update_task_status(tasks.pickup_task_id, response_to_junglework_status[data.response])
+
+
+async def update_task_status_from_delivery_state(data: RiderDeliveryState) -> list:
+    tasks = await query_get_dispatch_jungleworks_tasks(data.dispatch_request_id)  # type: ignore[misc,arg-type]
+
+    if data.state == DeliveryState.PICK_UP:
+        return [
+            await _update_task_status(tasks.delivery_task_id, JungleworksTaskStatus.SUCCESSFUL),
+            await _update_task_status(tasks.pickup_task_id, JungleworksTaskStatus.STARTED),
+        ]
+    elif data.state == DeliveryState.COMPLETED:
+        return [await _update_task_status(tasks.delivery_task_id, JungleworksTaskStatus.SUCCESSFUL)]
+    else:
+        return []
 
 
 def should_connect_jungleworks(request):

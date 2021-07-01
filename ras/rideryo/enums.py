@@ -1,3 +1,5 @@
+from enum import Enum
+
 from django.db.models import TextChoices
 
 
@@ -63,3 +65,10 @@ class DeliveryState(TextChoices):
     LEFT_PICKUP = "LEFT_PICKUP", "픽업지 벗어남"
     NEAR_DROPOFF = "NEAR_DROPOFF", "배달지 근처 도착"
     COMPLETED = "COMPLETED", "배달지 도착 완료"
+
+
+class JungleworksTaskStatus(str, Enum):
+    STARTED = "1"
+    SUCCESSFUL = "2"
+    ACCEPTED = "7"
+    DECLINE = "8"
