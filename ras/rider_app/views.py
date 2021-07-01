@@ -22,6 +22,7 @@ from .constants import (
 )
 from .enums import WebhookName
 from .schemas import RiderAvailability as RiderAvailabilitySchema
+from .schemas import RiderDeliveryState
 from .schemas import RiderDispatch as RiderDispatchResultSchema
 from .schemas import RiderDispatchResponse as RiderDispatchResponseSchema
 from .schemas import RiderLoginRequest, RiderLoginResponse
@@ -95,3 +96,12 @@ def login(request, data: RiderLoginRequest):
 )
 def get_token(request, code: str):
     return HTTPStatus.OK, {"access_token": MOCK_JWT_ACCESS_TOKEN, "refresh_token": MOCK_JWT_REFRESH_TOKEN}
+
+
+@rider_router.post(
+    "/delivery-state",
+    url_name="create_rider_delivery_state",
+    summary="배달 상태(픽업완료, 배달완료) 전달",
+)
+def create_rider_delivery_state(request, data: RiderDeliveryState):
+    return HTTPStatus.OK, {}

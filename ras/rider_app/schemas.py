@@ -3,6 +3,7 @@ from django.core.validators import validate_email
 from ninja.schema import Field, Schema
 from pydantic import validator
 
+from ras.rideryo.enums import DeliveryState
 from ras.rideryo.enums import RiderResponse as RiderResponseEnum
 
 
@@ -45,3 +46,8 @@ class AuthyoPayload(Schema):
     platform: str = "rideryo-dev"
     role: str = "rider"
     base_url: str = "http://rideryo-dev"
+
+
+class RiderDeliveryState(Schema):
+    dispatch_request_id: int
+    state: DeliveryState
