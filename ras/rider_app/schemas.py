@@ -37,7 +37,7 @@ class RiderLoginRequest(Schema):
 
 class RiderLoginResponse(Schema):
     authorization_url: str
-    password_change_required: str
+    password_change_required: bool
 
 
 class AuthyoPayload(Schema):

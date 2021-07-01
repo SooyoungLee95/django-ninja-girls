@@ -26,7 +26,7 @@ def test_mock_login_api_on_success():
     data = json.loads(response.content)
     assert response.status_code == 200
     assert data["authorization_url"] == f"{MOCK_TOKEN_PUBLISH_URL}?code={MOCK_ENCRYPTED_PAYLOAD}"
-    assert data["password_change_required"] == "False"
+    assert data["password_change_required"] is False
 
 
 def test_mock_generate_token_api_on_success():
