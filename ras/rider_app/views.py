@@ -78,7 +78,7 @@ def webhook_handler(request, webhook_type: WebhookName, data: RiderDispatchResul
 @auth_router.post(
     "login",
     url_name="rider_app_login",
-    summary="Mock 라이더 앱 Login API",
+    summary="라이더 앱 Login API",
     response={200: RiderLoginResponse, codes_4xx: ErrorResponse},
 )
 def login(request, data: RiderLoginRequest):
