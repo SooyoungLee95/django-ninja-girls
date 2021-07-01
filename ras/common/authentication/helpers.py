@@ -1,9 +1,9 @@
 from cryptography.fernet import Fernet
+from django.conf import settings
 
-from config.settings.base import AUTHYO
 from ras.rider_app.schemas import AuthyoPayload
 
-CIPHER = Fernet(key=AUTHYO.FERNET_CRYPTO_KEY)
+CIPHER = Fernet(key=settings.AUTHYO.FERNET_CRYPTO_KEY)
 
 
 class AuthyoTokenAuthenticator:
