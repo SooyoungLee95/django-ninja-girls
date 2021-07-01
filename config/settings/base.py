@@ -136,7 +136,7 @@ FCM_SERVICE_ACCOUNT_KEY_FILENAME = env.str("FCM_SERVICE_ACCOUNT_KEY_FILENAME", d
 
 # Authyo
 AUTHYO = SimpleNamespace(
-    BASE_URL=env.str("AUTHYO_URL", default="https://staging-authyo.yogiyo.co.kr/"),
+    BASE_URL=env.str("AUTHYO_URL", default="https://staging-authyo.yogiyo.co.kr"),
     FERNET_CRYPTO_KEY=env.str(
         "AUTHYO_FERNET_CRYPTO_KEY", default="CkjxwCCPDYkrS0d6-bmhDsuIcnajgutUDkqeZE-PkSw="
     ).encode(),
