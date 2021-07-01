@@ -58,7 +58,8 @@ class RiderResponse(TextChoices):
 
 
 class DeliveryState(TextChoices):
-    NEAR_PICKUP = "NEAR_PICKUP", "레스토랑 근처 도착"
+    NEAR_PICKUP = "NEAR_PICKUP", "픽업지 근처 도착"
     PICK_UP = "PICK_UP", "픽업 완료"
-    NEAR_DROPOFF = "NEAR_DROPOFF", "고객 근처 도착"
-    COMPLETED = "COMPLETED", "고객 배달 완료"
+    LEFT_PICKUP = "LEFT_PICKUP", "픽업지 벗어남"
+    NEAR_DROPOFF = "NEAR_DROPOFF", "배달지 근처 도착"
+    COMPLETED = "COMPLETED", "배달지 도착 완료"
