@@ -1,0 +1,13 @@
+from config.settings.base import RIDERYO_BASE_URL
+
+AUTHYO_LOGIN_URL = "https://staging-authyo.yogiyo.co.kr/api/v1/auth/authorize"
+
+RIDER_APP_INITIAL_PASSWORD = "TestTest"
+
+
+# Mock data
+MOCK_TOKEN_PUBLISH_URL = f"http://{RIDERYO_BASE_URL}/api/rider-app/account/token"
+MOCK_ENCRYPTED_PAYLOAD = "gAAAAABg3SyliEt8iX18AJmeqXEQpIVcAp-5Xz90fZxBppwKydxXsy9ebsNSLUG3ADRljVWtFuliY-vSZQ6l_S0AND-mfxKXJph_LMowCGra3LheTLCPk-m7zcv7dH5te1EYbNSd9CzOqqB9bo9uvT-JWkRXzv0LCyDMJnhi8sxyjyJtk749zjrUttFXsiQ-EfTJGoiK6r2h"  # noqa: E501
+
+MOCK_JWT_ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJfaWQiOiIxMjM0NTY3ODkwIiwicGxhdGZvcm0iOiJyaWRlcnlvLWRldiIsInJvbGUiOiJyaWRlciIsImV4cCI6MTUxNjIzOTAyMjAsImJhc2VfdXJsIjoiaHR0cDovL2VjMi01Mi03OC05Ni0xNzEuYXAtbm9ydGhlYXN0LTIuY29tcHV0ZS5hbWF6b25hd3MuY29tLyIsImlhdCI6MTUxNjIzOTAyMn0.6HZp4GKVk-tULhytEffSCD9pvvcOPwWTWoZnpVO2mS8"  # noqa: E501
+MOCK_JWT_REFRESH_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJfaWQiOiIxMjM0NTY3ODkwIiwicGxhdGZvcm0iOiJyaWRlcnlvLWRldiIsInJvbGUiOiJyaWRlciIsImV4cCI6MTUxNjIzOTAyMjAwLCJpYXQiOjE1MTYyMzkwMjJ9.7UlNgxGyecI9KVjCxRO1V3rlSD3WGI6KNos9lvF3b7k"  # noqa: E501

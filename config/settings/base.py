@@ -131,3 +131,6 @@ FERNET_CRYPTO_KEY = env.str("FERNET_CRYPTO_KEY", default="CkjxwCCPDYkrS0d6-bmhDs
 
 # FCM Credentials
 FCM_SERVICE_ACCOUNT_KEY_FILENAME = env.str("FCM_SERVICE_ACCOUNT_KEY_FILENAME", default="serviceAccountKey.json")
+
+
+RIDERYO_BASE_URL = env.str("RIDERYO_BASE_URL", default="127.0.0.1")
