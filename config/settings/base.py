@@ -141,3 +141,6 @@ AUTHYO = SimpleNamespace(
         "AUTHYO_FERNET_CRYPTO_KEY", default="CkjxwCCPDYkrS0d6-bmhDsuIcnajgutUDkqeZE-PkSw="
     ).encode(),
 )
+
+RIDERYO_BASE_URL = env.str("RIDERYO_BASE_URL", default="http://rideryo-dev")
+RIDERYO_ENV = env.str("RIDERYO_ENV", default="rideryo-dev")

@@ -1,9 +1,9 @@
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from ninja.schema import Field, Schema
 from pydantic import validator
 
-from config.settings.base import env
 from ras.rideryo.enums import RiderResponse as RiderResponseEnum
 
 
@@ -43,6 +43,6 @@ class RiderLoginResponse(Schema):
 
 class AuthyoPayload(Schema):
     sub_id: int  # rider id
-    platform: str = env.str("RIDERYO_BASE_URL", default="http://rideryo-dev")
-    base_url: str = env.str("RIDERYO_ENV", default="rideryo-dev")
+    platform: str = settings.RIDERYO_BASE_URL
+    base_url: str = settings.RIDERYO_ENV
     role: str = "rider"
