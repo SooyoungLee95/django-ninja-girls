@@ -57,9 +57,8 @@ class RiderResponse(TextChoices):
     IGNORED = "IGNORED", "라이더 주문 무시"
 
 
-class RiderDeliveryState(TextChoices):
-    RESTAURANT_ARRIVED = "RESTAURANT_ARRIVED", "레스토랑 근처 도착"
-    PICKED_UP = "PICKED_UP", "픽업 완료"
-    DESTINATION_ARRIVED = "DESTINATION_ARRIVED", "고객 근처 도착"
+class DeliveryState(TextChoices):
+    NEAR_PICKUP = "NEAR_PICKUP", "레스토랑 근처 도착"
+    PICK_UP = "PICK_UP", "픽업 완료"
+    NEAR_DROPOFF = "NEAR_DROPOFF", "고객 근처 도착"
     COMPLETED = "COMPLETED", "고객 배달 완료"
-    NOT_COMPLETED = "NOT_COMPLETED", "배달이 완료 되지 않음"

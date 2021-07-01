@@ -2,8 +2,7 @@ from django.contrib.auth.hashers import make_password
 from django.db import models
 
 from ras.crypto import decrypt, encrypt
-from ras.rideryo.enums import Bank
-from ras.rideryo.enums import RiderDeliveryState as RiderDeliveryStateEnum
+from ras.rideryo.enums import Bank, DeliveryState
 from ras.rideryo.enums import RiderResponse as RiderResponseEnum
 
 
@@ -166,7 +165,7 @@ class RiderDeliveryStateHistory(CommonTimeStamp):
     """라이더의 배달 상태(RESTAURANT_ARRIVED/PICKED_UP/DESTINATION_ARRIVED/COMPLETED/NOT_COMPLETED) 이력"""
 
     dispatch_request = models.ForeignKey("RiderDispatchRequestHistory", on_delete=models.DO_NOTHING, help_text="배차 ID")
-    delivery_state = models.CharField(max_length=150, choices=RiderDeliveryStateEnum.choices, help_text="라이더의 배달 상태")
+    delivery_state = models.CharField(max_length=150, choices=DeliveryState.choices, help_text="라이더의 배달 상태")
 
 
 class RiderFCMToken(CommonTimeStamp):
