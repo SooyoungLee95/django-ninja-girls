@@ -10,14 +10,16 @@ from ras.common.integration.services.jungleworks.handlers import (
 )
 from ras.rider_app.queries import (
     mock_query_create_dispatch_request_with_task,
+    mock_query_registration_token,
     query_create_dispatch_request_with_task,
     query_create_rider_dispatch_response,
     query_update_rider_availability,
 )
 from ras.rideryo.enums import RiderResponse
 
+from ..common.fcm import FCMSender
 from ..rideryo.models import RiderProfile
-from .schemas import MockRiderDispatch
+from .schemas import MockFcmPushPayload, MockRiderDispatch
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import RiderDispatch, RiderDispatchResponse
 
@@ -75,10 +77,20 @@ def handle_rider_dispatch_request_creates(data: RiderDispatch):
 def mock_handle_rider_dispatch_request_creates(data: MockRiderDispatch):
     delivery_task_id = mock_handle_retrieve_delivery_task_id(data.pickup_delivery_relationship)
     try:
-        mock_query_create_dispatch_request_with_task(data=data, delivery_task_id=delivery_task_id)
-        # TODO: Send FCM push method 호출 - async
+        dispatch_request_id = mock_query_create_dispatch_request_with_task(data=data, delivery_task_id=delivery_task_id)
     except (RiderProfile.DoesNotExist, DatabaseError) as e:
         logger.error(f"[RiderDispatchRequest] {e!r} {data}")
+    else:
+        fcm_sender = FCMSender()
+        fcm_sender.send(
+            data=MockFcmPushPayload(
+                **{
+                    "registration_token": mock_query_registration_token(rider_id=data.rider_id),
+                    "rider_id": data.rider_id,
+                    "dispatch_request_id": dispatch_request_id,
+                }
+            ).dict()
+        )
 
 
 def mock_handle_retrieve_delivery_task_id(pickup_delivery_relationship):

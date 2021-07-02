@@ -1,3 +1,5 @@
+import logging
+
 from django.db import transaction
 
 from ras.rideryo.models import (
@@ -6,6 +8,7 @@ from ras.rideryo.models import (
     RiderAvailabilityHistory,
     RiderDispatchRequestHistory,
     RiderDispatchResponseHistory,
+    RiderFCMToken,
     RiderProfile,
 )
 
@@ -13,6 +16,8 @@ from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import RiderDispatch as RiderDispatchResultSchema
 from .schemas import RiderDispatchResponse as RiderDispatchResponseSchema
+
+logger = logging.getLogger(__name__)
 
 
 def query_update_rider_availability(rider_id, data: RiderAvailabilitySchema):
@@ -43,7 +48,7 @@ def query_create_dispatch_request_with_task(data: RiderDispatchResultSchema):
 
 
 def mock_query_create_dispatch_request_with_task(data: MockRiderDispatchResultSchema, delivery_task_id: str):
-    rider = RiderProfile.objects.get(pk=data.rider_id)
+    rider = RiderProfile.objects.get(jw_fleet_id=data.rider_id)
     with transaction.atomic():
         dispatch_request = RiderDispatchRequestHistory.objects.create(rider=rider, order_id=data.order_id)
         DispatchRequestJungleworksTask.objects.create(
@@ -51,3 +56,11 @@ def mock_query_create_dispatch_request_with_task(data: MockRiderDispatchResultSc
             pickup_task_id=data.pickup_task_id,
             delivery_task_id=delivery_task_id,
         )
+    return dispatch_request
+
+
+def mock_query_registration_token(rider_id):
+    try:
+        return RiderFCMToken.objects.get(rider_id=rider_id)
+    except RiderFCMToken.DoesNotExist as e:
+        logger.error(f"[RiderFCMToken]: {e!r}")

@@ -41,6 +41,7 @@ class RiderProfile(CommonTimeStamp):
     """라이더 프로필"""
 
     rider = models.OneToOneField("RiderAccount", primary_key=True, on_delete=models.DO_NOTHING, help_text="라이더 ID")
+    jw_fleet_id = models.PositiveSmallIntegerField(null=True, help_text="정글웍스 라이더 ID")
     full_name = models.CharField(max_length=100, help_text="이름")
     phone_number = models.CharField(max_length=16, help_text="휴대폰 번호")
     date_of_birth = models.DateField(help_text="생년월일")
