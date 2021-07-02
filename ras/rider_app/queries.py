@@ -61,6 +61,6 @@ def mock_query_create_dispatch_request_with_task(data: MockRiderDispatchResultSc
 
 def mock_query_registration_token(rider_id):
     try:
-        return RiderFCMToken.objects.get(rider_id=2)
+        return RiderFCMToken.objects.get(rider_id=2).registration_token
     except RiderFCMToken.DoesNotExist as e:
         logger.error(f"[RiderFCMToken]: {e!r}")
