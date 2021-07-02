@@ -16,6 +16,7 @@ from ras.rider_app.helpers import (
 )
 
 from .constants import (
+    MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO,
     MOCK_ENCRYPTED_PAYLOAD,
     MOCK_JWT_ACCESS_TOKEN,
     MOCK_JWT_REFRESH_TOKEN,
@@ -32,7 +33,7 @@ from .schemas import RiderLoginRequest, RiderLoginResponse
 rider_router = Router()
 auth_router = Router()
 mock_authyo_router = Router()
-
+dispatch_request_router = Router()
 
 WEBHOOK_MAP: dict[str, Callable] = {
     WebhookName.AUTO_ALLOCATION_SUCCESS: handle_rider_dispatch_request_creates,
@@ -120,3 +121,12 @@ def get_token(request, code: str):
 )
 def create_rider_delivery_state(request, data: RiderDeliveryState):
     return HTTPStatus.OK, {}
+
+
+@dispatch_request_router.get(
+    "{dispatch_request_id}/additional-info",
+    url_name="mock_rider_app_dispatch_request_additional_info",
+    summary="배차 관련 정보(주문, 레스토랑, 고객)",
+)
+def mock_retrieve_dispatch_requests_additional_info(request, dispatch_request_id: str):
+    return HTTPStatus.OK, MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO
