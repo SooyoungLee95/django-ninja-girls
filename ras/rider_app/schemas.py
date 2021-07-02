@@ -68,3 +68,11 @@ class AuthyoPayload(Schema):
 class RiderDeliveryState(Schema):
     dispatch_request_id: int
     state: DeliveryState
+
+
+class MockFcmPushPayload(Schema):
+    title: str = "[Rideryo-BE] Mock FCM Push test title"
+    body: str = "[Rideryo-BE] Mock FCM Push test body"
+    registration_token: str
+    rider_id: str
+    dispatch_request_id: str
