@@ -48,7 +48,7 @@ def query_create_dispatch_request_with_task(data: RiderDispatchResultSchema):
 
 
 def mock_query_create_dispatch_request_with_task(data: MockRiderDispatchResultSchema, delivery_task_id: str):
-    rider = RiderProfile.objects.get(jw_fleet_id=data.rider_id)
+    rider = RiderProfile.objects.all()[1]
     with transaction.atomic():
         dispatch_request = RiderDispatchRequestHistory.objects.create(rider=rider, order_id=data.order_id)
         DispatchRequestJungleworksTask.objects.create(
