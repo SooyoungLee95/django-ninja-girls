@@ -5,6 +5,7 @@ from django.db import DatabaseError
 from django.test import Client
 from django.urls import reverse
 
+from ras.rider_app.enums import WebhookName
 from ras.rider_app.schemas import RiderDispatch
 from ras.rideryo.models import (
     DispatchRequestJungleworksTask,
@@ -28,7 +29,7 @@ def test_rider_app_auto_allocation_success_webhook(rider_profile):
     input_body = RiderDispatch(rider_id=rider_profile.pk, order_id="1", pickup_task_id="1", delivery_task_id="1")
 
     # When: auto_allocation_success webhook handler 를 호출 하면,
-    call_api(webhook_type="auto_allocation_success", input_body=input_body)
+    call_api(webhook_type=WebhookName.AUTO_ALLOCATION_SUCCESS.value, input_body=input_body)
 
     # Then: RiderDispatchRequestHistory 값이 생성되어야 한다
     rider_dispatch_request = RiderDispatchRequestHistory.objects.get(rider_id=input_body.rider_id)
@@ -51,7 +52,7 @@ def test_rider_app_auto_allocation_success_on_404_error(rider_profile):
     )
 
     # When: auto_allocation_success webhook handler 를 호출 하면,
-    response = call_api(webhook_type="auto_allocation_success", input_body=input_body)
+    response = call_api(webhook_type=WebhookName.AUTO_ALLOCATION_SUCCESS.value, input_body=input_body)
 
     # Then: status는 200, logger.error 가 호출 되어야 한다
     assert response.status_code == 200
@@ -69,7 +70,7 @@ def test_rider_app_auto_allocation_success_on_database_error(mock_logger_error, 
     with patch("ras.rider_app.helpers.query_create_dispatch_request_with_task") as mock_query_create:
         # When: auto_allocation_success webhook handler 호출 시에, DatabaseError 가 발생하면,
         mock_query_create.side_effect = DatabaseError()
-        response = call_api(webhook_type="auto_allocation_success", input_body=input_body)
+        response = call_api(webhook_type=WebhookName.AUTO_ALLOCATION_SUCCESS.value, input_body=input_body)
 
     # Then: status는 200, logger.error 가 호출 되어야 한다
     assert response.status_code == 200

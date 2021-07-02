@@ -12,6 +12,7 @@ from ras.rider_app.helpers import (
     handle_rider_availability_updates,
     handle_rider_dispatch_request_creates,
     handle_rider_dispatch_response,
+    mock_handle_rider_dispatch_request_creates,
 )
 
 from .constants import (
@@ -21,6 +22,7 @@ from .constants import (
     MOCK_TOKEN_PUBLISH_URL,
 )
 from .enums import WebhookName
+from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import RiderDeliveryState
 from .schemas import RiderDispatch as RiderDispatchResultSchema
@@ -32,7 +34,10 @@ auth_router = Router()
 mock_authyo_router = Router()
 
 
-WEBHOOK_MAP: dict[str, Callable] = {WebhookName.auto_allocation_success: handle_rider_dispatch_request_creates}
+WEBHOOK_MAP: dict[str, Callable] = {
+    WebhookName.AUTO_ALLOCATION_SUCCESS: handle_rider_dispatch_request_creates,
+    WebhookName.MOCK_AUTO_ALLOCATION_SUCCESS: mock_handle_rider_dispatch_request_creates,
+}
 
 
 @rider_router.put(
@@ -74,6 +79,16 @@ def create_rider_dispatch_response(request, data: RiderDispatchResponseSchema):
 def webhook_handler(request, webhook_type: WebhookName, data: RiderDispatchResultSchema):
     WEBHOOK_MAP[webhook_type](data)
     return HTTPStatus.OK, data
+
+
+@rider_router.post(
+    "jungleworks/mock/webhook/{webhook_type}",
+    url_name="mock_rider_app_webhook",
+    summary="mock 라이더 web hook API",
+)
+def mock_webhook_handler(request, webhook_type: WebhookName, data: MockRiderDispatchResultSchema):
+    WEBHOOK_MAP[webhook_type](data)
+    return HTTPStatus.OK, {}
 
 
 @auth_router.post(
