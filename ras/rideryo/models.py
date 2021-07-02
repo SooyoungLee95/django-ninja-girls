@@ -141,9 +141,7 @@ class RiderDispatchRequestHistory(CommonTimeStamp):
     """Dispatchyo로 부터 받은 배차 요청 이력"""
 
     rider = models.ForeignKey("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
-    vendor_id = models.CharField(max_length=100, help_text="벤더 ID")
     order_id = models.CharField(max_length=100, help_text="주문 ID")
-    dispatch_id = models.CharField(max_length=100, unique=True, help_text="배차 ID")
 
 
 class RiderDispatchResponseHistory(CommonTimeStamp):

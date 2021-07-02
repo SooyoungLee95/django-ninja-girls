@@ -1,3 +1,5 @@
+from typing import Any, Optional
+
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from ninja.schema import Field, Schema
@@ -21,6 +23,21 @@ class RiderDispatch(Schema):
     order_id: str
     pickup_task_id: str
     delivery_task_id: str
+
+
+class MockRiderDispatch(Schema):
+    rider_id: int = Field(alias="fleet_id")
+    order_id: str
+    pickup_delivery_relationship: str
+    pickup_task_id: str = Field(alias="job_id")
+    customer_comment: Optional[str] = Field(alias="job_description")
+    estimated_pickup_time: str = Field(alias="job_pickup_datetime")
+    pickup_restaurant_name: str = Field(alias="job_pickup_name")
+    pickup_restaurant_phone_number: str = Field(alias="job_pickup_phone")
+    estimated_delivery_time: str = Field(alias="job_delivery_datetime")
+    pickup_restaurant_address: str = Field(alias="job_pickup_address")
+    pickup_restaurant_picture_urls: list[str] = Field(alias="ref_images")
+    custom_fields: list[Any]
 
 
 class RiderLoginRequest(Schema):
