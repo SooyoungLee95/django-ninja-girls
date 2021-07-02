@@ -77,7 +77,7 @@ def handle_rider_dispatch_request_creates(data: RiderDispatch):
 def mock_handle_rider_dispatch_request_creates(data: MockRiderDispatch):
     delivery_task_id = mock_handle_retrieve_delivery_task_id(data.pickup_delivery_relationship)
     try:
-        dispatch_request_id = mock_query_create_dispatch_request_with_task(data=data, delivery_task_id=delivery_task_id)
+        dispatch_request = mock_query_create_dispatch_request_with_task(data=data, delivery_task_id=delivery_task_id)
     except (RiderProfile.DoesNotExist, DatabaseError) as e:
         logger.error(f"[RiderDispatchRequest] {e!r} {data}")
     else:
@@ -87,7 +87,7 @@ def mock_handle_rider_dispatch_request_creates(data: MockRiderDispatch):
                 **{
                     "registration_token": mock_query_registration_token(rider_id=data.rider_id),
                     "rider_id": data.rider_id,
-                    "dispatch_request_id": dispatch_request_id,
+                    "dispatch_request_id": dispatch_request.id,
                 }
             ).dict()
         )
