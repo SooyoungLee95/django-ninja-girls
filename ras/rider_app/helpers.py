@@ -82,7 +82,7 @@ def mock_handle_rider_dispatch_request_creates(data: MockRiderDispatch):
         logger.error(f"[RiderDispatchRequest] {e!r} {data}")
     else:
         fcm_sender = FCMSender()
-        fcm_sender.send(
+        response = fcm_sender.send(
             data=MockFcmPushPayload(
                 **{
                     "registration_token": mock_query_registration_token(rider_id=data.rider_id),
@@ -91,6 +91,7 @@ def mock_handle_rider_dispatch_request_creates(data: MockRiderDispatch):
                 }
             ).dict()
         )
+        print(response)
 
 
 def mock_handle_retrieve_delivery_task_id(pickup_delivery_relationship):

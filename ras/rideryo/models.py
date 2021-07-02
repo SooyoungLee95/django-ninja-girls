@@ -7,7 +7,7 @@ from ras.rideryo.enums import RiderResponse as RiderResponseEnum
 
 
 class EncryptCharField(models.CharField):
-    def from_db_value(self, value):
+    def from_db_value(self, value, expression, connection):
         if value is not None:
             return decrypt(value)
         return value
