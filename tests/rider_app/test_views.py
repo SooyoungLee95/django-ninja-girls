@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 from django.db.utils import IntegrityError
@@ -258,6 +258,7 @@ class TestRiderDeliveryState:
     )
     @pytest.mark.django_db(transaction=True)
     @patch("ras.rider_app.views.should_connect_jungleworks")
+    @patch("ras.rider_app.views.mock_delivery_state_push_action", Mock(return_value=None))
     def test_create_rider_delivery_state_when_jw_enabled(
         self, mock_use_jungleworks, rider_dispatch_request, dispatch_request_jw_task, state, expected_jw_calls
     ):
@@ -298,6 +299,7 @@ class TestRiderDeliveryState:
     )
     @pytest.mark.django_db(transaction=True)
     @patch("ras.rider_app.views.should_connect_jungleworks")
+    @patch("ras.rider_app.views.mock_delivery_state_push_action", Mock(return_value=None))
     def test_create_rider_delivery_state_when_jw_not_enabled(self, mock_use_jungleworks, rider_dispatch_request, state):
         # Given: Jungleworks 기능이 비활성화된 경우
         mock_use_jungleworks.return_value = False
@@ -317,3 +319,33 @@ class TestRiderDeliveryState:
         histories = RiderDeliveryStateHistory.objects.filter(dispatch_request=rider_dispatch_request)
         assert len(histories) == 1
         assert histories[0].delivery_state == state
+
+    @pytest.mark.parametrize(
+        "state, should_send_push",
+        [
+            (DeliveryState.NEAR_PICKUP, True),
+            (DeliveryState.PICK_UP, False),
+            (DeliveryState.COMPLETED, False),
+        ],
+    )
+    @pytest.mark.django_db(transaction=True)
+    @patch("ras.rider_app.views.should_connect_jungleworks")
+    @patch("ras.rider_app.helpers.mock_push_action")
+    def test_create_rider_delivery_state_should_send_push(
+        self, mock_fcm_send, mock_use_jungleworks, rider_dispatch_request, state, should_send_push
+    ):
+        # Given: Jungleworks 기능이 비활성화된 경우
+        mock_use_jungleworks.return_value = False
+
+        # When: 배달 상태 전달 API 호출 시,
+        input_body = self._make_request_body(rider_dispatch_request.id, state)
+        response = self._call_api_create_rider_delivery_state(input_body)
+
+        # Then: 상태에 따라 푸시가 발생한다.
+        if should_send_push:
+            mock_fcm_send.assert_called_once()
+        else:
+            mock_fcm_send.assert_not_called()
+
+        # And: 200 응답코드가 반환된다.
+        assert response.status_code == HTTPStatus.OK
