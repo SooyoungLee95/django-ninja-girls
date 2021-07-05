@@ -138,7 +138,7 @@ def mock_push_action(rider_id: int, action: PushAction, id: int):
         return None
     response = fcm.send(
         data={
-            "registration_token": rider_fcm.registration_token,
+            **MockFcmPushPayload(registration_token=rider_fcm.registration_token).dict(),
             **PushActionPayload(action=action, id=id).dict(),
         }
     )
