@@ -73,8 +73,8 @@ async def update_task_status_from_delivery_state(data: RiderDeliveryState) -> li
 
     if data.state == DeliveryState.PICK_UP:
         return [
-            await _update_task_status(tasks.delivery_task_id, JungleworksTaskStatus.SUCCESSFUL),
-            await _update_task_status(tasks.pickup_task_id, JungleworksTaskStatus.STARTED),
+            await _update_task_status(tasks.pickup_task_id, JungleworksTaskStatus.SUCCESSFUL),
+            await _update_task_status(tasks.delivery_task_id, JungleworksTaskStatus.STARTED),
         ]
     elif data.state == DeliveryState.COMPLETED:
         return [await _update_task_status(tasks.delivery_task_id, JungleworksTaskStatus.SUCCESSFUL)]
