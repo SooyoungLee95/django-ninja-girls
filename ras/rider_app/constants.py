@@ -32,7 +32,10 @@ MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO = {
     "order": {
         "id": "21052016225297",  # 주문번호(YGY)
         "short_code": "#170",  # 라이더가 주문을 식별하는 코드
-        "menu": {"name": "쉬림프 아보카도 버거 세트 X1", "price": 20000, "sub": ["쉬림프 아보카도 버거 X1", "프렌치 프라이 X1", "제로 콜라 X1"]},
+        "menu": [
+            {"name": "쉬림프 아보카도 버거 세트 X1", "price": 20000, "sub": ["쉬림프 아보카도 버거 X1", "프렌치 프라이 X1", "제로 콜라 X1"]},
+            {"name": "치즈 버거 X1", "price": 10900, "sub": ["해시브라운 X1", "버섯 X1", "베이컨 X1"]},
+        ],
         "delivery_fee": 9000,
         "total_price": 29000,
         "customer_comment": "일회용 수저, 포크가 필요해요.\n케찹 30개 넣어주세요!! 감사합니다",
