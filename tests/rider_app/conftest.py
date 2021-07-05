@@ -1,6 +1,11 @@
 import pytest
 
-from ras.rideryo.models import RiderAccount, RiderDispatchRequestHistory, RiderProfile
+from ras.rideryo.models import (
+    DispatchRequestJungleworksTask,
+    RiderAccount,
+    RiderDispatchRequestHistory,
+    RiderProfile,
+)
 
 
 @pytest.fixture
@@ -23,3 +28,11 @@ def rider_dispatch_request(rider_profile):
         order_id="Test_Order",
     )
     return rider_dispatch_request
+
+
+@pytest.fixture
+def dispatch_request_jw_task(rider_dispatch_request):
+    tasks = DispatchRequestJungleworksTask.objects.create(
+        dispatch_request=rider_dispatch_request, pickup_task_id=1, delivery_task_id=2
+    )
+    return tasks

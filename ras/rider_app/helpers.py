@@ -7,21 +7,23 @@ from django.db.utils import DatabaseError, IntegrityError, OperationalError
 from ras.common.integration.services.jungleworks.handlers import (
     on_off_duty,
     update_task_status,
+    update_task_status_from_delivery_state,
 )
 from ras.rider_app.queries import (
     mock_query_create_dispatch_request_with_task,
     mock_query_registration_token,
     query_create_dispatch_request_with_task,
+    query_create_rider_delivery_state,
     query_create_rider_dispatch_response,
     query_update_rider_availability,
 )
-from ras.rideryo.enums import RiderResponse
+from ras.rideryo.enums import DeliveryState, RiderResponse
 
 from ..common.fcm import FCMSender
 from ..rideryo.models import RiderProfile
 from .schemas import MockFcmPushPayload, MockRiderDispatch
 from .schemas import RiderAvailability as RiderAvailabilitySchema
-from .schemas import RiderDispatch, RiderDispatchResponse
+from .schemas import RiderDeliveryState, RiderDispatch, RiderDispatchResponse
 
 logger = logging.getLogger(__name__)
 
@@ -98,3 +100,26 @@ def mock_handle_retrieve_delivery_task_id(pickup_delivery_relationship):
     # TODO 정글웍스 delivery_job_id를 가져오는 API 구현 필요
     # response = call_getting_delivery_job_id(pickup_delivery_relationship)
     return 1
+
+
+def handle_update_delivery_state(data: RiderDeliveryState):
+    if data.state not in (DeliveryState.PICK_UP, DeliveryState.COMPLETED):
+        return HTTPStatus.OK, ""
+
+    jw_responses = async_to_sync(update_task_status_from_delivery_state)(data)
+    for response in jw_responses:
+        if response.relevant_http_status() != HTTPStatus.OK:
+            raise ValueError(response.message)
+    return jw_responses[0].relevant_http_status(), jw_responses[0].message
+
+
+def handle_rider_delivery_state(data: RiderDeliveryState, is_jungleworks: bool):
+    try:
+        if is_jungleworks:
+            handle_update_delivery_state(data)
+        query_create_rider_delivery_state(data)
+    except (IntegrityError, ValueError) as e:
+        logger.error(f"[RiderDeliveryState] {e!r} {data}")
+        return HTTPStatus.BAD_REQUEST, "배달 상태를 업데이트 할 수 없습니다."
+    else:
+        return HTTPStatus.OK, ""

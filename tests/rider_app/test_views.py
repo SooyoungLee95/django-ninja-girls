@@ -7,7 +7,9 @@ from django.test import Client
 from django.urls import reverse
 
 from ras.common.integration.services.jungleworks.schemas import JungleworksResponseBody
-from ras.rider_app.schemas import RiderDispatchResponse
+from ras.rider_app.schemas import RiderDeliveryState, RiderDispatchResponse
+from ras.rideryo.enums import DeliveryState
+from ras.rideryo.models import RiderDeliveryStateHistory
 
 
 class TestUpdateRiderAvailability:
@@ -232,3 +234,86 @@ class TestRiderDispatchResponse:
         # And: Jungleworks 활성화 체크 함수 및 응답값이 올바른지 확인한다.
         mock_use_jungleworks.assert_called_once()
         assert response.json() == input_body.dict()
+
+
+class TestRiderDeliveryState:
+    def _call_api_create_rider_delivery_state(self, input_body):
+        client = Client()
+
+        return client.post(
+            reverse("ninja:create_rider_delivery_state"),
+            data=input_body.dict(),
+            content_type="application/json",
+        )
+
+    def _make_request_body(self, dispatch_request_id, state):
+        return RiderDeliveryState(dispatch_request_id=dispatch_request_id, state=state)
+
+    @pytest.mark.parametrize(
+        "state, expected_jw_calls",
+        [
+            (DeliveryState.PICK_UP, 2),
+            (DeliveryState.COMPLETED, 1),
+        ],
+    )
+    @pytest.mark.django_db(transaction=True)
+    @patch("ras.rider_app.views.should_connect_jungleworks")
+    def test_create_rider_delivery_state_when_jw_enabled(
+        self, mock_use_jungleworks, rider_dispatch_request, dispatch_request_jw_task, state, expected_jw_calls
+    ):
+        # Given: Jungleworks 기능이 활성화되고,
+        mock_use_jungleworks.return_value = True
+        # And: Jungleworks API에서 성공 응답을 반환하는 경우
+        expected_jungleworks_response = JungleworksResponseBody(message="test-message", status=200, data={})
+
+        # When: 배달 상태 전달 API 호출 시,
+        with patch(
+            "ras.common.integration.services.jungleworks.handlers._update_task_status"
+        ) as mock_jw_update_task_status:
+            mock_jw_update_task_status.return_value = expected_jungleworks_response
+            input_body = self._make_request_body(rider_dispatch_request.id, state)
+            response = self._call_api_create_rider_delivery_state(input_body)
+
+            # 픽업 task SUCCESSFUL, 배달 task START 로 전환하는 요청 총 2개가 호출됩니다.
+            assert mock_jw_update_task_status.call_count == expected_jw_calls
+
+        # Then: Jungleworks 응답코드에 상응하는 응답코드가 반환된다.
+        assert response.status_code == expected_jungleworks_response.relevant_http_status()
+
+        # And: Jungleworks 활성화 체크 함수 및 응답값이 올바른지 확인한다.
+        mock_use_jungleworks.assert_called_once()
+        assert response.json() == input_body.dict()
+
+        # And: 상태 변경에 대한 이력이 기록되는지 확인합니다.
+        histories = RiderDeliveryStateHistory.objects.filter(dispatch_request=rider_dispatch_request)
+        assert len(histories) == 1
+        assert histories[0].delivery_state == state
+
+    @pytest.mark.parametrize(
+        "state",
+        [
+            DeliveryState.PICK_UP,
+            DeliveryState.COMPLETED,
+        ],
+    )
+    @pytest.mark.django_db(transaction=True)
+    @patch("ras.rider_app.views.should_connect_jungleworks")
+    def test_create_rider_delivery_state_when_jw_not_enabled(self, mock_use_jungleworks, rider_dispatch_request, state):
+        # Given: Jungleworks 기능이 비활성화된 경우
+        mock_use_jungleworks.return_value = False
+
+        # When: 배달 상태 전달 API 호출 시,
+        input_body = self._make_request_body(rider_dispatch_request.id, state)
+        response = self._call_api_create_rider_delivery_state(input_body)
+
+        # Then: 200 응답코드가 반환되고,
+        assert response.status_code == HTTPStatus.OK
+
+        # And: Jungleworks 활성화 체크 함수 및 응답값이 올바른지 확인한다.
+        mock_use_jungleworks.assert_called_once()
+        assert response.json() == input_body.dict()
+
+        # And: 상태 변경에 대한 이력이 기록되는지 확인합니다.
+        histories = RiderDeliveryStateHistory.objects.filter(dispatch_request=rider_dispatch_request)
+        assert len(histories) == 1
+        assert histories[0].delivery_state == state

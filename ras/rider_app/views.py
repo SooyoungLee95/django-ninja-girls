@@ -10,6 +10,7 @@ from ras.common.integration.services.jungleworks.handlers import (
 from ras.common.schemas import ErrorResponse
 from ras.rider_app.helpers import (
     handle_rider_availability_updates,
+    handle_rider_delivery_state,
     handle_rider_dispatch_request_creates,
     handle_rider_dispatch_response,
     mock_handle_rider_dispatch_request_creates,
@@ -120,7 +121,11 @@ def get_token(request, code: str):
     summary="배달 상태(픽업완료, 배달완료) 전달",
 )
 def create_rider_delivery_state(request, data: RiderDeliveryState):
-    return HTTPStatus.OK, {}
+    is_jungleworks = should_connect_jungleworks(request)
+    status, message = handle_rider_delivery_state(data, is_jungleworks)
+    if status != HTTPStatus.OK:
+        return status, ErrorResponse(errors=[{"name": "reason", "message": message}])
+    return status, data
 
 
 @dispatch_request_router.get(
