@@ -133,7 +133,11 @@ def create_rider_delivery_state(request, data: RiderDeliveryState):
 def mock_retrieve_dispatch_requests_additional_info(request, id: str):
     id_list = id.split(",")
     if len(id_list) == 1:
-        dispatch_requests_additional_info = MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1
+        dispatch_requests_additional_info = {"data": [MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1]}
+    if len(id_list) == 2:
+        dispatch_requests_additional_info = {
+            "data": [MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1, MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_2]
+        }
     else:
         dispatch_requests_additional_info = {
             "data": [
