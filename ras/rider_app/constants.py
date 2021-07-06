@@ -17,16 +17,16 @@ MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1 = {
     "customer": {
         "phone_number": "010-1111-2222",
         "address": "서초대로38길 12 15층",
-        "lat": "37.4899318",
-        "lng": "127.0040233",
+        "lat": 37.4899318,
+        "lng": 127.0040233,
     },
     "restaurant": {
         "name": "번패티번",
         "detail_name": "번패티번 서초점",
         "address": "서울특별시 서초구 반포대로 27길 21 1층",
         "phone_number": "02-111-2222",
-        "lat": "37.4850935",
-        "lng": "126.981459",
+        "lat": 37.4850935,
+        "lng": 126.981459,
         "picture_urls": ["http://sample_picture/sample_pickupre/test.jpg"],
     },
     "order": {
@@ -53,16 +53,16 @@ MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_2 = {
     "customer": {
         "phone_number": "010-2222-3333",
         "address": "서초대로38길 12 14층",
-        "lat": "37.4899318",
-        "lng": "127.0040233",
+        "lat": 37.4899318,
+        "lng": 127.0040233,
     },
     "restaurant": {
         "name": "번패티번",
         "detail_name": "번패티번 서초점",
         "address": "서울특별시 서초구 반포대로 27길 21 1층",
         "phone_number": "02-111-2222",
-        "lat": "37.4850935",
-        "lng": "126.981459",
+        "lat": 37.4850935,
+        "lng": 126.981459,
         "picture_urls": ["http://sample_picture/sample_pickupre/test.jpg"],
     },
     "order": {
@@ -88,16 +88,16 @@ MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_3 = {
     "customer": {
         "phone_number": "010-3333-4444",
         "address": "서초대로38길 12 17층",
-        "lat": "37.4899318",
-        "lng": "127.0040233",
+        "lat": 37.4899318,
+        "lng": 127.0040233,
     },
     "restaurant": {
         "name": "번패티번",
         "detail_name": "번패티번 서초점",
         "address": "서울특별시 서초구 반포대로 27길 21 1층",
         "phone_number": "02-111-2222",
-        "lat": "37.4850935",
-        "lng": "126.981459",
+        "lat": 37.4850935,
+        "lng": 126.981459,
         "picture_urls": ["http://sample_picture/sample_pickupre/test.jpg"],
     },
     "order": {
