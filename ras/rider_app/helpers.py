@@ -6,6 +6,7 @@ from django.db.utils import DatabaseError, IntegrityError, OperationalError
 
 from ras.common.integration.services.jungleworks.handlers import (
     on_off_duty,
+    retrieve_delivery_task_id,
     update_task_status,
     update_task_status_from_delivery_state,
 )
@@ -92,7 +93,7 @@ def send_push_action(rider_id: int, action: PushAction, id: int):
 
 
 def mock_handle_rider_dispatch_request_creates(data: MockRiderDispatch):
-    delivery_task_id = mock_handle_retrieve_delivery_task_id(data.pickup_delivery_relationship)
+    delivery_task_id = handle_retrieve_delivery_task_id(data.pickup_delivery_relationship)
     try:
         dispatch_request = mock_query_create_dispatch_request_with_task(data=data, delivery_task_id=delivery_task_id)
     except (RiderProfile.DoesNotExist, DatabaseError) as e:
@@ -102,10 +103,12 @@ def mock_handle_rider_dispatch_request_creates(data: MockRiderDispatch):
         print(response)
 
 
-def mock_handle_retrieve_delivery_task_id(pickup_delivery_relationship):
-    # TODO 정글웍스 delivery_job_id를 가져오는 API 구현 필요
-    # response = call_getting_delivery_job_id(pickup_delivery_relationship)
-    return 1
+def handle_retrieve_delivery_task_id(pickup_delivery_relationship):
+    jw_response = async_to_sync(retrieve_delivery_task_id)(pickup_delivery_relationship)
+    if jw_response.relevant_http_status() != HTTPStatus.OK:
+        raise ValueError(jw_response.message)
+    _, delivery_task = jw_response.data
+    return delivery_task["job_id"]
 
 
 def handle_update_delivery_state(data: RiderDeliveryState):
