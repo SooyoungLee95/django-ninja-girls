@@ -5,6 +5,7 @@ from django.core.validators import validate_email
 from ninja.schema import Field, Schema
 from pydantic import validator
 
+from ras.rider_app.enums import PushAction
 from ras.rideryo.enums import DeliveryState
 from ras.rideryo.enums import RiderResponse as RiderResponseEnum
 
@@ -70,9 +71,12 @@ class RiderDeliveryState(Schema):
     state: DeliveryState
 
 
-class MockFcmPushPayload(Schema):
-    title: str = "[Rideryo-BE] Mock FCM Push test title"
-    body: str = "[Rideryo-BE] Mock FCM Push test body"
+class FcmPushPayload(Schema):
+    title: str = "[Rideryo-BE] FCM Push Test title"
+    body: str = "[Rideryo-BE] FCM Push Test body"
     registration_token: str
-    rider_id: str
-    dispatch_request_id: str
+    action: PushAction
+    id: str
+
+    class Config:
+        use_enum_values = True

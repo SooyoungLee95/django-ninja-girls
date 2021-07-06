@@ -13,6 +13,7 @@ from ras.rider_app.helpers import (
     handle_rider_delivery_state,
     handle_rider_dispatch_request_creates,
     handle_rider_dispatch_response,
+    mock_delivery_state_push_action,
     mock_handle_rider_dispatch_request_creates,
 )
 
@@ -125,6 +126,7 @@ def create_rider_delivery_state(request, data: RiderDeliveryState):
     status, message = handle_rider_delivery_state(data, is_jungleworks)
     if status != HTTPStatus.OK:
         return status, ErrorResponse(errors=[{"name": "reason", "message": message}])
+    mock_delivery_state_push_action(rider_id=1, delivery_state=data)  # NOTE: fixed rider_id
     return status, data
 
 

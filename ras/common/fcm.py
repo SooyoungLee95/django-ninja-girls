@@ -30,12 +30,20 @@ class FCMSender:
             cls._init = True  # type: ignore[attr-defined]
 
     def _create_fcm(self, data):
+        title = data.pop("title")
+        body = data.pop("body")
+        token = data.pop("registration_token")
         return messaging.Message(
-            token=data.pop("registration_token"),
-            data=data,
-            notification=messaging.Notification(
-                title=data.pop("title"),
-                body=data.pop("body"),
+            token=token,
+            apns=messaging.APNSConfig(
+                payload=messaging.APNSPayload(
+                    aps=messaging.Aps(alert=messaging.ApsAlert(title=title, body=body)),
+                    data=data,
+                )
+            ),
+            android=messaging.AndroidConfig(
+                notification=messaging.AndroidNotification(title=title, body=body),
+                data=data,
             ),
         )
 

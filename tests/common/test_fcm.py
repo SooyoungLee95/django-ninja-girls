@@ -35,8 +35,11 @@ class TestFCMSender:
         # Then: 발송 성공
         message = mock_send.call_args.args[0]
         mock_send.assert_called_once()
-        assert message.notification.title == "test_title"
-        assert message.notification.body == "test_body"
-        assert message.data == fcm_sample
+        assert message.apns.payload.aps.alert.title == "test_title"
+        assert message.apns.payload.aps.alert.body == "test_body"
+        assert message.apns.payload.custom_data["data"] == fcm_sample
+        assert message.android.notification.title == "test_title"
+        assert message.android.notification.body == "test_body"
+        assert message.android.data == fcm_sample
         assert message.token == "dFrn2w0HPNT"
         assert result == {"success": True}
