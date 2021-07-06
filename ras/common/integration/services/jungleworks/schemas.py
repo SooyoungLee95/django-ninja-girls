@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from typing import Union
 
 from django.conf import settings
 from ninja import Schema
@@ -16,7 +17,7 @@ _relevant_status = {
 class JungleworksResponseBody(Schema):
     message: str
     status: int
-    data: dict
+    data: Union[dict, list]
 
     def relevant_http_status(self) -> HTTPStatus:
         return _relevant_status[self.status]
@@ -39,3 +40,7 @@ class OnOffDutyRequestBody(JungleworksRequestBody):
 class TaskStatusRequestBody(JungleworksRequestBody):
     job_id: str
     job_status: str
+
+
+class RetrieveDeliveryTaskIdRequestBody(JungleworksRequestBody):
+    pickup_delivery_relationship: str

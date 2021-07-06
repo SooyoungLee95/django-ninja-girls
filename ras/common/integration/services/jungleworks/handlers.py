@@ -18,14 +18,18 @@ from .schemas import (
     JungleworksRequestBody,
     JungleworksResponseBody,
     OnOffDutyRequestBody,
+    RetrieveDeliveryTaskIdRequestBody,
     TaskStatusRequestBody,
 )
 
 ON_OFF_DUTY = "on_off_duty"
 UPDATE_TASK_STATUS = "update_task_status"
+RETRIEVE_DELIVERY_TASK_ID = "get_related_tasks"
+
 JUNGLEWORKS_PATHS = {
     ON_OFF_DUTY: "/v2/change_fleet_availability",
     UPDATE_TASK_STATUS: "/v2/update_task_status",
+    RETRIEVE_DELIVERY_TASK_ID: "/v2/get_related_tasks",
 }
 response_to_junglework_status = {
     RiderResponse.ACCEPTED: "7",
@@ -80,6 +84,15 @@ async def update_task_status_from_delivery_state(data: RiderDeliveryState) -> li
         return [await _update_task_status(tasks.delivery_task_id, JungleworksTaskStatus.SUCCESSFUL)]
     else:
         return []
+
+
+async def _retrieve_delivery_task_id(pickup_delivery_relationship):
+    request_body = RetrieveDeliveryTaskIdRequestBody(pickup_delivery_relationship=pickup_delivery_relationship)
+    return await call_jungleworks_api(path_namespace=RETRIEVE_DELIVERY_TASK_ID, body=request_body)
+
+
+async def retrieve_delivery_task_id(pickup_delivery_relationship):
+    return await _retrieve_delivery_task_id(pickup_delivery_relationship)
 
 
 def should_connect_jungleworks(request):
