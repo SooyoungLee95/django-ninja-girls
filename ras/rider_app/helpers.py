@@ -12,16 +12,16 @@ from ras.common.integration.services.jungleworks.handlers import (
 from ras.rider_app.enums import PushAction
 from ras.rider_app.queries import (
     mock_query_create_dispatch_request_with_task,
-    mock_query_registration_token,
     query_create_dispatch_request_with_task,
     query_create_rider_delivery_state,
     query_create_rider_dispatch_response,
+    query_fcm_token,
     query_update_rider_availability,
 )
 from ras.rideryo.enums import DeliveryState, RiderResponse
 
 from ..common.fcm import FCMSender
-from ..rideryo.models import RiderFCMToken, RiderProfile
+from ..rideryo.models import RiderProfile
 from .schemas import MockFcmPushPayload, MockRiderDispatch, PushActionPayload
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import RiderDeliveryState, RiderDispatch, RiderDispatchResponse
@@ -82,6 +82,20 @@ def handle_rider_dispatch_request_creates(data: RiderDispatch):
         logger.error(f"[RiderDispatchRequest] {e!r} {data}")
 
 
+def mock_push_action(rider_id: int, action: PushAction, id: int):
+    fcm = FCMSender()
+    rider_fcm_token = query_fcm_token(rider_id)
+    if not rider_fcm_token:
+        return None
+    response = fcm.send(
+        data={
+            **MockFcmPushPayload(registration_token=rider_fcm_token).dict(),
+            **PushActionPayload(action=action, id=id).dict(),
+        }
+    )
+    return response
+
+
 def mock_handle_rider_dispatch_request_creates(data: MockRiderDispatch):
     delivery_task_id = mock_handle_retrieve_delivery_task_id(data.pickup_delivery_relationship)
     try:
@@ -89,16 +103,7 @@ def mock_handle_rider_dispatch_request_creates(data: MockRiderDispatch):
     except (RiderProfile.DoesNotExist, DatabaseError) as e:
         logger.error(f"[RiderDispatchRequest] {e!r} {data}")
     else:
-        fcm_sender = FCMSender()
-        response = fcm_sender.send(
-            data=MockFcmPushPayload(
-                **{
-                    "registration_token": mock_query_registration_token(rider_id=data.rider_id),
-                    "rider_id": data.rider_id,
-                    "dispatch_request_id": dispatch_request.id,
-                }
-            ).dict()
-        )
+        response = mock_push_action(rider_id=data.rider_id, action=PushAction.DISPATCHED, id=dispatch_request.id)
         print(response)
 
 
@@ -129,20 +134,6 @@ def handle_rider_delivery_state(data: RiderDeliveryState, is_jungleworks: bool):
         return HTTPStatus.BAD_REQUEST, "배달 상태를 업데이트 할 수 없습니다."
     else:
         return HTTPStatus.OK, ""
-
-
-def mock_push_action(rider_id: int, action: PushAction, id: int):
-    fcm = FCMSender()
-    rider_fcm = RiderFCMToken.objects.filter(rider_id=rider_id).first()
-    if not rider_fcm:
-        return None
-    response = fcm.send(
-        data={
-            **MockFcmPushPayload(registration_token=rider_fcm.registration_token).dict(),
-            **PushActionPayload(action=action, id=id).dict(),
-        }
-    )
-    return response
 
 
 def mock_delivery_state_push_action(rider_id, delivery_state: RiderDeliveryState):
