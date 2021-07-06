@@ -329,16 +329,15 @@ class TestRiderDeliveryState:
         ],
     )
     @pytest.mark.django_db(transaction=True)
-    @patch("ras.rider_app.views.should_connect_jungleworks")
+    @patch("ras.rider_app.views.should_connect_jungleworks", Mock(return_value=False))
     @patch("ras.rider_app.helpers.send_push_action")
     def test_create_rider_delivery_state_should_send_push(
-        self, mock_fcm_send, mock_use_jungleworks, rider_dispatch_request, state, should_send_push
+        self, mock_fcm_send, rider_dispatch_request, state, should_send_push
     ):
-        # Given: Jungleworks 기능이 비활성화된 경우
-        mock_use_jungleworks.return_value = False
+        # Given: 배달 상태가 변경된 경우
+        input_body = self._make_request_body(rider_dispatch_request.id, state)
 
         # When: 배달 상태 전달 API 호출 시,
-        input_body = self._make_request_body(rider_dispatch_request.id, state)
         response = self._call_api_create_rider_delivery_state(input_body)
 
         # Then: 상태에 따라 푸시가 발생한다.
