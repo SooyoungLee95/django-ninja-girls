@@ -71,13 +71,10 @@ class RiderDeliveryState(Schema):
     state: DeliveryState
 
 
-class MockFcmPushPayload(Schema):
-    title: str = "[Rideryo-BE] Mock FCM Push test title"
-    body: str = "[Rideryo-BE] Mock FCM Push test body"
+class FcmPushPayload(Schema):
+    title: str = "[Rideryo-BE] FCM Push Test title"
+    body: str = "[Rideryo-BE] FCM Push Test body"
     registration_token: str
-
-
-class PushActionPayload(Schema):
     action: PushAction
     id: str
 

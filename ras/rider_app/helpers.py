@@ -22,7 +22,7 @@ from ras.rideryo.enums import DeliveryState, RiderResponse
 
 from ..common.fcm import FCMSender
 from ..rideryo.models import RiderProfile
-from .schemas import MockFcmPushPayload, MockRiderDispatch, PushActionPayload
+from .schemas import FcmPushPayload, MockRiderDispatch
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import RiderDeliveryState, RiderDispatch, RiderDispatchResponse
 
@@ -82,17 +82,12 @@ def handle_rider_dispatch_request_creates(data: RiderDispatch):
         logger.error(f"[RiderDispatchRequest] {e!r} {data}")
 
 
-def mock_push_action(rider_id: int, action: PushAction, id: int):
+def send_push_action(rider_id: int, action: PushAction, id: int):
     fcm = FCMSender()
     rider_fcm_token = query_fcm_token(rider_id)
     if not rider_fcm_token:
         return None
-    response = fcm.send(
-        data={
-            **MockFcmPushPayload(registration_token=rider_fcm_token).dict(),
-            **PushActionPayload(action=action, id=id).dict(),
-        }
-    )
+    response = fcm.send(data=FcmPushPayload(registration_token=rider_fcm_token, action=action, id=id).dict())
     return response
 
 
@@ -103,7 +98,7 @@ def mock_handle_rider_dispatch_request_creates(data: MockRiderDispatch):
     except (RiderProfile.DoesNotExist, DatabaseError) as e:
         logger.error(f"[RiderDispatchRequest] {e!r} {data}")
     else:
-        response = mock_push_action(rider_id=data.rider_id, action=PushAction.DISPATCHED, id=dispatch_request.id)
+        response = send_push_action(rider_id=data.rider_id, action=PushAction.DISPATCHED, id=dispatch_request.id)
         print(response)
 
 
@@ -140,4 +135,4 @@ def mock_delivery_state_push_action(rider_id, delivery_state: RiderDeliveryState
     action = delivery_state_push_action_map.get(delivery_state.state)
     if not action:
         return None
-    return mock_push_action(rider_id=rider_id, action=action, id=delivery_state.dispatch_request_id)
+    return send_push_action(rider_id=rider_id, action=action, id=delivery_state.dispatch_request_id)

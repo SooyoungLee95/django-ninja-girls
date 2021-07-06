@@ -330,7 +330,7 @@ class TestRiderDeliveryState:
     )
     @pytest.mark.django_db(transaction=True)
     @patch("ras.rider_app.views.should_connect_jungleworks")
-    @patch("ras.rider_app.helpers.mock_push_action")
+    @patch("ras.rider_app.helpers.send_push_action")
     def test_create_rider_delivery_state_should_send_push(
         self, mock_fcm_send, mock_use_jungleworks, rider_dispatch_request, state, should_send_push
     ):
