@@ -99,7 +99,8 @@ def mock_handle_rider_dispatch_request_creates(data: MockRiderDispatch):
     except (RiderProfile.DoesNotExist, DatabaseError) as e:
         logger.error(f"[RiderDispatchRequest] {e!r} {data}")
     else:
-        response = send_push_action(rider_id=data.rider_id, action=PushAction.DISPATCHED, id=dispatch_request.id)
+        fixed_rider_id = 626
+        response = send_push_action(rider_id=fixed_rider_id, action=PushAction.DISPATCHED, id=dispatch_request.id)
         print(response)
 
 
