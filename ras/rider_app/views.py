@@ -128,7 +128,7 @@ def create_rider_delivery_state(request, data: RiderDeliveryState):
     status, message = handle_rider_delivery_state(data, is_jungleworks)
     if status != HTTPStatus.OK:
         return status, ErrorResponse(errors=[{"name": "reason", "message": message}])
-    mock_delivery_state_push_action(rider_id=1, delivery_state=data)  # NOTE: fixed rider_id
+    mock_delivery_state_push_action(delivery_state=data)
     return status, data
 
 
