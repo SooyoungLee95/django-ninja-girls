@@ -7,7 +7,8 @@ from django.test import Client
 from django.urls import reverse
 
 from ras.common.integration.services.jungleworks.schemas import JungleworksResponseBody
-from ras.rider_app.schemas import RiderDeliveryState, RiderDispatchResponse
+from ras.rider_app.enums import PushAction
+from ras.rider_app.schemas import RiderBan, RiderDeliveryState, RiderDispatchResponse
 from ras.rideryo.enums import DeliveryState
 from ras.rideryo.models import RiderDeliveryStateHistory
 
@@ -345,6 +346,100 @@ class TestRiderDeliveryState:
             mock_fcm_send.assert_called_once()
         else:
             mock_fcm_send.assert_not_called()
+
+        # And: 200 응답코드가 반환된다.
+        assert response.status_code == HTTPStatus.OK
+
+
+class TestRiderBan:
+    def _call_api_update_rider_ban(self, input_body):
+        client = Client()
+
+        return client.put(
+            reverse("ninja:rider_app_update_rider_ban"),
+            data=input_body.dict(),
+            content_type="application/json",
+        )
+
+    def _make_request_body(self, rider_id, is_banned):
+        return RiderBan(rider_id=rider_id, is_banned=is_banned)
+
+    @pytest.mark.parametrize(
+        "given_rider_availability",
+        [
+            True,
+            False,
+        ],
+    )
+    @pytest.mark.django_db(transaction=True)
+    @patch("ras.rider_app.views.should_connect_jungleworks", Mock(return_value=False))
+    @patch("ras.rider_app.helpers.send_push_action", Mock(return_value=None))
+    def test_update_rider_ban_should_change_rider_to_unavailable(self, rider_availability, given_rider_availability):
+        # Given: 라이더가 "근무 중"이거나 "근무 중이 아닌" 상태일 때,
+        rider_availability.is_available = given_rider_availability
+        rider_availability.save()
+
+        # And: 업무정지 된 경우
+        input_body = self._make_request_body(rider_availability.rider.pk, is_banned=True)
+
+        # When: 업무정지 API 호출 시,
+        response = self._call_api_update_rider_ban(input_body)
+
+        # Then: 근무 중이 아닌 상태로 전환 또는 유지된다
+        rider_availability.refresh_from_db()
+        assert rider_availability.is_available is False
+
+        # And: 200 응답코드가 반환된다.
+        assert response.status_code == HTTPStatus.OK
+
+    @pytest.mark.parametrize(
+        "given_rider_availability",
+        [
+            True,
+            False,
+        ],
+    )
+    @pytest.mark.django_db(transaction=True)
+    @patch("ras.rider_app.views.should_connect_jungleworks", Mock(return_value=False))
+    @patch("ras.rider_app.helpers.send_push_action", Mock(return_value=None))
+    def test_update_rider_undo_ban_should_remain_rider_availablity(self, rider_availability, given_rider_availability):
+        # Given: 라이더가 "근무 중"이거나 "근무 중이 아닌" 상태일 때,
+        rider_availability.is_available = given_rider_availability
+        rider_availability.save()
+
+        # And: 업무정지 해제가 된 경우
+        input_body = self._make_request_body(rider_availability.rider.pk, is_banned=False)
+
+        # When: 업무정지 API 호출 시,
+        response = self._call_api_update_rider_ban(input_body)
+
+        # Then: 기존 상태를 유지한다 (근무 중 상태로 돌리지 않는다.)
+        rider_availability.refresh_from_db()
+        assert rider_availability.is_available == given_rider_availability
+
+        # And: 200 응답코드가 반환된다.
+        assert response.status_code == HTTPStatus.OK
+
+    @pytest.mark.parametrize(
+        "is_banned, push_action",
+        [
+            (True, PushAction.BAN),
+            (False, PushAction.UNDO_BAN),
+        ],
+    )
+    @pytest.mark.django_db(transaction=True)
+    @patch("ras.rider_app.views.should_connect_jungleworks", Mock(return_value=False))
+    @patch("ras.rider_app.helpers.send_push_action")
+    def test_update_rider_ban_should_send_push(self, mock_fcm_send, rider_profile, is_banned, push_action):
+        # Given: 업무정지 상태가 변경된 경우
+        input_body = self._make_request_body(rider_profile.pk, is_banned)
+
+        # When: 업무정지 API 호출 시,
+        response = self._call_api_update_rider_ban(input_body)
+
+        # Then: 올바른 푸시가 발생한다.
+        mock_fcm_send.assert_called_once()
+        assert mock_fcm_send.call_args.kwargs["action"] == push_action
 
         # And: 200 응답코드가 반환된다.
         assert response.status_code == HTTPStatus.OK
