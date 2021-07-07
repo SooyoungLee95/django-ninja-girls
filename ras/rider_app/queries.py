@@ -1,4 +1,5 @@
 import logging
+from functools import singledispatch
 
 from asgiref.sync import sync_to_async
 from django.db import transaction
@@ -23,12 +24,23 @@ from .schemas import RiderDispatchResponse as RiderDispatchResponseSchema
 logger = logging.getLogger(__name__)
 
 
+@singledispatch
 def query_update_rider_availability(rider_id, data: RiderAvailabilitySchema):
     with transaction.atomic():
         availability, _ = RiderAvailability.objects.select_for_update(nowait=True).get_or_create(rider_id=rider_id)
         availability.is_available = data.is_available
         availability.save()
         RiderAvailabilityHistory.objects.create(rider=availability, is_available=data.is_available)
+    return availability
+
+
+@query_update_rider_availability.register
+def _(rider_id, data: bool):
+    with transaction.atomic():
+        availability, _ = RiderAvailability.objects.select_for_update(nowait=True).get_or_create(rider_id=rider_id)
+        availability.is_available = data
+        availability.save()
+        RiderAvailabilityHistory.objects.create(rider=availability, is_available=data)
     return availability
 
 
