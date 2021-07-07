@@ -22,7 +22,7 @@ from ras.rider_app.queries import (
 from ras.rideryo.enums import DeliveryState, RiderResponse
 
 from ..common.fcm import FCMSender
-from ..rideryo.models import RiderProfile
+from ..rideryo.models import RiderDispatchRequestHistory, RiderProfile
 from .schemas import FcmPushPayload, MockRiderDispatch
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import RiderDeliveryState, RiderDispatch, RiderDispatchResponse
@@ -136,8 +136,14 @@ def handle_rider_delivery_state(data: RiderDeliveryState, is_jungleworks: bool):
         return HTTPStatus.OK, ""
 
 
-def mock_delivery_state_push_action(rider_id, delivery_state: RiderDeliveryState):
+def mock_delivery_state_push_action(delivery_state: RiderDeliveryState):
+    try:
+        rider = RiderDispatchRequestHistory.objects.get(pk=delivery_state.dispatch_request_id).rider
+    except RiderDispatchRequestHistory.DoesNotExist as e:
+        logger.error(f"[DeliveryStatePushAction] {e!r} {delivery_state}")
+        return None
+
     action = delivery_state_push_action_map.get(delivery_state.state)
     if not action:
         return None
-    return send_push_action(rider_id=rider_id, action=action, id=delivery_state.dispatch_request_id)
+    return send_push_action(rider_id=rider.pk, action=action, id=delivery_state.dispatch_request_id)
