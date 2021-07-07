@@ -141,7 +141,7 @@ def mock_delivery_state_push_action(rider_id, delivery_state: RiderDeliveryState
 
 
 def handle_rider_ban(data: RiderBan):
-    rider_id = 626  # TODO: data.rider_id
+    rider_id = data.rider_id
     if data.is_banned:
         try:
             # TODO: Ban 상태 추가시 구현 로직 추가
