@@ -7,6 +7,7 @@ from django.test import Client
 from django.urls import reverse
 
 from ras.common.integration.services.jungleworks.schemas import JungleworksResponseBody
+from ras.rider_app.enums import PushAction
 from ras.rider_app.schemas import RiderDeliveryState, RiderDispatchResponse
 from ras.rideryo.enums import DeliveryState
 from ras.rideryo.models import RiderDeliveryStateHistory
@@ -321,18 +322,19 @@ class TestRiderDeliveryState:
         assert histories[0].delivery_state == state
 
     @pytest.mark.parametrize(
-        "state, should_send_push",
+        "state, should_send_push, push_action",
         [
-            (DeliveryState.NEAR_PICKUP, True),
-            (DeliveryState.PICK_UP, False),
-            (DeliveryState.COMPLETED, False),
+            (DeliveryState.NEAR_PICKUP, True, PushAction.NEAR_PICKUP),
+            (DeliveryState.PICK_UP, False, None),
+            (DeliveryState.NEAR_DROPOFF, True, PushAction.NEAR_DROPOFF),
+            (DeliveryState.COMPLETED, False, None),
         ],
     )
     @pytest.mark.django_db(transaction=True)
     @patch("ras.rider_app.views.should_connect_jungleworks", Mock(return_value=False))
     @patch("ras.rider_app.helpers.send_push_action")
     def test_create_rider_delivery_state_should_send_push(
-        self, mock_fcm_send, rider_dispatch_request, state, should_send_push
+        self, mock_fcm_send, rider_dispatch_request, state, should_send_push, push_action
     ):
         # Given: 배달 상태가 변경된 경우
         input_body = self._make_request_body(rider_dispatch_request.id, state)
@@ -343,6 +345,7 @@ class TestRiderDeliveryState:
         # Then: 상태에 따라 푸시가 발생한다.
         if should_send_push:
             mock_fcm_send.assert_called_once()
+            assert mock_fcm_send.call_args.kwargs["action"] == push_action
         else:
             mock_fcm_send.assert_not_called()
 

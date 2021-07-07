@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 
 delivery_state_push_action_map = {
     DeliveryState.NEAR_PICKUP: PushAction.NEAR_PICKUP,
+    DeliveryState.NEAR_DROPOFF: PushAction.NEAR_DROPOFF,
 }
 
 
