@@ -41,7 +41,7 @@ def handle_rider_availability_updates(rider_id, data: RiderAvailabilitySchema, i
         return jw_response.relevant_http_status(), jw_response.message
     else:
         try:
-            query_update_rider_availability(rider_id, data)
+            query_update_rider_availability(data, rider_id)
             return HTTPStatus.OK, ""
         except IntegrityError as e:
             logger.error(f"[RiderAvailability] {e!r} {data}")
@@ -88,8 +88,7 @@ def send_push_action(rider_id: int, action: PushAction, id: int):
     rider_fcm_token = query_fcm_token(rider_id)
     if not rider_fcm_token:
         return None
-    response = fcm.send(data=FcmPushPayload(registration_token=rider_fcm_token, action=action, id=id).dict())
-    return response
+    return fcm.send(data=FcmPushPayload(registration_token=rider_fcm_token, action=action, id=id).dict())
 
 
 def mock_handle_rider_dispatch_request_creates(data: MockRiderDispatch):
@@ -146,7 +145,7 @@ def handle_rider_ban(data: RiderBan):
     if data.is_banned:
         try:
             # TODO: Ban 상태 추가시 구현 로직 추가
-            query_update_rider_availability(rider_id, False)
+            query_update_rider_availability(False, rider_id)
         except IntegrityError as e:
             logger.error(f"[RiderBan] {e!r} {data}")
             return HTTPStatus.BAD_REQUEST, "라이더를 식별할 수 없습니다."

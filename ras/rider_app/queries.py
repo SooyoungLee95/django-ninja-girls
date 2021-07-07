@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 @singledispatch
-def query_update_rider_availability(rider_id, data: RiderAvailabilitySchema):
+def query_update_rider_availability(data: RiderAvailabilitySchema, rider_id):
     with transaction.atomic():
         availability, _ = RiderAvailability.objects.select_for_update(nowait=True).get_or_create(rider_id=rider_id)
         availability.is_available = data.is_available
@@ -35,7 +35,7 @@ def query_update_rider_availability(rider_id, data: RiderAvailabilitySchema):
 
 
 @query_update_rider_availability.register
-def _(rider_id, data: bool):
+def _(data: bool, rider_id):
     with transaction.atomic():
         availability, _ = RiderAvailability.objects.select_for_update(nowait=True).get_or_create(rider_id=rider_id)
         availability.is_available = data
