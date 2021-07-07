@@ -159,11 +159,11 @@ def mock_retrieve_dispatch_requests_additional_info(request, id: str):
 
 @rider_router.put(
     "/ban",
-    url_name="rider_app_update_rider_ban_state",
+    url_name="rider_app_update_rider_ban",
     summary="업무정지/해제",
     response={200: RiderBan, codes_4xx: ErrorResponse},
 )
-def update_rider_ban_state(request, data: RiderBan):
+def update_rider_ban(request, data: RiderBan):
     # TODO: requires permission check! Admin only!
     status, message = handle_rider_ban(data)
     if status != HTTPStatus.OK:
