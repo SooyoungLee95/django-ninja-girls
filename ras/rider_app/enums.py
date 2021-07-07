@@ -9,3 +9,5 @@ class WebhookName(str, Enum):
 class PushAction(str, Enum):
     NEAR_PICKUP = "dispatch-request:near-pickup"
     DISPATCHED = "dispatch-request:dispatched"
+    BAN = "dispatch-request:ban"
+    UNDO_BAN = "dispatch-request:undo-ban"
