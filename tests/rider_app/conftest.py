@@ -1,6 +1,23 @@
+import jwt
 import pytest
 
 from ras.rideryo.models import RiderAccount, RiderDispatchRequestHistory, RiderProfile
+
+TEST_JWT_PRIVATE = """-----BEGIN RSA PRIVATE KEY-----
+MIICXAIBAAKBgQCJcExoaKfVlIBH6q2IyFbPOCRS5+JfIQWDou3wQ2JadCkglsc8
+3g0rc0Yvk8Z9sbFdsi3wnL3dO+3/yklpNO19qICe8ga4bAry70xQNCzxw2GZ8+6j
+NFB8vhZ7q24rd27GCP+IKX/sSvi6YU6zkv9UJno9M4ER4mAIz2cETX7rbQIDAQAB
+AoGAWWEKj6vf2enlMt/PUvDWY5RjKvdaI/tZlq3ShzmLML/yLxtfHppZfjRNJIu5
+vexdKE3DyoJkhwd+U6a97wlYmDHJaNIaR+VWxW9Z1kFThQCxMglEyTjBMQej3m2H
+v6lyJEX/ifZtNZ8HrqyqgenYfavviH7E8JRxYwiIvxVp2oECQQDpE5qqT/tQ4sMB
+BrqTL7vhdXaBgz//m/wkithtnQKAvHu172ZEslL7liHxbQAd9PfAbz1llpFAZfpf
+SS4VSQ+VAkEAlvS5usHNhLA7PABOnLnNgtZUireVe87xzn51doeuNMslrv0ak/Ws
+plo5XOr1q+bs0Wi/R6wupZGkLqVxgzDWeQJAGzwpNIGIElmNA8+veYd4Ys4A/P1D
+OzEU84gt5hEUu8pKgmXpA1n7DF7stHNSMi3vzVKyT+6aJnZEHWJFukMBSQJAS/9U
+6gLb1utqRuDYsuqP3kjNMzENntEmx5C+zjesqoODqz9dfBP5IZ7WtkLMAAk4PI0B
+j7HNoilagOll5mhV8QJBAKvzEsWMeQkgmd5ZgoSAx5xDgJ5YUUTC9qqwjqYSZCE1
+3g/BzhMvc9aht6HWon+M+g5S93ePit89SxK4GGEpnEs=
+-----END RSA PRIVATE KEY-----"""
 
 
 @pytest.fixture
@@ -25,3 +42,8 @@ def rider_dispatch_request(rider_profile):
         dispatch_id=1,
     )
     return rider_dispatch_request
+
+
+@pytest.fixture
+def mock_jwt_token():
+    return jwt.encode({}, TEST_JWT_PRIVATE, algorithm="RS256")

@@ -89,3 +89,14 @@ def test_login_api_on_fail_with_invalid_request_body(rider_profile):
         # When: 유효하지않은 request body로 login API 요청을 하면,
         invalid_request_body = {"email": "test@test.com", "passwd": "testpasswd"}
         _call_login_api(RiderLoginRequest(**invalid_request_body))
+
+
+class TestJWTAuthentication:
+    def test_jwt_auth_on_invalid_payload(self):
+        invalid_jwt_token = "invalid_jwt_token"
+        response = client.get(
+            reverse("ninja:test_authentication"),
+            content_type="application/json",
+            **{"HTTP_AUTHORIZATION": f"Bearer {invalid_jwt_token}"},
+        )
+        assert response.status_code == 401

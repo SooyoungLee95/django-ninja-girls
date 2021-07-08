@@ -16,7 +16,7 @@ from .helpers import (
     publish_rider_updated,
 )
 
-trigger_router = Router()
+trigger_router = Router(auth=None)
 
 
 @trigger_router.post("/rider/location", url_name="simulator_rider_location_trigger")
