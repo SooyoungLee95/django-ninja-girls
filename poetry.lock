@@ -815,17 +815,6 @@ optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
-name = "jwt"
-version = "1.2.0"
-description = "JSON Web Token library for Python 3."
-category = "main"
-optional = false
-python-versions = ">= 3.6"
-
-[package.dependencies]
-cryptography = ">=3.1,<3.4.0 || >3.4.0,<4.0"
-
-[[package]]
 name = "localstack"
 version = "0.12.13"
 description = "An easy-to-use test/mocking framework for developing Cloud applications"
@@ -1534,7 +1523,7 @@ brotli = ["brotli"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "05fa22f2ac6b3cf03dc85b4ef9364f5f080a282a5ef3a5fef1c9576b4c253791"
+content-hash = "2b2ee5c51734e7b099671da1cd9ab8735f0abc6576b41770884c7409f2a53f84"
 
 [metadata.files]
 anyio = [
@@ -1954,10 +1943,6 @@ jedi = [
 jmespath = [
     {file = "jmespath-0.10.0-py2.py3-none-any.whl", hash = "sha256:cdf6525904cc597730141d61b36f2e4b8ecc257c420fa2f4549bac2c2d0cb72f"},
     {file = "jmespath-0.10.0.tar.gz", hash = "sha256:b85d0567b8666149a93172712e68920734333c0ce7e89b78b3e987f71e5ed4f9"},
-]
-jwt = [
-    {file = "jwt-1.2.0-py3-none-any.whl", hash = "sha256:488db4749770f0c189d35bf3de35cb874373967f75cbdd6ac4c86de7d24dc804"},
-    {file = "jwt-1.2.0.tar.gz", hash = "sha256:362bf06995e310af59c44c8c732c499fa4c1621f4ff7ad4a6f14ab0b9e066407"},
 ]
 localstack = [
     {file = "localstack-0.12.13.tar.gz", hash = "sha256:efe0fb8a646f1263ae0e798fc0d1c4323dd2c99b7aaf62f60e826daa1674af68"},
