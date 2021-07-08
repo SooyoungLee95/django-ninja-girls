@@ -17,8 +17,6 @@ from ras.rider_app.helpers import (
 
 from .constants import (
     MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1,
-    MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_2,
-    MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_3,
     MOCK_ENCRYPTED_PAYLOAD,
     MOCK_JWT_ACCESS_TOKEN,
     MOCK_JWT_REFRESH_TOKEN,
@@ -131,19 +129,5 @@ def create_rider_delivery_state(request, data: RiderDeliveryState):
     summary="배차 관련 정보(주문, 레스토랑, 고객)",
 )
 def mock_retrieve_dispatch_requests_additional_info(request, id: str):
-    id_list = id.split(",")
-    if len(id_list) == 1:
-        dispatch_requests_additional_info = {"data": [MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1]}
-    if len(id_list) == 2:
-        dispatch_requests_additional_info = {
-            "data": [MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1, MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_2]
-        }
-    else:
-        dispatch_requests_additional_info = {
-            "data": [
-                MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1,
-                MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_2,
-                MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_3,
-            ]
-        }
-    return HTTPStatus.OK, dispatch_requests_additional_info
+    MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1["dispatch_request_id"] = int(id)
+    return HTTPStatus.OK, {"data": [MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1]}
