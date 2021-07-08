@@ -3,6 +3,7 @@ from unittest.mock import Mock, patch
 
 import jwt
 import pytest
+from django.conf import settings
 from django.test import Client
 from django.urls import reverse
 from pydantic import ValidationError
@@ -109,6 +110,26 @@ class TestJWTAuthentication:
             reverse("ninja:test_authentication"),
             content_type="application/json",
             **{"HTTP_AUTHORIZATION": f"Bearer {token_with_invalid_payload}"},
+        )
+        assert response.status_code == 401
+
+    def test_jwt_auth_on_expired_token(self):
+        expired_token = jwt.encode(
+            {
+                "iat": 1625703402,
+                "exp": 1625703402,  # expired
+                "sub_id": 1,
+                "platform": settings.RIDERYO_BASE_URL,
+                "base_url": settings.RIDERYO_ENV,
+                "role": "rider",
+            },
+            TEST_JWT_PRIVATE,
+            algorithm="RS256",
+        )
+        response = client.get(
+            reverse("ninja:test_authentication"),
+            content_type="application/json",
+            **{"HTTP_AUTHORIZATION": f"Bearer {expired_token}"},
         )
         assert response.status_code == 401
 
