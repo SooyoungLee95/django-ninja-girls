@@ -95,22 +95,21 @@ def test_login_api_on_fail_with_invalid_request_body(rider_profile):
 
 
 class TestJWTAuthentication:
-    def test_jwt_auth_on_invalid_token(self):
-        invalid_jwt_token = "invalid_jwt_token"
-        response = client.get(
+    def _call_test_api(self, token):
+        return client.get(
             reverse("ninja:test_authentication"),
             content_type="application/json",
-            **{"HTTP_AUTHORIZATION": f"Bearer {invalid_jwt_token}"},
+            **{"HTTP_AUTHORIZATION": f"Bearer {token}"},
         )
+
+    def test_jwt_auth_on_invalid_token(self):
+        invalid_jwt_token = "invalid_jwt_token"
+        response = self._call_test_api(token=invalid_jwt_token)
         assert response.status_code == 401
 
     def test_jwt_auth_on_invalid_payload(self):
         token_with_invalid_payload = jwt.encode({"role": "owner"}, TEST_JWT_PRIVATE, algorithm="RS256")
-        response = client.get(
-            reverse("ninja:test_authentication"),
-            content_type="application/json",
-            **{"HTTP_AUTHORIZATION": f"Bearer {token_with_invalid_payload}"},
-        )
+        response = self._call_test_api(token=token_with_invalid_payload)
         assert response.status_code == 401
 
     def test_jwt_auth_on_expired_token(self):
@@ -126,17 +125,9 @@ class TestJWTAuthentication:
             TEST_JWT_PRIVATE,
             algorithm="RS256",
         )
-        response = client.get(
-            reverse("ninja:test_authentication"),
-            content_type="application/json",
-            **{"HTTP_AUTHORIZATION": f"Bearer {expired_token}"},
-        )
+        response = self._call_test_api(token=expired_token)
         assert response.status_code == 401
 
     def test_jwt_auth_on_valid_token_and_payload(self, mock_jwt_token):
-        response = client.get(
-            reverse("ninja:test_authentication"),
-            content_type="application/json",
-            **{"HTTP_AUTHORIZATION": f"Bearer {mock_jwt_token}"},
-        )
+        response = self._call_test_api(token=mock_jwt_token)
         assert response.status_code == 200
