@@ -111,3 +111,11 @@ class TestJWTAuthentication:
             **{"HTTP_AUTHORIZATION": f"Bearer {token_with_invalid_payload}"},
         )
         assert response.status_code == 401
+
+    def test_jwt_auth_on_valid_token_and_payload(self, mock_jwt_token):
+        response = client.get(
+            reverse("ninja:test_authentication"),
+            content_type="application/json",
+            **{"HTTP_AUTHORIZATION": f"Bearer {mock_jwt_token}"},
+        )
+        assert response.status_code == 200
