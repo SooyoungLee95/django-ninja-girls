@@ -1,5 +1,6 @@
 import jwt
 import pytest
+from django.conf import settings
 
 from ras.rideryo.models import RiderAccount, RiderDispatchRequestHistory, RiderProfile
 
@@ -46,4 +47,15 @@ def rider_dispatch_request(rider_profile):
 
 @pytest.fixture
 def mock_jwt_token():
-    return jwt.encode({}, TEST_JWT_PRIVATE, algorithm="RS256")
+    return jwt.encode(
+        {
+            "iat": 1625703402,
+            "exp": 2247783524,
+            "sub_id": 1,
+            "platform": settings.RIDERYO_BASE_URL,
+            "base_url": settings.RIDERYO_ENV,
+            "role": "rider",
+        },
+        TEST_JWT_PRIVATE,
+        algorithm="RS256",
+    )

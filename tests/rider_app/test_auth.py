@@ -1,6 +1,7 @@
 import json
 from unittest.mock import Mock, patch
 
+import jwt
 import pytest
 from django.test import Client
 from django.urls import reverse
@@ -9,6 +10,7 @@ from pydantic import ValidationError
 from ras.rider_app.constants import AUTHYO_LOGIN_URL
 from ras.rider_app.schemas import RiderLoginRequest
 from ras.rider_app.views import RIDER_APP_INITIAL_PASSWORD
+from tests.rider_app.conftest import TEST_JWT_PRIVATE
 
 client = Client()
 
@@ -92,11 +94,20 @@ def test_login_api_on_fail_with_invalid_request_body(rider_profile):
 
 
 class TestJWTAuthentication:
-    def test_jwt_auth_on_invalid_payload(self):
+    def test_jwt_auth_on_invalid_token(self):
         invalid_jwt_token = "invalid_jwt_token"
         response = client.get(
             reverse("ninja:test_authentication"),
             content_type="application/json",
             **{"HTTP_AUTHORIZATION": f"Bearer {invalid_jwt_token}"},
+        )
+        assert response.status_code == 401
+
+    def test_jwt_auth_on_invalid_payload(self):
+        token_with_invalid_payload = jwt.encode({"role": "owner"}, TEST_JWT_PRIVATE, algorithm="RS256")
+        response = client.get(
+            reverse("ninja:test_authentication"),
+            content_type="application/json",
+            **{"HTTP_AUTHORIZATION": f"Bearer {token_with_invalid_payload}"},
         )
         assert response.status_code == 401
