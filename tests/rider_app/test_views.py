@@ -83,7 +83,7 @@ class TestUpdateRiderAvailability:
         assert response.status_code == expected_jungleworks_response.relevant_http_status()
         # And: Jungleworks 활성화 체크 함수 및 응답값이 올바른지 확인한다.
         mock_use_jungleworks.assert_called_once()
-        assert response.json() == {"errors": [{"name": "reason", "message": "invalid"}]}
+        assert response.json() == {"message": "invalid"}
 
     @pytest.mark.django_db(transaction=True)
     @patch("ras.rider_app.views.should_connect_jungleworks")
@@ -101,7 +101,7 @@ class TestUpdateRiderAvailability:
 
         # Then: 400 응답코드가 반환된다.
         assert response.status_code == HTTPStatus.BAD_REQUEST
-        assert response.json() == {"errors": [{"name": "reason", "message": "라이더를 식별할 수 없습니다."}]}
+        assert response.json() == {"message": "라이더를 식별할 수 없습니다."}
 
 
 class TestRiderDispatchResponse:
@@ -175,7 +175,7 @@ class TestRiderDispatchResponse:
         assert response.status_code == expected_jungleworks_response.relevant_http_status()
         # And: Jungleworks 활성화 체크 함수 및 응답값이 올바른지 확인한다.
         mock_use_jungleworks.assert_called_once()
-        assert response.json() == {"errors": [{"name": "reason", "message": "invalid"}]}
+        assert response.json() == {"message": "invalid"}
 
     @pytest.mark.django_db(transaction=True)
     @patch("ras.rider_app.views.should_connect_jungleworks")
@@ -192,7 +192,7 @@ class TestRiderDispatchResponse:
 
         # Then: 400 응답코드가 반환된다.
         assert response.status_code == HTTPStatus.BAD_REQUEST
-        assert response.json() == {"errors": [{"name": "reason", "message": "유효한 ID 값이 아닙니다."}]}
+        assert response.json() == {"message": "유효한 ID 값이 아닙니다."}
 
     @pytest.mark.django_db(transaction=True)
     @patch("ras.rider_app.views.should_connect_jungleworks")
