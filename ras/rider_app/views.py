@@ -57,7 +57,7 @@ def update_rider_availability(request, data: RiderAvailabilitySchema):
     status, message = handle_rider_availability_updates(rider_id, data, is_jungleworks)
 
     if status != HTTPStatus.OK:
-        return status, ErrorResponse(errors=[{"name": "reason", "message": message}])
+        return status, ErrorResponse(message=message)
     return status, data
 
 
@@ -71,7 +71,7 @@ def create_rider_dispatch_response(request, data: RiderDispatchResponseSchema):
     is_jungleworks = should_connect_jungleworks(request)
     status, message = handle_rider_dispatch_response(data, is_jungleworks)
     if status != HTTPStatus.OK:
-        return status, ErrorResponse(errors=[{"name": "reason", "message": message}])
+        return status, ErrorResponse(message=message)
     return status, data
 
 
@@ -127,7 +127,7 @@ def create_rider_delivery_state(request, data: RiderDeliveryState):
     is_jungleworks = should_connect_jungleworks(request)
     status, message = handle_rider_delivery_state(data, is_jungleworks)
     if status != HTTPStatus.OK:
-        return status, ErrorResponse(errors=[{"name": "reason", "message": message}])
+        return status, ErrorResponse(message=message)
     mock_delivery_state_push_action(delivery_state=data)
     return status, data
 
