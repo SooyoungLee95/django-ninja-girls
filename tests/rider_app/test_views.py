@@ -377,7 +377,9 @@ class TestRiderBan:
     @patch("ras.rider_app.views.should_connect_jungleworks", Mock(return_value=False))
     @patch("ras.rider_app.helpers.send_push_action", Mock(return_value=None))
     @patch("ras.common.messaging.helpers.sns_client.publish")
-    def test_update_rider_ban_should_change_rider_to_unavailable(self, mock_publish, rider_availability, given_rider_availability):
+    def test_update_rider_ban_should_change_rider_to_unavailable(
+        self, mock_publish, rider_availability, given_rider_availability
+    ):
         # Given: 라이더가 "근무 중"이거나 "근무 중이 아닌" 상태일 때,
         rider_availability.is_available = given_rider_availability
         rider_availability.save()
