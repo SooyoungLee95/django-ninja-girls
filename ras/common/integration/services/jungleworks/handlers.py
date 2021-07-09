@@ -68,12 +68,12 @@ async def _update_task_status(task_id, task_status):
 
 
 async def update_task_status(data: RiderDispatchResponse):
-    tasks = await query_get_dispatch_jungleworks_tasks(data.dispatch_request_id)  # type: ignore[misc,arg-type]
+    tasks = await query_get_dispatch_jungleworks_tasks(data.dispatch_request_id)
     return await _update_task_status(tasks.pickup_task_id, response_to_junglework_status[data.response])
 
 
 async def update_task_status_from_delivery_state(data: RiderDeliveryState) -> list:
-    tasks = await query_get_dispatch_jungleworks_tasks(data.dispatch_request_id)  # type: ignore[misc,arg-type]
+    tasks = await query_get_dispatch_jungleworks_tasks(data.dispatch_request_id)
 
     if data.state == DeliveryState.PICK_UP:
         return [
