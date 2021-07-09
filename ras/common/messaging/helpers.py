@@ -23,7 +23,7 @@ event_cls_to_type = {RIDER_WORKING_STATE: EventMsgRiderWorkingState}
 
 @singledispatch
 def publish_event(instance, event_type):
-    pass
+    raise NotImplementedError("publish_event must be implemented.")
 
 
 @publish_event.register
