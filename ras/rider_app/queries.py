@@ -4,6 +4,8 @@ from functools import singledispatch
 from asgiref.sync import sync_to_async
 from django.db import transaction
 
+from ras.common.messaging.consts import RIDER_WORKING_STATE
+from ras.common.messaging.helpers import trigger_event
 from ras.rideryo.models import (
     DispatchRequestJungleworksTask,
     RiderAvailability,
@@ -25,7 +27,8 @@ logger = logging.getLogger(__name__)
 
 
 @singledispatch
-def query_update_rider_availability(data: RiderAvailabilitySchema, rider_id):
+@trigger_event(RIDER_WORKING_STATE)
+def query_update_rider_availability(data: RiderAvailabilitySchema, rider_id) -> RiderAvailability:
     with transaction.atomic():
         availability, _ = RiderAvailability.objects.select_for_update(nowait=True).get_or_create(rider_id=rider_id)
         availability.is_available = data.is_available
@@ -35,7 +38,8 @@ def query_update_rider_availability(data: RiderAvailabilitySchema, rider_id):
 
 
 @query_update_rider_availability.register
-def _(data: bool, rider_id):
+@trigger_event(RIDER_WORKING_STATE)
+def _(data: bool, rider_id) -> RiderAvailability:
     with transaction.atomic():
         availability, _ = RiderAvailability.objects.select_for_update(nowait=True).get_or_create(rider_id=rider_id)
         availability.is_available = data
