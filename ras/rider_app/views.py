@@ -151,5 +151,5 @@ def update_rider_ban(request, data: RiderBan):
     # TODO: requires permission check! Admin only!
     status, message = handle_rider_ban(data)
     if status != HTTPStatus.OK:
-        return status, ErrorResponse(errors=[{"name": "reason", "message": message}])
+        return status, ErrorResponse(message=message)
     return status, data
