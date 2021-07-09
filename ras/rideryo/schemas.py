@@ -1,10 +1,8 @@
 from enum import Enum
-from uuid import UUID
 
 from ninja import Schema
-from pydantic import Field, validator
 
-from .helpers import generate_event_id
+from ras.common.messaging.consts import RIDER_TOPIC_ARN
 
 
 class Location(Schema):
@@ -26,23 +24,16 @@ class EventType(Enum):
     ADD = "add"
     UPDATE = "update"
     DELETE = "delete"
+    WORKING_STATE = "working-state"
 
 
 class EventMsg(Schema):
-    event_id: str = Field(default_factory=generate_event_id)
+    _arn: str
     event_type: EventType
-    event_name: str
-
-    @validator("event_id", pre=True)
-    def check_event_id(cls, value: str):
-        service, _, uuid = value.partition(":")
-        if service == "ras" and UUID(uuid):
-            return value
-        raise ValueError("Invalid event_id")
 
 
-class EventMsgRiderUpdated(EventMsg):
-    id: int
-    zone_id: int
-    current_location: Location
-    state: RiderState
+class EventMsgRiderWorkingState(EventMsg):
+    _arn = RIDER_TOPIC_ARN
+    event_type = EventType.WORKING_STATE
+    rider_id: int
+    state: str
