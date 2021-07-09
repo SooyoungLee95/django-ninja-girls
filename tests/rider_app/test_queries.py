@@ -13,7 +13,7 @@ def test_query_update_rider_availability(rider_profile):
 
     # When: 라이더 업무시작/종료 업데이트 요청을 보내면
     data = RiderAvailabilitySchema(is_available=True)
-    availability = query_update_rider_availability(rider_profile.pk, data)
+    availability = query_update_rider_availability(data, rider_profile.pk)
 
     # Then: 요청한 라이더의 업무내역이 반환되고, 요청값이 반영되었는지 확인한다.
     assert availability is not None
@@ -33,7 +33,7 @@ def test_query_update_rider_availability_of_not_existing_rider(rider_profile):
     # When: 라이더 업무시작/종료 업데이트 요청을 보내면
     data = RiderAvailabilitySchema(is_available=True)
     try:
-        query_update_rider_availability(not_existing_rider_pk, data)
+        query_update_rider_availability(data, not_existing_rider_pk)
     except IntegrityError:
         # Then: 예외가 발생하고
         assert True

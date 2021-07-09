@@ -25,7 +25,7 @@ from ..common.fcm import FCMSender
 from ..rideryo.models import RiderDispatchRequestHistory, RiderProfile
 from .schemas import FcmPushPayload, MockRiderDispatch
 from .schemas import RiderAvailability as RiderAvailabilitySchema
-from .schemas import RiderDeliveryState, RiderDispatch, RiderDispatchResponse
+from .schemas import RiderBan, RiderDeliveryState, RiderDispatch, RiderDispatchResponse
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ def handle_rider_availability_updates(rider_id, data: RiderAvailabilitySchema, i
         return jw_response.relevant_http_status(), jw_response.message
     else:
         try:
-            query_update_rider_availability(rider_id, data)
+            query_update_rider_availability(data, rider_id)
             return HTTPStatus.OK, ""
         except IntegrityError as e:
             logger.error(f"[RiderAvailability] {e!r} {data}")
@@ -89,8 +89,7 @@ def send_push_action(rider_id: int, action: PushAction, id: int):
     rider_fcm_token = query_fcm_token(rider_id)
     if not rider_fcm_token:
         return None
-    response = fcm.send(data=FcmPushPayload(registration_token=rider_fcm_token, action=action, id=id).dict())
-    return response
+    return fcm.send(data=FcmPushPayload(registration_token=rider_fcm_token, action=action, id=id).dict())
 
 
 def mock_handle_rider_dispatch_request_creates(data: MockRiderDispatch):
@@ -146,4 +145,23 @@ def mock_delivery_state_push_action(delivery_state: RiderDeliveryState):
     action = delivery_state_push_action_map.get(delivery_state.state)
     if not action:
         return None
+
     return send_push_action(rider_id=rider.pk, action=action, id=delivery_state.dispatch_request_id)
+
+
+def handle_rider_ban(data: RiderBan):
+    rider_id = data.rider_id
+    if data.is_banned:
+        try:
+            # TODO: Ban 상태 추가시 구현 로직 추가
+            query_update_rider_availability(False, rider_id)
+        except IntegrityError as e:
+            logger.error(f"[RiderBan] {e!r} {data}")
+            return HTTPStatus.BAD_REQUEST, "라이더를 식별할 수 없습니다."
+        except OperationalError as e:
+            logger.error(f"[RiderBan] {e!r} {data}")
+            return HTTPStatus.CONFLICT, "업무상태를 변경 중입니다."
+
+    action = PushAction.BAN if data.is_banned else PushAction.UNDO_BAN
+    send_push_action(rider_id=rider_id, action=action, id=rider_id)
+    return HTTPStatus.OK, ""

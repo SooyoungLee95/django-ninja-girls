@@ -10,3 +10,5 @@ class PushAction(str, Enum):
     NEAR_PICKUP = "dispatch-request:near-pickup"
     NEAR_DROPOFF = "dispatch-request:near-dropoff"
     DISPATCHED = "dispatch-request:dispatched"
+    BAN = "dispatch-request:ban"
+    UNDO_BAN = "dispatch-request:undo-ban"

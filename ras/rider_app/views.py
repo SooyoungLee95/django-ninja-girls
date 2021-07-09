@@ -10,6 +10,7 @@ from ras.common.integration.services.jungleworks.handlers import (
 from ras.common.schemas import ErrorResponse
 from ras.rider_app.helpers import (
     handle_rider_availability_updates,
+    handle_rider_ban,
     handle_rider_delivery_state,
     handle_rider_dispatch_request_creates,
     handle_rider_dispatch_response,
@@ -27,7 +28,7 @@ from .constants import (
 from .enums import WebhookName
 from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
 from .schemas import RiderAvailability as RiderAvailabilitySchema
-from .schemas import RiderDeliveryState
+from .schemas import RiderBan, RiderDeliveryState
 from .schemas import RiderDispatch as RiderDispatchResultSchema
 from .schemas import RiderDispatchResponse as RiderDispatchResponseSchema
 from .schemas import RiderLoginRequest, RiderLoginResponse
@@ -138,3 +139,17 @@ def create_rider_delivery_state(request, data: RiderDeliveryState):
 def mock_retrieve_dispatch_requests_additional_info(request, id: str):
     MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1["dispatch_request_id"] = int(id)
     return HTTPStatus.OK, {"data": [MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1]}
+
+
+@rider_router.put(
+    "/ban",
+    url_name="rider_app_update_rider_ban",
+    summary="업무정지/해제",
+    response={200: RiderBan, codes_4xx: ErrorResponse},
+)
+def update_rider_ban(request, data: RiderBan):
+    # TODO: requires permission check! Admin only!
+    status, message = handle_rider_ban(data)
+    if status != HTTPStatus.OK:
+        return status, ErrorResponse(errors=[{"name": "reason", "message": message}])
+    return status, data
