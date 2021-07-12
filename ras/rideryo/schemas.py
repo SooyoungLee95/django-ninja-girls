@@ -1,8 +1,7 @@
 from enum import Enum
 
+from django.conf import settings
 from ninja import Schema
-
-from ras.common.messaging.consts import RIDER_TOPIC_ARN
 
 
 class Location(Schema):
@@ -33,7 +32,7 @@ class EventMsg(Schema):
 
 
 class EventMsgRiderWorkingState(EventMsg):
-    _arn = RIDER_TOPIC_ARN
+    _arn = settings.ARN_SNS_TOPIC_RIDER
     event_type = EventType.WORKING_STATE
     rider_id: int
     state: str

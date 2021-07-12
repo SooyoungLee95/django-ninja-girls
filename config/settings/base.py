@@ -117,6 +117,7 @@ AWS_ACCESS_KEY_ID = env.str("AWS_ACCESS_KEY_ID", default="test")
 AWS_SECRET_ACCESS_KEY = env.str("AWS_SECRET_ACCESS_KEY", default="test")
 AWS_REGION = env.str("AWS_REGION", default="us-east-1")
 AWS_SNS_ENDPOINT_URL = env.str("AWS_SNS_ENDPOINT_URL", default="http://0.0.0.0:4566")
+ARN_SNS_TOPIC_RIDER = env.str("ARN_SNS_TOPIC_RIDER", default="arn:aws:sns:us-east-1:000000000000:rider")
 
 
 # Jungleworks
