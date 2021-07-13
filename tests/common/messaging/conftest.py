@@ -1,5 +1,7 @@
 import pytest
 
+from tests.rider_app.conftest import rider_dispatch_request, rider_profile  # noqa: F401
+
 
 @pytest.fixture
 def notification_data():

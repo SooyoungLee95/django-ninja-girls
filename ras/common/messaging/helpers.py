@@ -7,11 +7,18 @@ import boto3
 import httpx
 from botocore.exceptions import BotoCoreError
 from django.conf import settings
+from django.db import transaction
 from ninja.errors import HttpError
 
 from ras.common.messaging.consts import RIDER_WORKING_STATE
 from ras.common.messaging.schema import SNSMessageForPublish, SNSMessageForSubscribe
-from ras.rideryo.models import RiderAvailability
+from ras.rideryo.enums import DeliveryState
+from ras.rideryo.models import (
+    RiderAvailability,
+    RiderDeliveryCancelReason,
+    RiderDeliveryStateHistory,
+    RiderDispatchRequestHistory,
+)
 from ras.rideryo.schemas import EventMsgRiderWorkingState
 
 logger = logging.getLogger(__name__)
@@ -59,8 +66,19 @@ def trigger_event(event_type: str):
     return decorator
 
 
-def handle_order_cancelled_notification(sns_message: SNSMessageForSubscribe):
-    pass
+def handle_order_cancelled_notification(sns_message: SNSMessageForSubscribe) -> Optional[RiderDispatchRequestHistory]:
+    message = sns_message.message
+    if not (rider_id := message["rider_id"]):
+        return None
+
+    order_id = message["order_id"]
+    with transaction.atomic():
+        dispatch_request = RiderDispatchRequestHistory.objects.get(order_id=order_id, rider_id=rider_id)
+        RiderDeliveryStateHistory.objects.create(
+            dispatch_request=dispatch_request, delivery_state=DeliveryState.CANCELLED
+        )
+        RiderDeliveryCancelReason.objects.create(dispatch_request=dispatch_request, reason=message["reason"])
+    return dispatch_request
 
 
 SNS_NOTIFICATION_HANDLER_MAP: dict[str, dict[str, Callable]] = {
@@ -74,7 +92,7 @@ def handle_sns_notification(message_type: Optional[str], sns_message: SNSMessage
     if message_type == "Notification":
         event_handlers = SNS_NOTIFICATION_HANDLER_MAP[sns_message.topic_arn]
         handler_func = event_handlers[sns_message.message["event_type"]]
-        handler_func(sns_message)
+        return handler_func(sns_message)
     elif message_type == "SubscriptionConfirmation" and sns_message.subscribe_url:
         httpx.get(sns_message.subscribe_url)
     elif message_type == "UnsubscribeConfirmation":

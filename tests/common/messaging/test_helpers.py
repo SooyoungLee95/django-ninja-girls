@@ -1,11 +1,18 @@
 from http import HTTPStatus
 from unittest.mock import Mock, patch
 
+import orjson
+import pytest
 from ninja.errors import HttpError
 
 from ras.common.messaging import SNSMessageForPublish, publish_message
-from ras.common.messaging.helpers import handle_sns_notification
+from ras.common.messaging.helpers import (
+    handle_order_cancelled_notification,
+    handle_sns_notification,
+)
 from ras.common.messaging.schema import SNSMessageForSubscribe
+from ras.rideryo.enums import DeliveryState
+from ras.rideryo.models import RiderDeliveryCancelReason, RiderDeliveryStateHistory
 
 
 @patch("ras.common.messaging.helpers.sns_client.publish")
@@ -82,3 +89,35 @@ def test_handle_sns_unknown_event(notification_data):
         assert e.status_code == HTTPStatus.BAD_REQUEST
     else:
         raise AssertionError()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_handle_order_cancelled_notification(rider_dispatch_request, notification_data):
+    # Given: SNSMessageForSubscribe Schema로 정의된 주문취소 message가 있고
+    sns_message = SNSMessageForSubscribe.parse_obj(notification_data)
+    rider_id = rider_dispatch_request.rider.pk
+    order_id = rider_dispatch_request.order_id
+    reason = "restaurant_cancelled"
+
+    sns_message.message_ = orjson.dumps(
+        {"rider_id": rider_id, "order_id": order_id, "reason": reason, "event_type": "cancelled"}
+    ).decode()
+
+    # When: sns 이벤트 처리 함수를 실행하면,
+    handle_order_cancelled_notification(sns_message)
+
+    # Then: 배달 상태 CANCELLED 로 기록이 저장되고
+    state_history = (
+        RiderDeliveryStateHistory.objects.filter(dispatch_request=rider_dispatch_request)
+        .order_by("-created_at")
+        .first()
+    )
+    assert state_history.delivery_state == DeliveryState.CANCELLED
+
+    # Then: 취소 사유가 저장된다.
+    cancel_reason = (
+        RiderDeliveryCancelReason.objects.filter(dispatch_request=rider_dispatch_request)
+        .order_by("-created_at")
+        .first()
+    )
+    assert cancel_reason.reason == reason
