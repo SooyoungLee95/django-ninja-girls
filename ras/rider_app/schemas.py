@@ -14,6 +14,11 @@ class RiderAvailability(Schema):
     is_available: bool
 
 
+class RiderBan(Schema):
+    rider_id: int
+    is_banned: bool
+
+
 class RiderDispatchResponse(Schema):
     dispatch_request_id: int
     response: RiderResponseEnum

@@ -10,6 +10,7 @@ from ras.common.integration.services.jungleworks.handlers import (
 from ras.common.schemas import ErrorResponse
 from ras.rider_app.helpers import (
     handle_rider_availability_updates,
+    handle_rider_ban,
     handle_rider_delivery_state,
     handle_rider_dispatch_request_creates,
     handle_rider_dispatch_response,
@@ -20,8 +21,6 @@ from ras.rider_app.helpers import (
 
 from .constants import (
     MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1,
-    MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_2,
-    MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_3,
     MOCK_ENCRYPTED_PAYLOAD,
     MOCK_JWT_ACCESS_TOKEN,
     MOCK_JWT_REFRESH_TOKEN,
@@ -30,7 +29,7 @@ from .constants import (
 from .enums import WebhookName
 from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
 from .schemas import RiderAvailability as RiderAvailabilitySchema
-from .schemas import RiderDeliveryState
+from .schemas import RiderBan, RiderDeliveryState
 from .schemas import RiderDispatch as RiderDispatchResultSchema
 from .schemas import RiderDispatchResponse as RiderDispatchResponseSchema
 from .schemas import RiderLoginRequest, RiderLoginResponse, RiderProfileSummary
@@ -54,11 +53,11 @@ WEBHOOK_MAP: dict[str, Callable] = {
 )
 def update_rider_availability(request, data: RiderAvailabilitySchema):
     is_jungleworks = should_connect_jungleworks(request)
-    rider_id = 1  # TODO: parse rider id from token
+    rider_id = 1049903  # TODO: parse rider id from token
     status, message = handle_rider_availability_updates(rider_id, data, is_jungleworks)
 
     if status != HTTPStatus.OK:
-        return status, ErrorResponse(errors=[{"name": "reason", "message": message}])
+        return status, ErrorResponse(message=message)
     return status, data
 
 
@@ -72,7 +71,7 @@ def create_rider_dispatch_response(request, data: RiderDispatchResponseSchema):
     is_jungleworks = should_connect_jungleworks(request)
     status, message = handle_rider_dispatch_response(data, is_jungleworks)
     if status != HTTPStatus.OK:
-        return status, ErrorResponse(errors=[{"name": "reason", "message": message}])
+        return status, ErrorResponse(message=message)
     return status, data
 
 
@@ -128,7 +127,7 @@ def create_rider_delivery_state(request, data: RiderDeliveryState):
     is_jungleworks = should_connect_jungleworks(request)
     status, message = handle_rider_delivery_state(data, is_jungleworks)
     if status != HTTPStatus.OK:
-        return status, ErrorResponse(errors=[{"name": "reason", "message": message}])
+        return status, ErrorResponse(message=message)
     mock_delivery_state_push_action(delivery_state=data)
     return status, data
 
@@ -139,22 +138,22 @@ def create_rider_delivery_state(request, data: RiderDeliveryState):
     summary="배차 관련 정보(주문, 레스토랑, 고객)",
 )
 def mock_retrieve_dispatch_requests_additional_info(request, id: str):
-    id_list = id.split(",")
-    if len(id_list) == 1:
-        dispatch_requests_additional_info = {"data": [MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1]}
-    if len(id_list) == 2:
-        dispatch_requests_additional_info = {
-            "data": [MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1, MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_2]
-        }
-    else:
-        dispatch_requests_additional_info = {
-            "data": [
-                MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1,
-                MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_2,
-                MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_3,
-            ]
-        }
-    return HTTPStatus.OK, dispatch_requests_additional_info
+    MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1["dispatch_request_id"] = int(id)
+    return HTTPStatus.OK, {"data": [MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1]}
+
+
+@rider_router.put(
+    "/ban",
+    url_name="rider_app_update_rider_ban",
+    summary="업무정지/해제",
+    response={200: RiderBan, codes_4xx: ErrorResponse},
+)
+def update_rider_ban(request, data: RiderBan):
+    # TODO: requires permission check! Admin only!
+    status, message = handle_rider_ban(data)
+    if status != HTTPStatus.OK:
+        return status, ErrorResponse(errors=[{"name": "reason", "message": message}])
+    return status, data
 
 
 @rider_router.get(
