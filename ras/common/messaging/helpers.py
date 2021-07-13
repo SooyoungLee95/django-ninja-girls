@@ -1,12 +1,16 @@
 import logging
 from functools import singledispatch, wraps
+from http import HTTPStatus
+from typing import Callable, Optional
 
 import boto3
+import httpx
 from botocore.exceptions import BotoCoreError
 from django.conf import settings
+from ninja.errors import HttpError
 
 from ras.common.messaging.consts import RIDER_WORKING_STATE
-from ras.common.messaging.schema import SNSMessageForPublish
+from ras.common.messaging.schema import SNSMessageForPublish, SNSMessageForSubscribe
 from ras.rideryo.models import RiderAvailability
 from ras.rideryo.schemas import EventMsgRiderWorkingState
 
@@ -53,3 +57,27 @@ def trigger_event(event_type: str):
         return wrapper
 
     return decorator
+
+
+def handle_order_cancelled_notification(sns_message: SNSMessageForSubscribe):
+    pass
+
+
+SNS_NOTIFICATION_HANDLER_MAP: dict[str, dict[str, Callable]] = {
+    settings.ARN_SNS_TOPIC_ORDER: {
+        "cancelled": handle_order_cancelled_notification,
+    }
+}
+
+
+def handle_sns_notification(message_type: Optional[str], sns_message: SNSMessageForSubscribe):
+    if message_type == "Notification":
+        event_handlers = SNS_NOTIFICATION_HANDLER_MAP[sns_message.topic_arn]
+        handler_func = event_handlers[sns_message.message["event_type"]]
+        handler_func(sns_message)
+    elif message_type == "SubscriptionConfirmation" and sns_message.subscribe_url:
+        httpx.get(sns_message.subscribe_url)
+    elif message_type == "UnsubscribeConfirmation":
+        pass
+    else:
+        raise HttpError(HTTPStatus.BAD_REQUEST, "Unprocessable notification")

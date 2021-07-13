@@ -29,6 +29,7 @@ class SNSMessageForSubscribe(Schema):
     signing_cert_url: str = Field(alias="SigningCertURL")
     subscribe_url: Optional[str] = Field(alias="SubscribeURL")
     unsubscribe_url: Optional[str] = Field(alias="UnsubscribeURL")
+    token: Optional[str] = Field(alias="Token")
 
     @property
     def message(self) -> dict[str, Any]:
