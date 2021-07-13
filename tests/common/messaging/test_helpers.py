@@ -1,12 +1,12 @@
 from unittest.mock import patch
 
-from ras.common.messaging import SNSMessage, publish_message
+from ras.common.messaging import SNSMessageForPublish, publish_message
 
 
 @patch("ras.common.messaging.helpers.sns_client.publish")
 def test_publish_message(mock_sns_publish):
-    # Given: SNSMessage Schema로 정의된 message가 있고
-    sns_message = SNSMessage(topic_arn="test-topic-arn", message='{"test-message": 123}')
+    # Given: SNSMessageForPublish Schema로 정의된 message가 있고
+    sns_message = SNSMessageForPublish(topic_arn="test-topic-arn", message='{"test-message": 123}')
     # And: sns publish 호출시 True를 반환하는 경우
     mock_sns_publish.return_value = True
 

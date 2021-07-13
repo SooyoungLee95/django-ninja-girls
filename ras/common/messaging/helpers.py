@@ -6,7 +6,7 @@ from botocore.exceptions import BotoCoreError
 from django.conf import settings
 
 from ras.common.messaging.consts import RIDER_WORKING_STATE
-from ras.common.messaging.schema import SNSMessage
+from ras.common.messaging.schema import SNSMessageForPublish
 from ras.rideryo.models import RiderAvailability
 from ras.rideryo.schemas import EventMsgRiderWorkingState
 
@@ -30,11 +30,11 @@ def publish_event(instance, event_type):
 def publish_rider_working_state(instance: RiderAvailability, event_type: str):
     event_msg_cls = event_cls_to_type[event_type]
     event_msg = event_msg_cls(rider_id=instance.rider.pk, state="available" if instance.is_available else "unavailable")
-    sns_message = SNSMessage(topic_arn=event_msg._arn, message=event_msg.json(exclude={"_arn"}))
+    sns_message = SNSMessageForPublish(topic_arn=event_msg._arn, message=event_msg.json(exclude={"_arn"}))
     return publish_message(sns_message)
 
 
-def publish_message(sns_message: SNSMessage):
+def publish_message(sns_message: SNSMessageForPublish):
     try:
         return sns_client.publish(**sns_message.dict(exclude_none=True, exclude_unset=True))
     except BotoCoreError as e:

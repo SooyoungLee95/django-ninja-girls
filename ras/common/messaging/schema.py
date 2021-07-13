@@ -5,7 +5,7 @@ from pydantic import Field
 
 
 # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/sns.html#SNS.Client.publish
-class SNSMessage(Schema):
+class SNSMessageForPublish(Schema):
     TopicArn: str = Field(alias="topic_arn")
     Message: str = Field(alias="message")
     TargetArn: Optional[str] = Field(alias="target_arn")

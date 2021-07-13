@@ -1,4 +1,4 @@
 from .helpers import publish_message
-from .schema import SNSMessage
+from .schema import SNSMessageForPublish
 
-__all__ = ["SNSMessage", "publish_message"]
+__all__ = ["SNSMessageForPublish", "publish_message"]
