@@ -354,11 +354,11 @@ class TestRiderDeliveryState:
 
 
 @pytest.mark.django_db(transaction=True)
-def test_retrieve_rider_profile(rider_contract_type):
+def test_retrieve_rider_profile_summary(rider_contract_type):
     # When: 라이더 프로필 조회 API를 호출 하였을 때
     client = Client()
     response = client.get(
-        reverse("ninja:retrieve_rider_profile"),
+        reverse("ninja:retrieve_rider_profile_summary"),
         data={"rider_id": rider_contract_type.rider_id},
     )
     # Then: 200 OK를 return 해야하고,

@@ -1,5 +1,6 @@
 import pytest
 
+from ras.rideryo.enums import ContractType
 from ras.rideryo.models import (
     DeliveryCity,
     DeliveryZone,
@@ -75,5 +76,5 @@ def rider_contract_type(vehicle_type, delivery_zone, rider_profile):
         delivery_zone=delivery_zone,
         vehicle_type=vehicle_type,
         rider=rider_profile,
-        contract_type="FULL_TIME",
+        contract_type=ContractType.FULL_TIME,
     )

@@ -13,7 +13,7 @@ from ras.rider_app.helpers import (
     handle_rider_delivery_state,
     handle_rider_dispatch_request_creates,
     handle_rider_dispatch_response,
-    handle_rider_profile,
+    handle_rider_profile_summary,
     mock_delivery_state_push_action,
     mock_handle_rider_dispatch_request_creates,
 )
@@ -158,14 +158,14 @@ def mock_retrieve_dispatch_requests_additional_info(request, id: str):
 
 
 @rider_router.get(
-    "/rider-profile",
-    url_name="retrieve_rider_profile",
+    "/rider-profile-summary",
+    url_name="retrieve_rider_profile_summary",
     summary="라이더 프로필 정보 조회",
     response={200: list[RiderProfile], codes_4xx: ErrorResponse},
 )
-def retrieve_rider_profile(request, rider_id):
+def retrieve_rider_profile_summary(request, rider_id):
     # TODO: parse rider id from token
-    status, message = handle_rider_profile(rider_id)
+    status, message = handle_rider_profile_summary(rider_id)
     if status != HTTPStatus.OK:
-        return status, ErrorResponse(errors=[{"name": "reason", "message": message}])
+        return status, ErrorResponse(message=message)
     return status, message

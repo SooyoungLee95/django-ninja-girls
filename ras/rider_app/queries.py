@@ -82,7 +82,7 @@ def query_create_rider_delivery_state(data: RiderDeliveryState):
     )
 
 
-def query_get_rider_profile(rider_id):
+def query_get_rider_profile_summary(rider_id):
     return (
         RiderProfile.objects.filter(rider=rider_id)
         .annotate(vehicle_name=F("ridercontract__vehicle_type__name"))
