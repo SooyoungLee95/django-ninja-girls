@@ -73,7 +73,11 @@ def handle_order_cancelled_notification(sns_message: SNSMessageForSubscribe) -> 
 
     order_id = message["order_id"]
     with transaction.atomic():
-        dispatch_request = RiderDispatchRequestHistory.objects.get(order_id=order_id, rider_id=rider_id)
+        dispatch_request = (
+            RiderDispatchRequestHistory.objects.filter(order_id=order_id, rider_id=rider_id)
+            .order_by("-created_at")  # 동일 라이더에게 재배차될 가능성이 있으므로 정렬 후 조회
+            .first()
+        )
         RiderDeliveryStateHistory.objects.create(
             dispatch_request=dispatch_request, delivery_state=DeliveryState.CANCELLED
         )
