@@ -87,4 +87,5 @@ def query_get_rider_profile_summary(rider_id):
         RiderProfile.objects.filter(rider=rider_id)
         .annotate(vehicle_name=F("ridercontract__vehicle_type__name"))
         .values("full_name", "ridercontract__contract_type", "ridercontract__vehicle_type__name")
+        .first()
     )

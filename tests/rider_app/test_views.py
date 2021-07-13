@@ -364,10 +364,8 @@ def test_retrieve_rider_profile_summary(rider_contract_type):
     # Then: 200 OK를 return 해야하고,
     assert response.status_code == HTTPStatus.OK
     # And: 라이더 프로필 정보가 일치해야한다.
-    assert response.json() == [
-        {
-            "full_name": rider_contract_type.rider.full_name,
-            "contract_type": rider_contract_type.contract_type,
-            "vehicle_name": rider_contract_type.vehicle_type.name,
-        }
-    ]
+    assert response.json() == {
+        "full_name": rider_contract_type.rider.full_name,
+        "contract_type": rider_contract_type.contract_type,
+        "vehicle_name": rider_contract_type.vehicle_type.name,
+    }
