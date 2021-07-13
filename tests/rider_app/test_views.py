@@ -351,3 +351,23 @@ class TestRiderDeliveryState:
 
         # And: 200 응답코드가 반환된다.
         assert response.status_code == HTTPStatus.OK
+
+
+@pytest.mark.django_db(transaction=True)
+def test_retrieve_rider_profile(rider_contract_type):
+    # When: 라이더 프로필 조회 API를 호출 하였을 때
+    client = Client()
+    response = client.get(
+        reverse("ninja:retrieve_rider_profile"),
+        data={"rider_id": rider_contract_type.rider_id},
+    )
+    # Then: 200 OK를 return 해야하고,
+    assert response.status_code == HTTPStatus.OK
+    # And: 라이더 프로필 정보가 일치해야한다.
+    assert response.json() == [
+        {
+            "full_name": rider_contract_type.rider.full_name,
+            "contract_type": rider_contract_type.contract_type,
+            "vehicle_name": rider_contract_type.vehicle_type.name,
+        }
+    ]

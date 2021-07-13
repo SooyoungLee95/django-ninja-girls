@@ -2,6 +2,7 @@ import logging
 
 from asgiref.sync import sync_to_async
 from django.db import transaction
+from django.db.models import F
 
 from ras.rideryo.models import (
     DispatchRequestJungleworksTask,
@@ -78,4 +79,12 @@ def query_create_rider_delivery_state(data: RiderDeliveryState):
     return RiderDeliveryStateHistory.objects.create(
         dispatch_request_id=data.dispatch_request_id,
         delivery_state=data.state,
+    )
+
+
+def query_get_rider_profile(rider_id):
+    return (
+        RiderProfile.objects.filter(rider=rider_id)
+        .annotate(vehicle_name=F("ridercontract__vehicle_type__name"))
+        .values("full_name", "ridercontract__contract_type", "ridercontract__vehicle_type__name")
     )

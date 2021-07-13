@@ -17,6 +17,7 @@ from ras.rider_app.queries import (
     query_create_rider_delivery_state,
     query_create_rider_dispatch_response,
     query_fcm_token,
+    query_get_rider_profile,
     query_update_rider_availability,
 )
 from ras.rideryo.enums import DeliveryState, RiderResponse
@@ -147,3 +148,13 @@ def mock_delivery_state_push_action(delivery_state: RiderDeliveryState):
     if not action:
         return None
     return send_push_action(rider_id=rider.pk, action=action, id=delivery_state.dispatch_request_id)
+
+
+def handle_rider_profile(rider_id):
+    try:
+        delivery_commission = query_get_rider_profile(rider_id)
+    except RiderProfile.DoesNotExist as e:
+        logger.error(f"[RiderProfile] {e!r} {rider_id}")
+        return HTTPStatus.BAD_REQUEST, "라이더가 존재하지 않습니다."
+    else:
+        return HTTPStatus.OK, delivery_commission

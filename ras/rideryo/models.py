@@ -2,7 +2,7 @@ from django.contrib.auth.hashers import make_password
 from django.db import models
 
 from ras.crypto import decrypt, encrypt
-from ras.rideryo.enums import Bank, DeliveryState
+from ras.rideryo.enums import Bank, ContractType, DeliveryState
 from ras.rideryo.enums import RiderResponse as RiderResponseEnum
 
 
@@ -54,6 +54,7 @@ class RiderContract(CommonTimeStamp):
     rider = models.ForeignKey("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
     delivery_zone = models.ForeignKey("DeliveryZone", on_delete=models.DO_NOTHING, help_text="배달구역 ID")
     vehicle_type = models.ForeignKey("VehicleType", on_delete=models.DO_NOTHING, help_text="운송수단 ID")
+    contract_type = models.CharField(max_length=20, choices=ContractType.choices, help_text="계약 Type")
     is_active = models.BooleanField(default=True, help_text="활성화 여부")
 
 
