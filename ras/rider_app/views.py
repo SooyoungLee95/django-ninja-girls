@@ -158,7 +158,7 @@ def mock_retrieve_dispatch_requests_additional_info(request, id: str):
 
 
 @rider_router.get(
-    "/rider-profile-summary",
+    "/profile-summary",
     url_name="retrieve_rider_profile_summary",
     summary="라이더 프로필 정보 조회",
     response={200: RiderProfileSummary, codes_4xx: ErrorResponse},
