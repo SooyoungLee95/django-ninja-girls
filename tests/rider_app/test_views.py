@@ -1,7 +1,9 @@
 from http import HTTPStatus
 from unittest.mock import Mock, patch
 
+import orjson
 import pytest
+from django.conf import settings
 from django.db.utils import IntegrityError
 from django.test import Client
 from django.urls import reverse
@@ -470,3 +472,37 @@ def test_retrieve_rider_profile_summary(rider_contract_type):
         "contract_type": rider_contract_type.contract_type,
         "vehicle_name": rider_contract_type.vehicle_type.name,
     }
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("ras.rider_app.views.send_push_action")
+@patch("ras.rider_app.views.handle_sns_notification")
+def test_subscribe_sns_event_order_cancelled(mock_handler, mock_push, rider_dispatch_request, notification_data):
+    # Given: Order-Cancelled notification 생성
+    rider_id = rider_dispatch_request.rider.pk
+    order_id = rider_dispatch_request.order_id
+    reason = "restaurant_cancelled"
+
+    body = notification_data
+    body["TopicArn"] = settings.ARN_SNS_TOPIC_ORDER
+    body["Message"] = orjson.dumps(
+        {"rider_id": rider_id, "order_id": order_id, "reason": reason, "event_type": "cancelled"}
+    ).decode()
+
+    # And: 이벤트 처리 함수 mocking
+    mock_handler.return_value = rider_dispatch_request
+
+    # When: 메시지가 게시되면,
+    client = Client()
+    response = client.post(
+        reverse("ninja:rider_app_sns_notification"),
+        data=body,
+        content_type="application/json",
+    )
+
+    # Then: 성공 응답 반환되고,
+    assert response.status_code == HTTPStatus.OK
+
+    # And: 이벤트 핸들러 및 푸시발송이 실행된다
+    mock_handler.assert_called_once()
+    mock_push.assert_called_once()

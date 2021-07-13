@@ -12,3 +12,4 @@ class PushAction(str, Enum):
     DISPATCHED = "dispatch-request:dispatched"
     BAN = "dispatch-request:ban"
     UNDO_BAN = "dispatch-request:undo-ban"
+    DELIVERY_CANCEL = "dispatch-request:cancel"
