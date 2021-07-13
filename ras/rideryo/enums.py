@@ -65,6 +65,7 @@ class DeliveryState(TextChoices):
     LEFT_PICKUP = "LEFT_PICKUP", "픽업지 벗어남"
     NEAR_DROPOFF = "NEAR_DROPOFF", "배달지 근처 도착"
     COMPLETED = "COMPLETED", "배달지 도착 완료"
+    CANCELLED = "CANCELLED", "배달/주문 취소"
 
 
 class JungleworksTaskStatus(str, Enum):
