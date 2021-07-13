@@ -152,9 +152,9 @@ def mock_delivery_state_push_action(delivery_state: RiderDeliveryState):
 
 def handle_rider_profile_summary(rider_id):
     try:
-        rider_profile = query_get_rider_profile_summary(rider_id)
+        rider_profile_summary = query_get_rider_profile_summary(rider_id)
     except RiderProfile.DoesNotExist as e:
         logger.error(f"[RiderProfile] {e!r} {rider_id}")
         return HTTPStatus.BAD_REQUEST, "라이더가 존재하지 않습니다."
     else:
-        return HTTPStatus.OK, rider_profile
+        return HTTPStatus.OK, rider_profile_summary
