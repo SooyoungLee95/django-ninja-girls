@@ -376,7 +376,10 @@ class TestRiderBan:
     @pytest.mark.django_db(transaction=True)
     @patch("ras.rider_app.views.should_connect_jungleworks", Mock(return_value=False))
     @patch("ras.rider_app.helpers.send_push_action", Mock(return_value=None))
-    def test_update_rider_ban_should_change_rider_to_unavailable(self, rider_availability, given_rider_availability):
+    @patch("ras.common.messaging.helpers.sns_client.publish")
+    def test_update_rider_ban_should_change_rider_to_unavailable(
+        self, mock_publish, rider_availability, given_rider_availability
+    ):
         # Given: 라이더가 "근무 중"이거나 "근무 중이 아닌" 상태일 때,
         rider_availability.is_available = given_rider_availability
         rider_availability.save()
@@ -393,6 +396,9 @@ class TestRiderBan:
 
         # And: 200 응답코드가 반환된다.
         assert response.status_code == HTTPStatus.OK
+
+        # And: rider 근무 상태 이벤트가 발생한다.
+        mock_publish.assert_called_once()
 
     @pytest.mark.parametrize(
         "given_rider_availability",
@@ -432,6 +438,7 @@ class TestRiderBan:
     @pytest.mark.django_db(transaction=True)
     @patch("ras.rider_app.views.should_connect_jungleworks", Mock(return_value=False))
     @patch("ras.rider_app.helpers.send_push_action")
+    @patch("ras.common.messaging.helpers.sns_client.publish", Mock(return_value=None))
     def test_update_rider_ban_should_send_push(self, mock_fcm_send, rider_profile, is_banned, push_action):
         # Given: 업무정지 상태가 변경된 경우
         input_body = self._make_request_body(rider_profile.pk, is_banned)
