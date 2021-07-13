@@ -17,6 +17,7 @@ from ras.rider_app.queries import (
     query_create_rider_delivery_state,
     query_create_rider_dispatch_response,
     query_fcm_token,
+    query_get_rider_profile_summary,
     query_update_rider_availability,
 )
 from ras.rideryo.enums import DeliveryState, RiderResponse
@@ -165,3 +166,13 @@ def handle_rider_ban(data: RiderBan):
     action = PushAction.BAN if data.is_banned else PushAction.UNDO_BAN
     send_push_action(rider_id=rider_id, action=action, id=rider_id)
     return HTTPStatus.OK, ""
+
+
+def handle_rider_profile_summary(rider_id):
+    try:
+        rider_profile_summary = query_get_rider_profile_summary(rider_id)
+    except RiderProfile.DoesNotExist as e:
+        logger.error(f"[RiderProfile] {e!r} {rider_id}")
+        return HTTPStatus.BAD_REQUEST, "라이더가 존재하지 않습니다."
+    else:
+        return HTTPStatus.OK, rider_profile_summary

@@ -1,11 +1,16 @@
 import pytest
 
+from ras.rideryo.enums import ContractType
 from ras.rideryo.models import (
+    DeliveryCity,
+    DeliveryZone,
     DispatchRequestJungleworksTask,
     RiderAccount,
     RiderAvailability,
+    RiderContract,
     RiderDispatchRequestHistory,
     RiderProfile,
+    VehicleType,
 )
 
 
@@ -42,3 +47,40 @@ def dispatch_request_jw_task(rider_dispatch_request):
 @pytest.fixture
 def rider_availability(rider_profile):
     return RiderAvailability.objects.create(rider=rider_profile)
+
+
+@pytest.fixture
+def vehicle_type():
+    return VehicleType.objects.create(
+        name="오토바이",
+        is_active=1,
+    )
+
+
+@pytest.fixture
+def delivery_city():
+    return DeliveryCity.objects.create(
+        name="서울",
+        is_active=1,
+    )
+
+
+@pytest.fixture
+def delivery_zone(delivery_city):
+    return DeliveryZone.objects.create(
+        targetyo_zone_id=1,
+        name="서초",
+        is_active=1,
+        delivery_city=delivery_city,
+    )
+
+
+@pytest.fixture
+def rider_contract_type(vehicle_type, delivery_zone, rider_profile):
+    return RiderContract.objects.create(
+        is_active=1,
+        delivery_zone=delivery_zone,
+        vehicle_type=vehicle_type,
+        rider=rider_profile,
+        contract_type=ContractType.FULL_TIME,
+    )

@@ -85,3 +85,9 @@ class FcmPushPayload(Schema):
 
     class Config:
         use_enum_values = True
+
+
+class RiderProfileSummary(Schema):
+    full_name: str
+    contract_type: str = Field(alias="ridercontract__contract_type")
+    vehicle_name: str = Field(alias="ridercontract__vehicle_type__name")

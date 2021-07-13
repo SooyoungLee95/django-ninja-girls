@@ -14,6 +14,7 @@ from ras.rider_app.helpers import (
     handle_rider_delivery_state,
     handle_rider_dispatch_request_creates,
     handle_rider_dispatch_response,
+    handle_rider_profile_summary,
     mock_delivery_state_push_action,
     mock_handle_rider_dispatch_request_creates,
 )
@@ -31,7 +32,7 @@ from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import RiderBan, RiderDeliveryState
 from .schemas import RiderDispatch as RiderDispatchResultSchema
 from .schemas import RiderDispatchResponse as RiderDispatchResponseSchema
-from .schemas import RiderLoginRequest, RiderLoginResponse
+from .schemas import RiderLoginRequest, RiderLoginResponse, RiderProfileSummary
 
 rider_router = Router()
 auth_router = Router()
@@ -153,3 +154,17 @@ def update_rider_ban(request, data: RiderBan):
     if status != HTTPStatus.OK:
         return status, ErrorResponse(errors=[{"name": "reason", "message": message}])
     return status, data
+
+
+@rider_router.get(
+    "/profile-summary",
+    url_name="retrieve_rider_profile_summary",
+    summary="라이더 프로필 정보 조회",
+    response={200: RiderProfileSummary, codes_4xx: ErrorResponse},
+)
+def retrieve_rider_profile_summary(request, rider_id):
+    # TODO: parse rider id from token
+    status, message = handle_rider_profile_summary(rider_id)
+    if status != HTTPStatus.OK:
+        return status, ErrorResponse(message=message)
+    return status, message

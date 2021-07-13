@@ -13,8 +13,8 @@ class ContractStatus(TextChoices):
 
 
 class ContractType(TextChoices):
-    FULL_TIME = "FULL_TIME", "요기요 라이더"
-    PART_TIME = "PART_TIME", "요기요 크루"
+    FULL_TIME = "FULL_TIME", "라이더"
+    PART_TIME = "PART_TIME", "크루"
 
 
 class Bank(TextChoices):
