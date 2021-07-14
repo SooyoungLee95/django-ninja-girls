@@ -17,9 +17,9 @@ from ras.rider_app.helpers import (
     handle_rider_dispatch_request_creates,
     handle_rider_dispatch_response,
     handle_rider_profile_summary,
+    handle_sns_notification_push_action,
     mock_delivery_state_push_action,
     mock_handle_rider_dispatch_request_creates,
-    send_push_action,
 )
 
 from .constants import (
@@ -29,7 +29,7 @@ from .constants import (
     MOCK_JWT_REFRESH_TOKEN,
     MOCK_TOKEN_PUBLISH_URL,
 )
-from .enums import PushAction, WebhookName
+from .enums import WebhookName
 from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import RiderBan, RiderDeliveryState
@@ -176,15 +176,14 @@ def retrieve_rider_profile_summary(request, rider_id):
 
 
 @sns_router.post(
-    "/subs",
+    "/subs/{topic}",
     url_name="rider_app_sns_notification",
     summary="SNS 이벤트 처리",
 )
-def subscribe_sns_event(request):
+def subscribe_sns_event(request, topic):
     body = request.body.decode()
     message = SNSMessageForSubscribe.parse_raw(body)
     message_type = request.headers.get("x-amz-sns-message-type")
-    dispatch_request = handle_sns_notification(message_type, message)
-    if dispatch_request:
-        send_push_action(dispatch_request.rider.pk, PushAction.DELIVERY_CANCEL, dispatch_request.pk)
+    instance = handle_sns_notification(message_type, message)
+    handle_sns_notification_push_action(topic, message, instance)
     return HTTPStatus.OK

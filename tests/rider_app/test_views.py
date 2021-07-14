@@ -475,7 +475,7 @@ def test_retrieve_rider_profile_summary(rider_contract_type):
 
 
 @pytest.mark.django_db(transaction=True)
-@patch("ras.rider_app.views.send_push_action")
+@patch("ras.rider_app.helpers.send_push_action")
 @patch("ras.rider_app.views.handle_sns_notification")
 def test_subscribe_sns_event_order_cancelled(mock_handler, mock_push, rider_dispatch_request, notification_data):
     # Given: Order-Cancelled notification 생성
@@ -495,7 +495,7 @@ def test_subscribe_sns_event_order_cancelled(mock_handler, mock_push, rider_disp
     # When: 메시지가 게시되면,
     client = Client()
     response = client.post(
-        reverse("ninja:rider_app_sns_notification"),
+        reverse("ninja:rider_app_sns_notification", kwargs={"topic": "order"}),
         data=body,
         content_type="application/json",
     )
