@@ -176,3 +176,9 @@ def handle_rider_profile_summary(rider_id):
         return HTTPStatus.BAD_REQUEST, "라이더가 존재하지 않습니다."
     else:
         return HTTPStatus.OK, rider_profile_summary
+
+
+def handle_sns_notification_push_action(topic, message, instance):
+    if topic == "order":
+        if message.message["event_type"] == "cancelled":
+            send_push_action(instance.rider.pk, PushAction.DELIVERY_CANCEL, instance.pk)

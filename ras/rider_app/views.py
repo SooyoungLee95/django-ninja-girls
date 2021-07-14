@@ -7,6 +7,8 @@ from ninja.router import Router
 from ras.common.integration.services.jungleworks.handlers import (
     should_connect_jungleworks,
 )
+from ras.common.messaging.helpers import handle_sns_notification
+from ras.common.messaging.schema import SNSMessageForSubscribe
 from ras.common.schemas import ErrorResponse
 from ras.rider_app.helpers import (
     handle_rider_availability_updates,
@@ -15,6 +17,7 @@ from ras.rider_app.helpers import (
     handle_rider_dispatch_request_creates,
     handle_rider_dispatch_response,
     handle_rider_profile_summary,
+    handle_sns_notification_push_action,
     mock_delivery_state_push_action,
     mock_handle_rider_dispatch_request_creates,
 )
@@ -38,6 +41,8 @@ rider_router = Router()
 auth_router = Router()
 mock_authyo_router = Router()
 dispatch_request_router = Router()
+sns_router = Router()
+
 
 WEBHOOK_MAP: dict[str, Callable] = {
     WebhookName.AUTO_ALLOCATION_SUCCESS: handle_rider_dispatch_request_creates,
@@ -168,3 +173,17 @@ def retrieve_rider_profile_summary(request, rider_id):
     if status != HTTPStatus.OK:
         return status, ErrorResponse(message=message)
     return status, message
+
+
+@sns_router.post(
+    "/subs/{topic}",
+    url_name="rider_app_sns_notification",
+    summary="SNS 이벤트 처리",
+)
+def subscribe_sns_event(request, topic):
+    body = request.body.decode()
+    message = SNSMessageForSubscribe.parse_raw(body)
+    message_type = request.headers.get("x-amz-sns-message-type")
+    instance = handle_sns_notification(message_type, message)
+    handle_sns_notification_push_action(topic, message, instance)
+    return HTTPStatus.OK

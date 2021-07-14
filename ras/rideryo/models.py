@@ -162,7 +162,7 @@ class DispatchRequestJungleworksTask(CommonTimeStamp):
 
 
 class RiderDeliveryStateHistory(CommonTimeStamp):
-    """라이더의 배달 상태(RESTAURANT_ARRIVED/PICKED_UP/DESTINATION_ARRIVED/COMPLETED/NOT_COMPLETED) 이력"""
+    """라이더의 배달 상태 이력"""
 
     dispatch_request = models.ForeignKey("RiderDispatchRequestHistory", on_delete=models.DO_NOTHING, help_text="배차 ID")
     delivery_state = models.CharField(max_length=150, choices=DeliveryState.choices, help_text="라이더의 배달 상태")
@@ -173,3 +173,10 @@ class RiderFCMToken(CommonTimeStamp):
 
     rider = models.ForeignKey("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
     registration_token = EncryptCharField(max_length=512, help_text="FCM 발송에 사용되는 토큰")
+
+
+class RiderDeliveryCancelReason(CommonTimeStamp):
+    """라이더의 배달취소 사유"""
+
+    dispatch_request = models.ForeignKey("RiderDispatchRequestHistory", on_delete=models.DO_NOTHING, help_text="배차 ID")
+    reason = models.CharField(max_length=150, help_text="배달취소 사유")
