@@ -5,6 +5,7 @@ from django.core.validators import validate_email
 from ninja.schema import Field, Schema
 from pydantic import validator
 
+from ras.rider_app.constants import CANCEL_REASON_ISSUE_MAP, SYSTEM_ISSUE
 from ras.rider_app.enums import PushAction
 from ras.rideryo.enums import DeliveryState
 from ras.rideryo.enums import RiderResponse as RiderResponseEnum
@@ -91,3 +92,18 @@ class RiderProfileSummary(Schema):
     full_name: str
     contract_type: str = Field(alias="ridercontract__contract_type")
     vehicle_name: str = Field(alias="ridercontract__vehicle_type__name")
+
+
+class DispatchRequestState(Schema):
+    dispatch_request_id: int
+    state: DeliveryState
+    cancel_reason: Optional[str]
+
+    class Config:
+        use_enum_values = True
+
+    @validator("cancel_reason", pre=True)
+    def convert_cancel_reason(cls, reason: str) -> Optional[str]:
+        if reason is None:
+            return None
+        return CANCEL_REASON_ISSUE_MAP.get(reason, SYSTEM_ISSUE)

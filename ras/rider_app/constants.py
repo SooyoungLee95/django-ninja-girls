@@ -117,3 +117,40 @@ MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_3 = {
     "estimated_delivery_income": 4000,  # 예상 라이더 수수료
     "dispatch_request_created_at": "2021-06-28 18:17:00",  # 배차 생성 시간 화면에 표시하는 용도가 아니라서 포맷 통일하지 않았습니다
 }
+
+CUSTOMER_ISSUE = "고객 요청"
+RESTAURANT_ISSUE = "가게 사정"
+SYSTEM_ISSUE = "시스템 오류"
+
+CANCEL_REASON_ISSUE_MAP = {
+    "customer_cancelled_within_5min": CUSTOMER_ISSUE,
+    "not_enough_data": CUSTOMER_ISSUE,
+    "customer_canceled": CUSTOMER_ISSUE,
+    "long_delivery_time": CUSTOMER_ISSUE,
+    "change_closing_hours": RESTAURANT_ISSUE,
+    "restaurant_declined": RESTAURANT_ISSUE,
+    "restaurant_canceled": RESTAURANT_ISSUE,
+    "change_opening_hours": RESTAURANT_ISSUE,
+    "back_to_yogiyo_sms_canceled": RESTAURANT_ISSUE,
+    "tts_declined": RESTAURANT_ISSUE,
+    "out_of_dish": RESTAURANT_ISSUE,
+    "restaurant_cant_deliver": RESTAURANT_ISSUE,
+    "yogiyo_not_accepted_by_restaurant": RESTAURANT_ISSUE,
+    "closing_day": RESTAURANT_ISSUE,
+    "change_of_price": RESTAURANT_ISSUE,
+    "restaurant_fault": RESTAURANT_ISSUE,
+    "rest_closed": RESTAURANT_ISSUE,
+    "pos_order_sync_failed": SYSTEM_ISSUE,
+    "pos_restaurant_sync_failed": SYSTEM_ISSUE,
+    "pos_menu_sync_failed": SYSTEM_ISSUE,
+    "pos_deliveryinfo_sync_failed": SYSTEM_ISSUE,
+    "not_covered": SYSTEM_ISSUE,
+    "tampered_order": SYSTEM_ISSUE,
+    "yogiyo_fault": SYSTEM_ISSUE,
+    "min_value_changed": SYSTEM_ISSUE,
+    "prank_order": SYSTEM_ISSUE,
+    "back_to_yogiyo_duplicate": SYSTEM_ISSUE,
+    "back_to_yogiyo_prank": SYSTEM_ISSUE,
+    "back_to_yogiyo": SYSTEM_ISSUE,
+    "other_reasons": SYSTEM_ISSUE,
+}
