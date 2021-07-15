@@ -7,8 +7,10 @@ from django.urls import reverse
 
 from ras.rider_app.enums import WebhookName
 from ras.rider_app.schemas import RiderDispatch
+from ras.rideryo.enums import DeliveryState
 from ras.rideryo.models import (
     DispatchRequestJungleworksTask,
+    RiderDeliveryStateHistory,
     RiderDispatchRequestHistory,
 )
 
@@ -41,6 +43,12 @@ def test_rider_app_auto_allocation_success_webhook(rider_profile):
     assert dispatch_request_jungleworks_task.pickup_task_id == input_body.pickup_task_id
     assert dispatch_request_jungleworks_task.pickup_task_id == input_body.delivery_task_id
 
+    # And: RiderDeliveryStateHistory 값이 생성되어야 한다
+    delivery_state = RiderDeliveryStateHistory.objects.filter(
+        dispatch_request=rider_dispatch_request, delivery_state=DeliveryState.DISPATCHED
+    ).first()
+    assert delivery_state is not None
+
 
 @pytest.mark.django_db(transaction=True)
 @patch("ras.rider_app.helpers.logger.error")
@@ -59,6 +67,7 @@ def test_rider_app_auto_allocation_success_on_404_error(rider_profile):
     # And: RiderDispatchRequestHistory 와 DispatchRequestJungleworksTask 값은 생성되지 않아야 한다.
     assert not RiderDispatchRequestHistory.objects.exists()
     assert not DispatchRequestJungleworksTask.objects.exists()
+    assert not RiderDeliveryStateHistory.objects.exists()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -78,6 +87,7 @@ def test_rider_app_auto_allocation_success_on_database_error(mock_logger_error, 
     # And: RiderDispatchRequestHistory 와 DispatchRequestJungleworksTask 값은 생성되지 않아야 한다.
     assert RiderDispatchRequestHistory.objects.count() == 0
     assert DispatchRequestJungleworksTask.objects.count() == 0
+    assert RiderDeliveryStateHistory.objects.count() == 0
 
 
 @pytest.mark.django_db(transaction=True)

@@ -7,6 +7,7 @@ from django.db.models import F
 
 from ras.common.messaging.consts import RIDER_WORKING_STATE
 from ras.common.messaging.helpers import trigger_event
+from ras.rideryo.enums import DeliveryState, RiderResponse
 from ras.rideryo.models import (
     DispatchRequestJungleworksTask,
     RiderAvailability,
@@ -25,6 +26,13 @@ from .schemas import RiderDispatch as RiderDispatchResultSchema
 from .schemas import RiderDispatchResponse as RiderDispatchResponseSchema
 
 logger = logging.getLogger(__name__)
+
+RIDER_RESPONSE_DELIVERY_STATE_MAP = {
+    RiderResponse.NOTIFIED: DeliveryState.NOTIFIED,
+    RiderResponse.ACCEPTED: DeliveryState.ACCEPTED,
+    RiderResponse.DECLINED: DeliveryState.DECLINED,
+    RiderResponse.IGNORED: DeliveryState.IGNORED,
+}
 
 
 @singledispatch
@@ -50,16 +58,24 @@ def _(data: bool, rider_id) -> RiderAvailability:
 
 
 def query_create_rider_dispatch_response(data: RiderDispatchResponseSchema):
-    return RiderDispatchResponseHistory.objects.create(
-        dispatch_request_id=data.dispatch_request_id,
-        response=data.response,
-    )
+    with transaction.atomic():
+        RiderDeliveryStateHistory.objects.create(
+            dispatch_request_id=data.dispatch_request_id,
+            delivery_state=RIDER_RESPONSE_DELIVERY_STATE_MAP[data.response],
+        )
+        return RiderDispatchResponseHistory.objects.create(
+            dispatch_request_id=data.dispatch_request_id,
+            response=data.response,
+        )
 
 
 def query_create_dispatch_request_with_task(data: RiderDispatchResultSchema):
     rider = RiderProfile.objects.get(pk=data.rider_id)
     with transaction.atomic():
         dispatch_request = RiderDispatchRequestHistory.objects.create(rider=rider, order_id=data.order_id)
+        RiderDeliveryStateHistory.objects.create(
+            dispatch_request=dispatch_request, delivery_state=DeliveryState.DISPATCHED
+        )
         DispatchRequestJungleworksTask.objects.create(
             dispatch_request=dispatch_request,
             pickup_task_id=data.pickup_task_id,
@@ -71,6 +87,9 @@ def mock_query_create_dispatch_request_with_task(data: MockRiderDispatchResultSc
     rider = RiderProfile.objects.get(jw_fleet_id=data.rider_id)
     with transaction.atomic():
         dispatch_request = RiderDispatchRequestHistory.objects.create(rider=rider, order_id=data.order_id)
+        RiderDeliveryStateHistory.objects.create(
+            dispatch_request=dispatch_request, delivery_state=DeliveryState.DISPATCHED
+        )
         DispatchRequestJungleworksTask.objects.create(
             dispatch_request=dispatch_request,
             pickup_task_id=data.pickup_task_id,
