@@ -144,7 +144,7 @@ def create_rider_delivery_state(request, data: RiderDeliveryState):
     summary="배차 관련 정보 (상태, 주문, 레스토랑, 고객)",
     response={200: list[DispatchRequestDetail], codes_4xx: ErrorResponse},
 )
-def retrieve_dispatch_requests_status(request, id: str):
+def retrieve_dispatch_requests_detail(request, id: str):
     try:
         req_ids = [int(req_id) for req_id in id.split(",")]
     except ValueError:
