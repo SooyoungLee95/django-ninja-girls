@@ -10,6 +10,7 @@ from ras.common.integration.services.jungleworks.handlers import (
     update_task_status,
     update_task_status_from_delivery_state,
 )
+from ras.rider_app.constants import MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1
 from ras.rider_app.enums import PushAction
 from ras.rider_app.queries import (
     mock_query_create_dispatch_request_with_task,
@@ -25,7 +26,7 @@ from ras.rideryo.enums import DeliveryState, RiderResponse
 
 from ..common.fcm import FCMSender
 from ..rideryo.models import RiderDispatchRequestHistory, RiderProfile
-from .schemas import DispatchRequestState, FcmPushPayload, MockRiderDispatch
+from .schemas import DispatchRequestDetail, FcmPushPayload, MockRiderDispatch
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import RiderBan, RiderDeliveryState, RiderDispatch, RiderDispatchResponse
 
@@ -185,13 +186,16 @@ def handle_sns_notification_push_action(topic, message, instance):
             send_push_action(instance.rider.pk, PushAction.DELIVERY_CANCEL, instance.pk)
 
 
-def handle_dispatch_request_state(dispatch_request_ids: list[int]):
+def handle_dispatch_request_detail(dispatch_request_ids: list[int]):
     dispatch_requests = query_get_dispatch_request_states(dispatch_request_ids)
     states = [
-        DispatchRequestState(
-            dispatch_request_id=request.pk,
-            state=request.states[0].delivery_state,
-            cancel_reason=request.cancel_reasons[0].reason if request.cancel_reasons else None,
+        DispatchRequestDetail(
+            **MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1  # TODO: mock data 제거
+            | {
+                "dispatch_request_id": request.pk,
+                "state": request.states[0].delivery_state,
+                "cancel_reason": request.cancel_reasons[0].reason if request.cancel_reasons else "",
+            }
         )
         for request in dispatch_requests
     ]

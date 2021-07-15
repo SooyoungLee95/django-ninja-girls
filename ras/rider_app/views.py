@@ -11,7 +11,7 @@ from ras.common.messaging.helpers import handle_sns_notification
 from ras.common.messaging.schema import SNSMessageForSubscribe
 from ras.common.schemas import ErrorResponse
 from ras.rider_app.helpers import (
-    handle_dispatch_request_state,
+    handle_dispatch_request_detail,
     handle_rider_availability_updates,
     handle_rider_ban,
     handle_rider_delivery_state,
@@ -31,7 +31,7 @@ from .constants import (
     MOCK_TOKEN_PUBLISH_URL,
 )
 from .enums import WebhookName
-from .schemas import DispatchRequestState
+from .schemas import DispatchRequestDetail
 from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import RiderBan, RiderDeliveryState
@@ -150,10 +150,10 @@ def mock_retrieve_dispatch_requests_additional_info(request, id: str):
 
 
 @dispatch_request_router.get(
-    "status",
-    url_name="rider_app_dispatch_request_status",
-    summary="배차 상태 조회",
-    response={200: list[DispatchRequestState], codes_4xx: ErrorResponse},
+    "/",
+    url_name="mock_rider_app_dispatch_requests",
+    summary="배차 관련 정보 (상태, 주문, 레스토랑, 고객)",
+    response={200: list[DispatchRequestDetail], codes_4xx: ErrorResponse},
 )
 def retrieve_dispatch_requests_status(request, id: str):
     try:
@@ -161,7 +161,7 @@ def retrieve_dispatch_requests_status(request, id: str):
     except ValueError:
         return HTTPStatus.BAD_REQUEST, ErrorResponse()
     else:
-        return handle_dispatch_request_state(req_ids)
+        return handle_dispatch_request_detail(req_ids)
 
 
 @rider_router.put(

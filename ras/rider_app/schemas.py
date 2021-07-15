@@ -94,16 +94,24 @@ class RiderProfileSummary(Schema):
     vehicle_name: str = Field(alias="ridercontract__vehicle_type__name")
 
 
-class DispatchRequestState(Schema):
+class DispatchRequestDetail(Schema):
     dispatch_request_id: int
     state: DeliveryState
-    cancel_reason: Optional[str]
+    cancel_reason: str
+    customer: dict
+    restaurant: dict
+    order: dict
+    estimated_delivery_time: str
+    estimated_pickup_time: str
+    estimated_delivery_distance: str
+    estimated_delivery_income: int
+    dispatch_request_created_at: str
 
     class Config:
         use_enum_values = True
 
     @validator("cancel_reason", pre=True)
     def convert_cancel_reason(cls, reason: str) -> Optional[str]:
-        if reason is None:
-            return None
-        return CANCEL_REASON_ISSUE_MAP.get(reason, SYSTEM_ISSUE)
+        if reason:
+            return CANCEL_REASON_ISSUE_MAP.get(reason, SYSTEM_ISSUE)
+        return reason
