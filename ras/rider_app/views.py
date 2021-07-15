@@ -140,7 +140,7 @@ def create_rider_delivery_state(request, data: RiderDeliveryState):
 
 @dispatch_request_router.get(
     "/",
-    url_name="mock_rider_app_dispatch_requests",
+    url_name="mock_rider_app_dispatch_requests_detail",
     summary="배차 관련 정보 (상태, 주문, 레스토랑, 고객)",
     response={200: list[DispatchRequestDetail], codes_4xx: ErrorResponse},
 )
