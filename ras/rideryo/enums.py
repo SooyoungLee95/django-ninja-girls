@@ -60,6 +60,11 @@ class RiderResponse(TextChoices):
 
 
 class DeliveryState(TextChoices):
+    DISPATCHED = "DISPATCHED", "배차 완료됨"
+    NOTIFIED = "NOTIFIED", "배차 전달됨"
+    ACCEPTED = "ACCEPTED", "배차 수락됨"
+    DECLINED = "DECLINED", "배차 거절됨"
+    IGNORED = "IGNORED", "배차 무시됨"
     NEAR_PICKUP = "NEAR_PICKUP", "픽업지 근처 도착"
     PICK_UP = "PICK_UP", "픽업 완료"
     LEFT_PICKUP = "LEFT_PICKUP", "픽업지 벗어남"
