@@ -16,10 +16,10 @@ from .helpers import (
     publish_rider_updated,
 )
 
-trigger_router = Router(auth=None)
+trigger_router = Router()
 
 
-@trigger_router.post("/rider/location", url_name="simulator_rider_location_trigger")
+@trigger_router.post("/rider/location", url_name="simulator_rider_location_trigger", auth=None)
 def trigger_rider_location(request, data: LocationTriggerPayload):
     msg = EventMsgRiderUpdated(
         event_type=EventType.UPDATE,
@@ -35,7 +35,7 @@ def trigger_rider_location(request, data: LocationTriggerPayload):
     }
 
 
-@trigger_router.post("/rider/state", url_name="simulator_rider_state_trigger")
+@trigger_router.post("/rider/state", url_name="simulator_rider_state_trigger", auth=None)
 def trigger_rider_state(request, data: RiderStateTriggerPayload):
     state = get_state_of_rider_action(data.action)
     event = get_event_type_of_rider_state(state)
@@ -53,7 +53,7 @@ def trigger_rider_state(request, data: RiderStateTriggerPayload):
     }
 
 
-@trigger_router.post("/rider/shift", url_name="simulator_rider_shift_trigger")
+@trigger_router.post("/rider/shift", url_name="simulator_rider_shift_trigger", auth=None)
 def trigger_rider_shift(request, data: RiderShiftTriggerPayload):
     state = get_state_of_shift_action(data.action)
     event = get_event_type_of_rider_state(state)

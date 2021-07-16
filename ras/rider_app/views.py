@@ -14,7 +14,6 @@ from ras.rider_app.helpers import (
     handle_rider_dispatch_response,
 )
 
-from ..common.authentication.authentication import RideryoAuth
 from ..common.authentication.helpers import AuthyoTokenAuthenticator
 from ..rideryo.models import RiderAccount
 from .constants import AUTHYO_LOGIN_URL, RIDER_APP_INITIAL_PASSWORD
@@ -39,7 +38,6 @@ token_authenticator = AuthyoTokenAuthenticator()
     url_name="rider_app_update_rider_availability",
     summary="업무시작/종료",
     response={200: RiderAvailabilitySchema, codes_4xx: ErrorResponse},
-    auth=RideryoAuth(),
 )
 def update_rider_availability(request, data: RiderAvailabilitySchema):
     is_jungleworks = should_connect_jungleworks(request)
@@ -56,7 +54,6 @@ def update_rider_availability(request, data: RiderAvailabilitySchema):
     url_name="create_rider_dispatch_response",
     summary="배차 확인/수락/거절/무시",
     response={200: RiderDispatchResponseSchema, codes_4xx: ErrorResponse},
-    auth=RideryoAuth(),
 )
 def create_rider_dispatch_response(request, data: RiderDispatchResponseSchema):
     is_jungleworks = should_connect_jungleworks(request)
@@ -71,6 +68,7 @@ def create_rider_dispatch_response(request, data: RiderDispatchResponseSchema):
     url_name="rider_app_webhook",
     summary="라이더 web hook API",
     response={200: RiderDispatchResultSchema},
+    auth=None,
 )
 def webhook_handler(request, webhook_type: WebhookName, data: RiderDispatchResultSchema):
     WEBHOOK_MAP[webhook_type](data)
@@ -82,6 +80,7 @@ def webhook_handler(request, webhook_type: WebhookName, data: RiderDispatchResul
     url_name="rider_app_login",
     summary="라이더 앱 Login API",
     response={200: RiderLoginResponse, codes_4xx: ErrorResponse},
+    auth=None,
 )
 def login(request, data: RiderLoginRequest):
     request_body = data.dict()
@@ -101,6 +100,6 @@ def login(request, data: RiderLoginRequest):
     )
 
 
-@auth_router.get("test/jwt/authentication", url_name="test_authentication", summary="JWT 인증 테스트", auth=RideryoAuth())
+@auth_router.get("test/jwt/authentication", url_name="test_authentication", summary="JWT 인증 테스트")
 def mock_api_for_auth(request):
     return HTTPStatus.OK, {}
