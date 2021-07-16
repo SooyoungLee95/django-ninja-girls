@@ -27,7 +27,7 @@ class RideryoAuth(HttpBearer):
                 payload["sub_id"]
                 and payload["platform"] == settings.RIDERYO_BASE_URL
                 and payload["base_url"] == settings.RIDERYO_ENV
-                and payload["role"] == "rider"
+                and (payload["role"] == "rider" or payload["role"] == "staff")
             )
         except KeyError as e:
             logger.error(f"[RideryoAuth] {e!r}")

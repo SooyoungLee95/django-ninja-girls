@@ -128,6 +128,6 @@ class TestJWTAuthentication:
         response = self._call_test_api(token=expired_token)
         assert response.status_code == 401
 
-    def test_jwt_auth_on_valid_token_and_payload(self, mock_jwt_token):
-        response = self._call_test_api(token=mock_jwt_token)
+    def test_jwt_auth_on_valid_token_and_payload(self, mock_jwt_token_with_staff):
+        response = self._call_test_api(token=mock_jwt_token_with_staff)
         assert response.status_code == 200

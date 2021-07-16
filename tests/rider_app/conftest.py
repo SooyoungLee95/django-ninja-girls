@@ -45,17 +45,30 @@ def rider_dispatch_request(rider_profile):
     return rider_dispatch_request
 
 
+def _generate_payload(role):
+    return {
+        "iat": 1625703402,
+        "exp": 2247783524,
+        "sub_id": 1,
+        "platform": settings.RIDERYO_BASE_URL,
+        "base_url": settings.RIDERYO_ENV,
+        "role": role,
+    }
+
+
 @pytest.fixture
 def mock_jwt_token():
     return jwt.encode(
-        {
-            "iat": 1625703402,
-            "exp": 2247783524,
-            "sub_id": 1,
-            "platform": settings.RIDERYO_BASE_URL,
-            "base_url": settings.RIDERYO_ENV,
-            "role": "rider",
-        },
+        _generate_payload("rider"),
+        TEST_JWT_PRIVATE,
+        algorithm="RS256",
+    )
+
+
+@pytest.fixture
+def mock_jwt_token_with_staff():
+    return jwt.encode(
+        _generate_payload("staff"),
         TEST_JWT_PRIVATE,
         algorithm="RS256",
     )
