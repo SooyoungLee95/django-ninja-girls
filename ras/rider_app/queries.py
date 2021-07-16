@@ -4,6 +4,7 @@ from functools import singledispatch
 from asgiref.sync import sync_to_async
 from django.db import transaction
 from django.db.models import F
+from django.db.models.query import Prefetch
 
 from ras.common.messaging.consts import RIDER_WORKING_STATE
 from ras.common.messaging.helpers import trigger_event
@@ -11,6 +12,7 @@ from ras.rideryo.models import (
     DispatchRequestJungleworksTask,
     RiderAvailability,
     RiderAvailabilityHistory,
+    RiderDeliveryCancelReason,
     RiderDeliveryStateHistory,
     RiderDispatchRequestHistory,
     RiderDispatchResponseHistory,
@@ -104,4 +106,26 @@ def query_get_rider_profile_summary(rider_id):
         .annotate(vehicle_name=F("ridercontract__vehicle_type__name"))
         .values("full_name", "ridercontract__contract_type", "ridercontract__vehicle_type__name")
         .first()
+    )
+
+
+def query_get_dispatch_request_states(dispatch_request_ids: list[int]):
+    latest_cancel_reason_qs = RiderDeliveryCancelReason.objects.order_by("-created_at")
+    latest_state_qs = RiderDeliveryStateHistory.objects.order_by("-created_at")
+    return (
+        RiderDispatchRequestHistory.objects.prefetch_related(
+            Prefetch(
+                "riderdeliverycancelreason_set",
+                queryset=latest_cancel_reason_qs,
+                to_attr="cancel_reasons",
+            )
+        )
+        .prefetch_related(
+            Prefetch(
+                "riderdeliverystatehistory_set",
+                queryset=latest_state_qs,
+                to_attr="states",
+            )
+        )
+        .filter(id__in=dispatch_request_ids)
     )

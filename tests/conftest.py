@@ -1,6 +1,6 @@
 import pytest
 
-from ras.rideryo.enums import ContractType
+from ras.rideryo.enums import ContractType, DeliveryState
 from ras.rideryo.models import (
     DeliveryCity,
     DeliveryZone,
@@ -8,6 +8,8 @@ from ras.rideryo.models import (
     RiderAccount,
     RiderAvailability,
     RiderContract,
+    RiderDeliveryCancelReason,
+    RiderDeliveryStateHistory,
     RiderDispatchRequestHistory,
     RiderProfile,
     VehicleType,
@@ -34,6 +36,26 @@ def rider_dispatch_request(rider_profile):
         order_id="Test_Order",
     )
     return rider_dispatch_request
+
+
+@pytest.fixture
+def rider_dispatch_request_state_near_pickup(rider_dispatch_request):
+    delivery_state = RiderDeliveryStateHistory.objects.create(
+        dispatch_request=rider_dispatch_request, delivery_state=DeliveryState.NEAR_PICKUP
+    )
+    return delivery_state
+
+
+@pytest.fixture
+def rider_dispatch_request_state_cancelled(rider_dispatch_request):
+    delivery_state = RiderDeliveryStateHistory.objects.create(
+        dispatch_request=rider_dispatch_request, delivery_state=DeliveryState.CANCELLED
+    )
+    RiderDeliveryCancelReason.objects.create(
+        dispatch_request=rider_dispatch_request,
+        reason="customer_cancelled_within_5min",
+    )
+    return delivery_state
 
 
 @pytest.fixture

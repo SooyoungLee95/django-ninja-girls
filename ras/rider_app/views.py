@@ -11,6 +11,7 @@ from ras.common.messaging.helpers import handle_sns_notification
 from ras.common.messaging.schema import SNSMessageForSubscribe
 from ras.common.schemas import ErrorResponse
 from ras.rider_app.helpers import (
+    handle_dispatch_request_detail,
     handle_rider_availability_updates,
     handle_rider_ban,
     handle_rider_delivery_state,
@@ -23,13 +24,13 @@ from ras.rider_app.helpers import (
 )
 
 from .constants import (
-    MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1,
     MOCK_ENCRYPTED_PAYLOAD,
     MOCK_JWT_ACCESS_TOKEN,
     MOCK_JWT_REFRESH_TOKEN,
     MOCK_TOKEN_PUBLISH_URL,
 )
 from .enums import WebhookName
+from .schemas import DispatchRequestDetail
 from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import RiderBan, RiderDeliveryState
@@ -138,13 +139,18 @@ def create_rider_delivery_state(request, data: RiderDeliveryState):
 
 
 @dispatch_request_router.get(
-    "additional-info",
-    url_name="mock_rider_app_dispatch_request_additional_info",
-    summary="배차 관련 정보(주문, 레스토랑, 고객)",
+    "/",
+    url_name="mock_rider_app_dispatch_requests_detail",
+    summary="배차 관련 정보 (상태, 주문, 레스토랑, 고객)",
+    response={200: list[DispatchRequestDetail], codes_4xx: ErrorResponse},
 )
-def mock_retrieve_dispatch_requests_additional_info(request, id: str):
-    MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1["dispatch_request_id"] = int(id)
-    return HTTPStatus.OK, {"data": [MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1]}
+def retrieve_dispatch_requests_detail(request, id: str):
+    try:
+        req_ids = [int(req_id) for req_id in id.split(",")]
+    except ValueError:
+        return HTTPStatus.BAD_REQUEST, ErrorResponse()
+    else:
+        return handle_dispatch_request_detail(req_ids)
 
 
 @rider_router.put(

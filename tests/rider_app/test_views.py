@@ -9,6 +9,7 @@ from django.test import Client
 from django.urls import reverse
 
 from ras.common.integration.services.jungleworks.schemas import JungleworksResponseBody
+from ras.rider_app.constants import CUSTOMER_ISSUE
 from ras.rider_app.enums import PushAction
 from ras.rider_app.schemas import RiderBan, RiderDeliveryState, RiderDispatchResponse
 from ras.rideryo.enums import DeliveryState
@@ -506,3 +507,49 @@ def test_subscribe_sns_event_order_cancelled(mock_handler, mock_push, rider_disp
     # And: 이벤트 핸들러 및 푸시발송이 실행된다
     mock_handler.assert_called_once()
     mock_push.assert_called_once()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_dispatch_requests_detail_not_cancelled(rider_dispatch_request, rider_dispatch_request_state_near_pickup):
+    # Given: 배차정보 및 상태기록이 있고
+
+    # When: 배차 정보 조회 시,
+    client = Client()
+    response = client.get(
+        reverse("ninja:mock_rider_app_dispatch_requests_detail") + f"?id={rider_dispatch_request.pk}",
+        content_type="application/json",
+    )
+
+    # Then: 200 성공 응답, 배열이 반환되고
+    assert response.status_code == HTTPStatus.OK
+    data = response.json()
+    assert isinstance(data, list)
+
+    # Then: 올바른 값이 포함되어 있고, 배차정보 및 상태가 반환된다
+    detail = data[0]
+    assert detail["dispatch_request_id"] == rider_dispatch_request.pk
+    assert detail["state"] == rider_dispatch_request_state_near_pickup.delivery_state
+    assert detail["cancel_reason"] == ""
+
+
+@pytest.mark.django_db(transaction=True)
+def test_dispatch_requests_detail_cancelled(rider_dispatch_request, rider_dispatch_request_state_cancelled):
+    # Given: 배차정보 및 상태기록이 있고
+
+    # When: 배차 정보 조회 시,
+    client = Client()
+    response = client.get(
+        reverse("ninja:mock_rider_app_dispatch_requests_detail") + f"?id={rider_dispatch_request.pk}",
+        content_type="application/json",
+    )
+
+    # Then: 200 성공 응답, 배열이 반환되고
+    assert response.status_code == HTTPStatus.OK
+    data = response.json()
+    assert isinstance(data, list)
+
+    # Then: 올바른 값이 포함되어 있고, 배차정보 및 상태가 반환된다
+    detail = data[0]
+    assert detail["dispatch_request_id"] == rider_dispatch_request.pk
+    assert detail["state"] == rider_dispatch_request_state_cancelled.delivery_state
+    assert detail["cancel_reason"] == CUSTOMER_ISSUE
