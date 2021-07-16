@@ -120,3 +120,8 @@ class DispatchRequestDetail(Schema):
         if reason and reason not in (CUSTOMER_ISSUE, RESTAURANT_ISSUE, SYSTEM_ISSUE):
             return CANCEL_REASON_ISSUE_MAP.get(reason, SYSTEM_ISSUE)
         return reason
+
+
+class RiderStatus(Schema):
+    status: str
+    current_deliveries: str
