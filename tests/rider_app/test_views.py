@@ -141,6 +141,12 @@ class TestRiderDispatchResponse:
         mock_use_jungleworks.assert_called_once()
         assert response.json() == input_body.dict()
 
+        # And: RiderDeliveryStateHistory 값이 생성되어야 한다
+        delivery_state = RiderDeliveryStateHistory.objects.filter(
+            dispatch_request=rider_dispatch_request, delivery_state=DeliveryState.ACCEPTED
+        ).first()
+        assert delivery_state is not None
+
     @pytest.mark.django_db(transaction=True)
     @patch("ras.rider_app.views.should_connect_jungleworks")
     def test_create_rider_dispatch_when_jw_not_enabled(self, mock_use_jungleworks, rider_dispatch_request):
@@ -148,10 +154,8 @@ class TestRiderDispatchResponse:
         mock_use_jungleworks.return_value = False
 
         # When: 라이더 배차 수락 API 호출 시,
-        with patch("ras.rider_app.helpers.query_create_rider_dispatch_response") as mock_query_create:
-            input_body = self._make_request_body(rider_dispatch_request.id, "ACCEPTED")
-            response = self._call_api_create_rider_dispatch_response(input_body)
-            mock_query_create.assert_called_once()
+        input_body = self._make_request_body(rider_dispatch_request.id, "ACCEPTED")
+        response = self._call_api_create_rider_dispatch_response(input_body)
 
         # Then: 200 응답코드가 반환되고,
         assert response.status_code == HTTPStatus.OK
@@ -159,6 +163,12 @@ class TestRiderDispatchResponse:
         # And: Jungleworks 활성화 체크 함수 및 응답값이 올바른지 확인한다.
         mock_use_jungleworks.assert_called_once()
         assert response.json() == input_body.dict()
+
+        # And: RiderDeliveryStateHistory 값이 생성되어야 한다
+        delivery_state = RiderDeliveryStateHistory.objects.filter(
+            dispatch_request=rider_dispatch_request, delivery_state=DeliveryState.ACCEPTED
+        ).first()
+        assert delivery_state is not None
 
     @pytest.mark.django_db(transaction=True)
     @patch("ras.rider_app.views.should_connect_jungleworks")
@@ -220,6 +230,12 @@ class TestRiderDispatchResponse:
         mock_use_jungleworks.assert_called_once()
         assert response.json() == input_body.dict()
 
+        # And: RiderDeliveryStateHistory 값이 생성되어야 한다
+        delivery_state = RiderDeliveryStateHistory.objects.filter(
+            dispatch_request=rider_dispatch_request, delivery_state=DeliveryState.NOTIFIED
+        ).first()
+        assert delivery_state is not None
+
     @pytest.mark.django_db(transaction=True)
     @patch("ras.rider_app.views.should_connect_jungleworks")
     def test_create_rider_dispatch_notified_when_jw_not_enabled(self, mock_use_jungleworks, rider_dispatch_request):
@@ -227,10 +243,8 @@ class TestRiderDispatchResponse:
         mock_use_jungleworks.return_value = False
 
         # When: 라이더 배차 확인 완료 API 호출 시,
-        with patch("ras.rider_app.helpers.query_create_rider_dispatch_response") as mock_query_create:
-            input_body = self._make_request_body(rider_dispatch_request.id, "NOTIFIED")
-            response = self._call_api_create_rider_dispatch_response(input_body)
-            mock_query_create.assert_called_once()
+        input_body = self._make_request_body(rider_dispatch_request.id, "NOTIFIED")
+        response = self._call_api_create_rider_dispatch_response(input_body)
 
         # Then: 200 응답코드가 반환되고,
         assert response.status_code == HTTPStatus.OK
@@ -238,6 +252,12 @@ class TestRiderDispatchResponse:
         # And: Jungleworks 활성화 체크 함수 및 응답값이 올바른지 확인한다.
         mock_use_jungleworks.assert_called_once()
         assert response.json() == input_body.dict()
+
+        # And: RiderDeliveryStateHistory 값이 생성되어야 한다
+        delivery_state = RiderDeliveryStateHistory.objects.filter(
+            dispatch_request=rider_dispatch_request, delivery_state=DeliveryState.NOTIFIED
+        ).first()
+        assert delivery_state is not None
 
 
 class TestRiderDeliveryState:
