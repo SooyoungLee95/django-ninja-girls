@@ -5,7 +5,12 @@ from django.core.validators import validate_email
 from ninja.schema import Field, Schema
 from pydantic import validator
 
-from ras.rider_app.constants import CANCEL_REASON_ISSUE_MAP, SYSTEM_ISSUE
+from ras.rider_app.constants import (
+    CANCEL_REASON_ISSUE_MAP,
+    CUSTOMER_ISSUE,
+    RESTAURANT_ISSUE,
+    SYSTEM_ISSUE,
+)
 from ras.rider_app.enums import PushAction
 from ras.rideryo.enums import DeliveryState
 from ras.rideryo.enums import RiderResponse as RiderResponseEnum
@@ -112,6 +117,6 @@ class DispatchRequestDetail(Schema):
 
     @validator("cancel_reason", pre=True)
     def convert_cancel_reason(cls, reason: str) -> Optional[str]:
-        if reason:
+        if reason and reason not in (CUSTOMER_ISSUE, RESTAURANT_ISSUE, SYSTEM_ISSUE):
             return CANCEL_REASON_ISSUE_MAP.get(reason, SYSTEM_ISSUE)
         return reason
