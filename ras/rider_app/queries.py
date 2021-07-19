@@ -156,14 +156,11 @@ def query_rider_status(rider_id):
 
 
 def query_rider_current_deliveries(rider_id):
-    working_state_filter = RiderDeliveryStateHistory.objects.exclude(
-        delivery_state__in=(
+    return RiderDispatchRequestHistory.objects.filter(rider_id=rider_id).exclude(
+        riderdeliverystatehistory__delivery_state__in=(
             DeliveryState.DECLINED,
             DeliveryState.IGNORED,
             DeliveryState.COMPLETED,
             DeliveryState.CANCELLED,
         )
     )
-    return RiderDispatchRequestHistory.objects.prefetch_related(
-        Prefetch("riderdeliverystatehistory_set", queryset=working_state_filter)
-    ).filter(rider_id=rider_id)
