@@ -18,6 +18,7 @@ from ras.rider_app.helpers import (
     handle_rider_dispatch_request_creates,
     handle_rider_dispatch_response,
     handle_rider_profile_summary,
+    handle_rider_status,
     handle_sns_notification_push_action,
     mock_delivery_state_push_action,
     mock_handle_rider_dispatch_request_creates,
@@ -36,7 +37,12 @@ from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import RiderBan, RiderDeliveryState
 from .schemas import RiderDispatch as RiderDispatchResultSchema
 from .schemas import RiderDispatchResponse as RiderDispatchResponseSchema
-from .schemas import RiderLoginRequest, RiderLoginResponse, RiderProfileSummary
+from .schemas import (
+    RiderLoginRequest,
+    RiderLoginResponse,
+    RiderProfileSummary,
+    RiderStatus,
+)
 
 rider_router = Router()
 auth_router = Router()
@@ -193,3 +199,14 @@ def subscribe_sns_event(request, topic):
     instance = handle_sns_notification(message_type, message)
     handle_sns_notification_push_action(topic, message, instance)
     return HTTPStatus.OK
+
+
+@rider_router.get(
+    "/status",
+    url_name="rider_app_rider_status",
+    summary="라이더 상태 조회",
+    response={200: RiderStatus, codes_4xx: ErrorResponse},
+)
+def retrieve_rider_status(request, rider_id):
+    # TODO: parse rider id from token
+    return handle_rider_status(rider_id)

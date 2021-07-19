@@ -20,15 +20,27 @@ from ras.rider_app.queries import (
     query_fcm_token,
     query_get_dispatch_request_states,
     query_get_rider_profile_summary,
+    query_rider_current_deliveries,
+    query_rider_status,
     query_update_rider_availability,
 )
 from ras.rideryo.enums import DeliveryState, RiderResponse
 
 from ..common.fcm import FCMSender
-from ..rideryo.models import RiderDispatchRequestHistory, RiderProfile
+from ..rideryo.models import (
+    RiderAvailability,
+    RiderDispatchRequestHistory,
+    RiderProfile,
+)
 from .schemas import DispatchRequestDetail, FcmPushPayload, MockRiderDispatch
 from .schemas import RiderAvailability as RiderAvailabilitySchema
-from .schemas import RiderBan, RiderDeliveryState, RiderDispatch, RiderDispatchResponse
+from .schemas import (
+    RiderBan,
+    RiderDeliveryState,
+    RiderDispatch,
+    RiderDispatchResponse,
+    RiderStatus,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -201,3 +213,15 @@ def handle_dispatch_request_detail(dispatch_request_ids: list[int]):
     ]
 
     return HTTPStatus.OK, states
+
+
+def handle_rider_status(rider_id):
+    try:
+        availability = query_rider_status(rider_id)
+        status = "working" if availability.is_available else "not_working"
+    except RiderAvailability.DoesNotExist:
+        return HTTPStatus.NOT_FOUND, ""
+    current_deliveries = query_rider_current_deliveries(rider_id)
+    return HTTPStatus.OK, RiderStatus(
+        status=status, current_deliveries=",".join(str(delivery.pk) for delivery in current_deliveries)
+    )
