@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 from pathlib import Path
+from types import SimpleNamespace
 
 import environ
 
@@ -135,4 +136,17 @@ FERNET_CRYPTO_KEY = env.str("FERNET_CRYPTO_KEY", default="CkjxwCCPDYkrS0d6-bmhDs
 FCM_SERVICE_ACCOUNT_KEY_FILENAME = env.str("FCM_SERVICE_ACCOUNT_KEY_FILENAME", default="serviceAccountKey.json")
 
 
+# Authyo
+AUTHYO = SimpleNamespace(
+    BASE_URL=env.str("AUTHYO_URL", default="https://staging-authyo.yogiyo.co.kr"),
+    FERNET_CRYPTO_KEY=env.str(
+        "AUTHYO_FERNET_CRYPTO_KEY", default="azFuf3CpHYihwAUs5Cf0-_S3QJVfi-ZbS9rkJtIdkHI="
+    ).encode(),
+    SECRET_KEY=env.str("AUTHYO_SECRET_KEY", default="-----BEGIN PUBLIC KEY-----|-----END PUBLIC KEY-----|").replace(
+        "|", "\n"
+    ),
+    ALGORITHM=env.str("AUTHYO_ALGORITHM", default="RS256"),
+)
+
 RIDERYO_BASE_URL = env.str("RIDERYO_BASE_URL", default="127.0.0.1")
+RIDERYO_ENV = env.str("RIDERYO_ENV", default="rideryo-dev")

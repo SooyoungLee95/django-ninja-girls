@@ -1,5 +1,6 @@
 from typing import Any, Optional
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from ninja.schema import Field, Schema
@@ -72,9 +73,9 @@ class RiderLoginResponse(Schema):
 
 class AuthyoPayload(Schema):
     sub_id: int  # rider id
-    platform: str = "rideryo-dev"
+    platform: str = settings.RIDERYO_BASE_URL
+    base_url: str = settings.RIDERYO_ENV
     role: str = "rider"
-    base_url: str = "http://rideryo-dev"
 
 
 class RiderDeliveryState(Schema):

@@ -24,14 +24,16 @@ from ras.rider_app.helpers import (
     mock_handle_rider_dispatch_request_creates,
 )
 
+from ..common.authentication.helpers import AuthyoTokenAuthenticator
+from ..rideryo.models import RiderAccount
 from .constants import (
-    MOCK_ENCRYPTED_PAYLOAD,
+    AUTHYO_LOGIN_URL,
     MOCK_JWT_ACCESS_TOKEN,
     MOCK_JWT_REFRESH_TOKEN,
-    MOCK_TOKEN_PUBLISH_URL,
+    RIDER_APP_INITIAL_PASSWORD,
 )
 from .enums import WebhookName
-from .schemas import DispatchRequestDetail
+from .schemas import AuthyoPayload, DispatchRequestDetail
 from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import RiderBan, RiderDeliveryState
@@ -55,6 +57,8 @@ WEBHOOK_MAP: dict[str, Callable] = {
     WebhookName.AUTO_ALLOCATION_SUCCESS: handle_rider_dispatch_request_creates,
     WebhookName.MOCK_AUTO_ALLOCATION_SUCCESS: mock_handle_rider_dispatch_request_creates,
 }
+
+token_authenticator = AuthyoTokenAuthenticator()
 
 
 @rider_router.put(
@@ -92,6 +96,7 @@ def create_rider_dispatch_response(request, data: RiderDispatchResponseSchema):
     url_name="rider_app_webhook",
     summary="라이더 web hook API",
     response={200: RiderDispatchResultSchema},
+    auth=None,
 )
 def webhook_handler(request, webhook_type: WebhookName, data: RiderDispatchResultSchema):
     WEBHOOK_MAP[webhook_type](data)
@@ -106,19 +111,6 @@ def webhook_handler(request, webhook_type: WebhookName, data: RiderDispatchResul
 def mock_webhook_handler(request, webhook_type: WebhookName, data: MockRiderDispatchResultSchema):
     WEBHOOK_MAP[webhook_type](data)
     return HTTPStatus.OK, {}
-
-
-@auth_router.post(
-    "login",
-    url_name="rider_app_login",
-    summary="라이더 앱 Login API",
-    response={200: RiderLoginResponse, codes_4xx: ErrorResponse},
-)
-def login(request, data: RiderLoginRequest):
-    return HTTPStatus.OK, RiderLoginResponse(
-        authorization_url=f"{MOCK_TOKEN_PUBLISH_URL}?code={MOCK_ENCRYPTED_PAYLOAD}",
-        password_change_required=False,
-    )
 
 
 @mock_authyo_router.get(
@@ -210,3 +202,33 @@ def subscribe_sns_event(request, topic):
 def retrieve_rider_status(request, rider_id):
     # TODO: parse rider id from token
     return handle_rider_status(rider_id)
+
+
+@auth_router.post(
+    "login",
+    url_name="rider_app_login",
+    summary="라이더 앱 Login API",
+    response={200: RiderLoginResponse, codes_4xx: ErrorResponse},
+    auth=None,
+)
+def login(request, data: RiderLoginRequest):
+    request_body = data.dict()
+    try:
+        rider = RiderAccount.objects.active().get(email_address=request_body["email_address"])
+    except RiderAccount.DoesNotExist:
+        return HTTPStatus.BAD_REQUEST, ErrorResponse(message="이메일이 존재하지 않습니다.")
+
+    if not rider.is_valid_password(input_password=request_body["password"]):
+        return HTTPStatus.BAD_REQUEST, ErrorResponse(message="패스워드가 일치하지 않습니다.")
+
+    encrypted_payload = token_authenticator.get_encrypted_payload(payload=AuthyoPayload(sub_id=rider.id))
+
+    return HTTPStatus.OK, RiderLoginResponse(
+        authorization_url=f"{AUTHYO_LOGIN_URL}?code={encrypted_payload}",
+        password_change_required=request_body["password"] == RIDER_APP_INITIAL_PASSWORD,
+    )
+
+
+@auth_router.get("test/jwt/authentication", url_name="test_authentication", summary="JWT 인증 테스트")
+def mock_api_for_auth(request):
+    return HTTPStatus.OK, {}

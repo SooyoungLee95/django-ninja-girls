@@ -1,9 +1,10 @@
+from django.conf import settings
+
 from config.settings.base import RIDERYO_BASE_URL
 
-AUTHYO_LOGIN_URL = "https://staging-authyo.yogiyo.co.kr/api/v1/auth/authorize"
+AUTHYO_LOGIN_URL = f"{settings.AUTHYO.BASE_URL}/api/v1/auth/authorize"
 
 RIDER_APP_INITIAL_PASSWORD = "TestTest"
-
 
 # Mock data
 MOCK_TOKEN_PUBLISH_URL = f"http://{RIDERYO_BASE_URL}/api/mock_authyo/authorize"
