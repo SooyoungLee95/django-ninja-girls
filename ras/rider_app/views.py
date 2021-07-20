@@ -1,6 +1,7 @@
 from http import HTTPStatus
 from typing import Callable
 
+from ninja import Query
 from ninja.responses import codes_4xx
 from ninja.router import Router
 
@@ -15,6 +16,7 @@ from ras.rider_app.helpers import (
     handle_rider_availability_updates,
     handle_rider_ban,
     handle_rider_delivery_state,
+    handle_rider_dispatch_acceptance_rate,
     handle_rider_dispatch_request_creates,
     handle_rider_dispatch_response,
     handle_rider_profile_summary,
@@ -38,12 +40,14 @@ from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import RiderBan, RiderDeliveryState
 from .schemas import RiderDispatch as RiderDispatchResultSchema
+from .schemas import RiderDispatchAcceptanceRate
 from .schemas import RiderDispatchResponse as RiderDispatchResponseSchema
 from .schemas import (
     RiderLoginRequest,
     RiderLoginResponse,
     RiderProfileSummary,
     RiderStatus,
+    SearchDate,
 )
 
 rider_router = Router()
@@ -227,6 +231,20 @@ def login(request, data: RiderLoginRequest):
         authorization_url=f"{AUTHYO_LOGIN_URL}?code={encrypted_payload}",
         password_change_required=request_body["password"] == RIDER_APP_INITIAL_PASSWORD,
     )
+
+
+@rider_router.get(
+    "/dispatch-acceptance-rate",
+    url_name="retrieve_rider_dispatch_acceptance_rate",
+    summary="라이더 배차 수락률 조회",
+    response={200: RiderDispatchAcceptanceRate, codes_4xx: ErrorResponse},
+)
+def retrieve_rider_dispatch_acceptance_rate(request, data: SearchDate = Query(...)):
+    # TODO: parse rider id from token
+    status, message = handle_rider_dispatch_acceptance_rate(data.rider_id, data)
+    if status != HTTPStatus.OK:
+        return status, ErrorResponse(message=message)
+    return status, message
 
 
 @auth_router.get("test/jwt/authentication", url_name="test_authentication", summary="JWT 인증 테스트")
