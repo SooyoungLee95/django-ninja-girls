@@ -2,7 +2,16 @@ from transitions import Machine
 
 
 class RiderStateMachine(Machine):
+    def __new__(cls):
+        if not hasattr(cls, "_instance"):
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self):
+        cls = type(self)
+        if not hasattr(cls, "_init"):
+            cls._init = True
+
         states = ["applying", "available", "starting", "ready", "ending", "break", "pending"]
         super().__init__(states=states)
 
