@@ -7,6 +7,8 @@ from ninja.security import HttpBearer
 
 logger = logging.getLogger(__name__)
 
+AUTHORIZED_ROLES = {"rider", "staff"}
+
 
 class RideryoAuth(HttpBearer):
     def authenticate(self, request, token):
@@ -27,7 +29,7 @@ class RideryoAuth(HttpBearer):
                 payload["sub_id"]
                 and payload["platform"] == settings.RIDERYO_BASE_URL
                 and payload["base_url"] == settings.RIDERYO_ENV
-                and (payload["role"] == "rider" or payload["role"] == "staff")
+                and payload["role"] in AUTHORIZED_ROLES
             )
         except KeyError as e:
             logger.error(f"[RideryoAuth] {e!r}")
