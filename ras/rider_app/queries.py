@@ -1,14 +1,16 @@
+import datetime
 import logging
 from functools import singledispatch
 
 from asgiref.sync import sync_to_async
 from django.db import transaction
-from django.db.models import F
+from django.db.models import Case, Count, F, FloatField, Sum, When
+from django.db.models.functions import Round
 from django.db.models.query import Prefetch
 
 from ras.common.messaging.consts import RIDER_WORKING_STATE
 from ras.common.messaging.helpers import trigger_event
-from ras.rideryo.enums import DeliveryState, RiderResponse
+from ras.rideryo.enums import DeliveryState
 from ras.rideryo.models import (
     DispatchRequestJungleworksTask,
     RiderAvailability,
@@ -21,6 +23,7 @@ from ras.rideryo.models import (
     RiderProfile,
 )
 
+from ..rideryo.enums import RiderResponse
 from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import RiderDeliveryState
@@ -163,4 +166,27 @@ def query_rider_current_deliveries(rider_id):
             DeliveryState.COMPLETED,
             DeliveryState.CANCELLED,
         )
+    )
+
+
+def query_get_rider_dispatch_acceptance_rate(rider_id, data):
+    start_at = datetime.datetime.combine(data.start_at, datetime.time(1, 0, 0))
+    end_at = datetime.datetime.combine(data.end_at, datetime.time(0, 59, 59)) + datetime.timedelta(days=1)
+    return (
+        RiderDispatchResponseHistory.objects.filter(
+            dispatch_request__rider__rider_id=rider_id, created_at__range=[start_at, end_at]
+        )
+        .values("dispatch_request__rider__rider_id")
+        .annotate(
+            acceptance_rate=Round(
+                (
+                    Sum(Case(When(response=RiderResponse.ACCEPTED, then=1), default=0, output_field=FloatField()))
+                    / Count("dispatch_request__rider__rider_id")
+                )
+                * 100
+            )
+        )
+        .values("acceptance_rate")
+        .order_by("dispatch_request__rider__rider_id")
+        .first()
     )

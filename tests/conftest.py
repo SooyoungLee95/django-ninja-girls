@@ -1,6 +1,7 @@
 import pytest
+from django.db.models import Count
 
-from ras.rideryo.enums import ContractType, DeliveryState
+from ras.rideryo.enums import ContractType, DeliveryState, RiderResponse
 from ras.rideryo.models import (
     DeliveryCity,
     DeliveryZone,
@@ -11,6 +12,7 @@ from ras.rideryo.models import (
     RiderDeliveryCancelReason,
     RiderDeliveryStateHistory,
     RiderDispatchRequestHistory,
+    RiderDispatchResponseHistory,
     RiderProfile,
     VehicleType,
 )
@@ -56,6 +58,15 @@ def rider_dispatch_request_state_cancelled(rider_dispatch_request):
         reason="customer_cancelled_within_5min",
     )
     return delivery_state
+
+
+@pytest.fixture
+def rider_dispatch_response(rider_dispatch_request):
+    rider_dispatch_response = RiderDispatchResponseHistory.objects.create(
+        response=RiderResponse.ACCEPTED,
+        dispatch_request=rider_dispatch_request,
+    )
+    return rider_dispatch_response
 
 
 @pytest.fixture
@@ -152,3 +163,27 @@ def unsubscription_data():
         "Signature": "EXAMPLEpH+..",
         "SigningCertURL": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-0000000000000000000000.pem",
     }
+
+
+@pytest.fixture
+def dummy_rider_dispatch_acceptance_rate(rider_dispatch_response):
+    dispatch_accepted = (
+        RiderDispatchResponseHistory.objects.filter(
+            dispatch_request__rider__rider_id=rider_dispatch_response.dispatch_request.rider_id,
+            response=RiderResponse.ACCEPTED,
+        )
+        .values("dispatch_request__rider__rider_id")
+        .annotate(count=Count("id"))
+        .values("count")
+        .first()
+    )
+    dispatch_all = (
+        RiderDispatchResponseHistory.objects.filter(
+            dispatch_request__rider__rider_id=rider_dispatch_response.dispatch_request.rider_id
+        )
+        .values("dispatch_request__rider__rider_id")
+        .annotate(count=Count("id"))
+        .values("count")
+        .first()
+    )
+    return round(dispatch_accepted["count"] / dispatch_all["count"] * 100)
