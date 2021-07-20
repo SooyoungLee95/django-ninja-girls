@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Any, Optional
 
 from django.core.exceptions import ValidationError
@@ -125,3 +126,14 @@ class DispatchRequestDetail(Schema):
 class RiderStatus(Schema):
     status: str
     current_deliveries: str
+
+
+class RiderDispatchAcceptanceRate(Schema):
+    acceptance_rate: float
+
+
+class SearchDate(Schema):
+    # TODO: remove rider_id
+    rider_id: int
+    start_at: date = date.today()
+    end_at: date = date.today()

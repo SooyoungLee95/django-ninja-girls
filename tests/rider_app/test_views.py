@@ -573,3 +573,17 @@ def test_dispatch_requests_detail_cancelled(rider_dispatch_request, rider_dispat
     assert detail["dispatch_request_id"] == rider_dispatch_request.pk
     assert detail["state"] == rider_dispatch_request_state_cancelled.delivery_state
     assert detail["cancel_reason"] == CUSTOMER_ISSUE
+
+
+@pytest.mark.django_db(transaction=True)
+def test_retrieve_rider_dispatch_acceptance_rate(rider_dispatch_response, dummy_rider_dispatch_acceptance_rate):
+    # When: 라이더 배차 수락률 조회 API를 호출 하였을 때
+    client = Client()
+    response = client.get(
+        reverse("ninja:retrieve_rider_dispatch_acceptance_rate"),
+        data={"rider_id": rider_dispatch_response.dispatch_request.rider_id},
+    )
+    # Then: 200 OK를 return 해야하고,
+    assert response.status_code == HTTPStatus.OK
+    # And: 라이더 배차 수락률이 일치해야한다.
+    assert response.json() == {"acceptance_rate": dummy_rider_dispatch_acceptance_rate}

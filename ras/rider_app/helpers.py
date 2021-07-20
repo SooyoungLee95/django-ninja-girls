@@ -19,6 +19,7 @@ from ras.rider_app.queries import (
     query_create_rider_dispatch_response,
     query_fcm_token,
     query_get_dispatch_request_states,
+    query_get_rider_dispatch_acceptance_rate,
     query_get_rider_profile_summary,
     query_rider_current_deliveries,
     query_rider_status,
@@ -40,6 +41,7 @@ from .schemas import (
     RiderDispatch,
     RiderDispatchResponse,
     RiderStatus,
+    SearchDate,
 )
 
 logger = logging.getLogger(__name__)
@@ -225,3 +227,13 @@ def handle_rider_status(rider_id):
     return HTTPStatus.OK, RiderStatus(
         status=status, current_deliveries=",".join(str(delivery.pk) for delivery in current_deliveries)
     )
+
+
+def handle_rider_dispatch_acceptance_rate(rider_id, data: SearchDate):
+    try:
+        rider_dispatch_acceptance_rate = query_get_rider_dispatch_acceptance_rate(rider_id, data)
+    except IntegrityError as e:
+        logger.error(f"[RiderDispatchAcceptanceRate] {e!r} {data}")
+        return HTTPStatus.BAD_REQUEST, "유효한 검색 날짜가 아닙니다."
+    else:
+        return HTTPStatus.OK, rider_dispatch_acceptance_rate
