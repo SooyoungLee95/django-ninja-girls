@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Callable
+from typing import Callable, Union
 
 import jwt
 from django.conf import settings
@@ -65,6 +65,12 @@ WEBHOOK_MAP: dict[str, Callable] = {
 }
 
 token_authenticator = AuthyoTokenAuthenticator()
+
+
+def _extract_jwt_payload(request) -> dict[str, Union[str, int]]:
+    _, token = request.headers["Authorization"].split()
+    payload = jwt.decode(jwt=token, key=settings.AUTHYO.SECRET_KEY, algorithms=[settings.AUTHYO.ALGORITHM])
+    return payload
 
 
 @rider_router.put(
@@ -206,8 +212,7 @@ def subscribe_sns_event(request, topic):
     response={200: RiderStatus, codes_4xx: ErrorResponse},
 )
 def retrieve_rider_status(request):
-    _, token = request.headers["Authorization"].split()
-    payload = jwt.decode(jwt=token, key=settings.AUTHYO.SECRET_KEY, algorithms=[settings.AUTHYO.ALGORITHM])
+    payload = _extract_jwt_payload(request)
     return handle_rider_status(rider_id=payload["sub_id"])
 
 
