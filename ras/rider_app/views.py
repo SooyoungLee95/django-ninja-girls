@@ -81,8 +81,8 @@ def _extract_jwt_payload(request) -> dict[str, Union[str, int]]:
 )
 def update_rider_availability(request, data: RiderAvailabilitySchema):
     is_jungleworks = should_connect_jungleworks(request)
-    rider_id = 1049903  # TODO: parse rider id from token
-    status, message = handle_rider_availability_updates(rider_id, data, is_jungleworks)
+    payload = _extract_jwt_payload(request)
+    status, message = handle_rider_availability_updates(data, is_jungleworks, rider_id=payload["sub_id"])
 
     if status != HTTPStatus.OK:
         return status, ErrorResponse(message=message)

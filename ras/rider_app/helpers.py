@@ -53,7 +53,7 @@ delivery_state_push_action_map = {
 }
 
 
-def handle_rider_availability_updates(rider_id, data: RiderAvailabilitySchema, is_jungleworks: bool):
+def handle_rider_availability_updates(data: RiderAvailabilitySchema, is_jungleworks: bool, rider_id):
     if is_jungleworks:
         jw_response = async_to_sync(on_off_duty)(rider_id, data)
         return jw_response.relevant_http_status(), jw_response.message
