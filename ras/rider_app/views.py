@@ -1,6 +1,8 @@
 from http import HTTPStatus
 from typing import Callable
 
+import jwt
+from django.conf import settings
 from ninja import Query
 from ninja.responses import codes_4xx
 from ninja.router import Router
@@ -203,9 +205,10 @@ def subscribe_sns_event(request, topic):
     summary="라이더 상태 조회",
     response={200: RiderStatus, codes_4xx: ErrorResponse},
 )
-def retrieve_rider_status(request, rider_id):
-    # TODO: parse rider id from token
-    return handle_rider_status(rider_id)
+def retrieve_rider_status(request):
+    _, token = request.headers["Authorization"].split()
+    payload = jwt.decode(jwt=token, key=settings.AUTHYO.SECRET_KEY, algorithms=[settings.AUTHYO.ALGORITHM])
+    return handle_rider_status(rider_id=payload["sub_id"])
 
 
 @auth_router.post(
