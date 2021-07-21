@@ -30,12 +30,7 @@ from ras.rider_app.helpers import (
 
 from ..common.authentication.helpers import AuthyoTokenAuthenticator
 from ..rideryo.models import RiderAccount
-from .constants import (
-    AUTHYO_LOGIN_URL,
-    MOCK_JWT_ACCESS_TOKEN,
-    MOCK_JWT_REFRESH_TOKEN,
-    RIDER_APP_INITIAL_PASSWORD,
-)
+from .constants import AUTHYO_LOGIN_URL, RIDER_APP_INITIAL_PASSWORD
 from .enums import WebhookName
 from .schemas import AuthyoPayload, DispatchRequestDetail
 from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
@@ -123,15 +118,6 @@ def webhook_handler(request, webhook_type: WebhookName, data: RiderDispatchResul
 def mock_webhook_handler(request, webhook_type: WebhookName, data: MockRiderDispatchResultSchema):
     WEBHOOK_MAP[webhook_type](data)
     return HTTPStatus.OK, {}
-
-
-@mock_authyo_router.get(
-    "authorize",
-    url_name="mock_token_generate",
-    summary="Mock Access, Refresh 토큰 발급",
-)
-def get_token(request, code: str):
-    return HTTPStatus.OK, {"access_token": MOCK_JWT_ACCESS_TOKEN, "refresh_token": MOCK_JWT_REFRESH_TOKEN}
 
 
 @rider_router.post(
