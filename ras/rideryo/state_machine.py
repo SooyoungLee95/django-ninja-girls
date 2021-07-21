@@ -19,6 +19,7 @@ class RiderStateMachine(Machine):
             model=model,
             states=states,
             send_event=True,
+            after_state_change=self._save_model,
             *args,
             **kwargs,
         )
@@ -30,7 +31,7 @@ class RiderStateMachine(Machine):
         self.add_transition("approve", APPLYING, AVAILABLE)
 
         # 근무시작 (온디멘드)
-        self.add_transition("start_work_ondemand", AVAILABLE, READY)
+        self.add_transition("start_work_ondemand", AVAILABLE, READY, prepare=self._ondemand_auto_transit)
 
         # 근무시작 (스케줄)
         self.add_transition("start_work_schedule", AVAILABLE, STARTING)
@@ -52,3 +53,10 @@ class RiderStateMachine(Machine):
 
         # 업무정지 해제
         self.add_transition("unblock", PENDING, AVAILABLE)
+
+    def _ondemand_auto_transit(self, *args, **kwargs):
+        self.model.state = STARTING
+        self._save_model()
+
+    def _save_model(self, *args, **kwargs):
+        return self.model.save()
