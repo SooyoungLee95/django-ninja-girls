@@ -8,8 +8,6 @@ from django.db.models import Case, Count, F, FloatField, Sum, When
 from django.db.models.functions import Round
 from django.db.models.query import Prefetch
 
-from ras.common.messaging.consts import RIDER_WORKING_STATE
-from ras.common.messaging.helpers import trigger_event
 from ras.rideryo.enums import DeliveryState
 from ras.rideryo.models import (
     DispatchRequestJungleworksTask,
@@ -21,6 +19,7 @@ from ras.rideryo.models import (
     RiderDispatchResponseHistory,
     RiderFCMToken,
     RiderProfile,
+    RiderState,
 )
 
 from ..rideryo.enums import RiderResponse
@@ -41,7 +40,6 @@ RIDER_RESPONSE_DELIVERY_STATE_MAP = {
 
 
 @singledispatch
-@trigger_event(RIDER_WORKING_STATE)
 def query_update_rider_availability(data: RiderAvailabilitySchema, rider_id) -> RiderAvailability:
     with transaction.atomic():
         availability, _ = RiderAvailability.objects.select_for_update(nowait=True).get_or_create(rider_id=rider_id)
@@ -52,7 +50,6 @@ def query_update_rider_availability(data: RiderAvailabilitySchema, rider_id) -> 
 
 
 @query_update_rider_availability.register
-@trigger_event(RIDER_WORKING_STATE)
 def _(data: bool, rider_id) -> RiderAvailability:
     with transaction.atomic():
         availability, _ = RiderAvailability.objects.select_for_update(nowait=True).get_or_create(rider_id=rider_id)
@@ -60,6 +57,10 @@ def _(data: bool, rider_id) -> RiderAvailability:
         availability.save()
         RiderAvailabilityHistory.objects.create(rider=availability, is_available=data)
     return availability
+
+
+def query_rider_state(rider_id):
+    return RiderState.objects.get(rider_id=rider_id)
 
 
 def query_create_rider_dispatch_response(data: RiderDispatchResponseSchema):
