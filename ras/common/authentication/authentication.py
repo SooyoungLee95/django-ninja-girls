@@ -5,9 +5,11 @@ from django.conf import settings
 from jwt import InvalidTokenError
 from ninja.security import HttpBearer
 
+from ras.rider_app.enums import RideryoRole
+
 logger = logging.getLogger(__name__)
 
-AUTHORIZED_ROLES = {"rider", "staff"}
+AUTHORIZED_ROLES = {r.value for r in RideryoRole}
 
 
 class RideryoAuth(HttpBearer):

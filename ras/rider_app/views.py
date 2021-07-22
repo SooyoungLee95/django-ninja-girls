@@ -31,7 +31,7 @@ from ras.rider_app.helpers import (
 from ..common.authentication.helpers import AuthyoTokenAuthenticator
 from ..rideryo.models import RiderAccount
 from .constants import AUTHYO_LOGIN_URL, RIDER_APP_INITIAL_PASSWORD
-from .enums import WebhookName
+from .enums import RideryoRole, WebhookName
 from .schemas import AuthyoPayload, DispatchRequestDetail
 from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
 from .schemas import RiderAvailability as RiderAvailabilitySchema
@@ -157,7 +157,7 @@ def retrieve_dispatch_requests_detail(request, id: str):
 )
 def update_rider_ban(request, data: RiderBan):
     payload = _extract_jwt_payload(request)
-    if payload["role"] != "staff":
+    if payload["role"] != RideryoRole.STAFF:
         return HTTPStatus.FORBIDDEN, ErrorResponse(message="권한이 올바르지 않습니다.")
     status, message = handle_rider_ban(data)
     if status != HTTPStatus.OK:
