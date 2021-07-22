@@ -50,4 +50,4 @@ class RiderStateMachine(Machine):
         self._save_model()
 
     def _save_model(self, *args, **kwargs):
-        return self.model.save()
+        self.model.save()
