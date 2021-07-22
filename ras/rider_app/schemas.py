@@ -134,7 +134,5 @@ class RiderDispatchAcceptanceRate(Schema):
 
 
 class SearchDate(Schema):
-    # TODO: remove rider_id
-    rider_id: int
     start_at: date = date.today()
     end_at: date = date.today()

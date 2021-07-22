@@ -236,8 +236,8 @@ def login(request, data: RiderLoginRequest):
     response={200: RiderDispatchAcceptanceRate, codes_4xx: ErrorResponse},
 )
 def retrieve_rider_dispatch_acceptance_rate(request, data: SearchDate = Query(...)):
-    # TODO: parse rider id from token
-    status, rate = handle_rider_dispatch_acceptance_rate(data.rider_id, data)
+    payload = _extract_jwt_payload(request)
+    status, rate = handle_rider_dispatch_acceptance_rate(data, rider_id=payload["sub_id"])
     if status != HTTPStatus.OK:
         return status, ErrorResponse(message=rate)
     return status, RiderDispatchAcceptanceRate(acceptance_rate=rate)

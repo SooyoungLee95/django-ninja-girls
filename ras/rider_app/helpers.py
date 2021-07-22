@@ -229,7 +229,7 @@ def handle_rider_status(rider_id):
     )
 
 
-def handle_rider_dispatch_acceptance_rate(rider_id, data: SearchDate):
+def handle_rider_dispatch_acceptance_rate(data: SearchDate, rider_id):
     try:
         rider_dispatch_acceptance_rate = query_get_rider_dispatch_acceptance_rate(rider_id, data)
     except IntegrityError as e:

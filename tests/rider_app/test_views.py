@@ -509,7 +509,6 @@ class TestRiderBan:
     def test_update_rider_ban_should_return_403_when_token_role_is_not_staff(
         self, mock_jwt_token, rider_profile, is_banned
     ):
-        print(is_banned)
         # Given: 업무정지 상태가 변경된 경우
         input_body = self._make_request_body(rider_profile.pk, is_banned=is_banned)
 
@@ -615,7 +614,6 @@ def test_dispatch_requests_detail_cancelled(
         content_type="application/json",
         **{"HTTP_AUTHORIZATION": f"Bearer {mock_jwt_token}"},
     )
-
     # Then: 200 성공 응답, 배열이 반환되고
     assert response.status_code == HTTPStatus.OK
     data = response.json()
@@ -630,16 +628,17 @@ def test_dispatch_requests_detail_cancelled(
 
 @pytest.mark.django_db(transaction=True)
 def test_retrieve_rider_dispatch_acceptance_rate(
-    rider_dispatch_response, dummy_rider_dispatch_acceptance_rate, mock_jwt_token
+    rider_profile, rider_dispatch_request, rider_dispatch_response, dummy_rider_dispatch_acceptance_rate, mock_jwt_token
 ):
+    # Given: 라이더가 총 배차 1회 중 1회 수락 하였을 때,
     # When: 라이더 배차 수락률 조회 API를 호출 하였을 때
     client = Client()
     response = client.get(
         reverse("ninja:retrieve_rider_dispatch_acceptance_rate"),
-        data={"rider_id": rider_dispatch_response.dispatch_request.rider_id},
         **{"HTTP_AUTHORIZATION": f"Bearer {mock_jwt_token}"},
     )
+
     # Then: 200 OK를 return 해야하고,
     assert response.status_code == HTTPStatus.OK
-    # And: 라이더 배차 수락률이 일치해야한다.
+    # And: 라이더 배차 수락률은 100% 이어야 한다
     assert response.json() == {"acceptance_rate": dummy_rider_dispatch_acceptance_rate}
