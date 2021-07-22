@@ -157,7 +157,7 @@ class RiderState(CommonTimeStamp):
 class RiderStateHistory(CommonTimeStamp):
     """라이더의 상태 변경 이력"""
 
-    rider = models.OneToOneField("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
+    rider = models.ForeignKey("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
     to_state = models.CharField(max_length=20, choices=RiderStateEnum.choices, help_text="라이더 상태")
 
 
