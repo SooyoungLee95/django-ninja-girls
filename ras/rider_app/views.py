@@ -156,7 +156,9 @@ def retrieve_dispatch_requests_detail(request, id: str):
     response={200: RiderBan, codes_4xx: ErrorResponse},
 )
 def update_rider_ban(request, data: RiderBan):
-    # TODO: requires permission check! Admin only!
+    payload = _extract_jwt_payload(request)
+    if payload["role"] != "staff":
+        return HTTPStatus.FORBIDDEN, ErrorResponse(message="권한이 올바르지 않습니다.")
     status, message = handle_rider_ban(data)
     if status != HTTPStatus.OK:
         return status, ErrorResponse(message=message)

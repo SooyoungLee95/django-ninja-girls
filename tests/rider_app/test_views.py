@@ -423,7 +423,7 @@ class TestRiderBan:
     @patch("ras.rider_app.helpers.send_push_action", Mock(return_value=None))
     @patch("ras.common.messaging.helpers.sns_client.publish")
     def test_update_rider_ban_should_change_rider_to_unavailable(
-        self, mock_publish, rider_availability, given_rider_availability, mock_jwt_token
+        self, mock_publish, rider_availability, given_rider_availability, mock_jwt_token_with_staff
     ):
         # Given: 라이더가 "근무 중"이거나 "근무 중이 아닌" 상태일 때,
         rider_availability.is_available = given_rider_availability
@@ -433,7 +433,7 @@ class TestRiderBan:
         input_body = self._make_request_body(rider_availability.rider.pk, is_banned=True)
 
         # When: 업무정지 API 호출 시,
-        response = self._call_api_update_rider_ban(input_body, mock_jwt_token)
+        response = self._call_api_update_rider_ban(input_body, mock_jwt_token_with_staff)
 
         # Then: 근무 중이 아닌 상태로 전환 또는 유지된다
         rider_availability.refresh_from_db()
@@ -456,7 +456,7 @@ class TestRiderBan:
     @patch("ras.rider_app.views.should_connect_jungleworks", Mock(return_value=False))
     @patch("ras.rider_app.helpers.send_push_action", Mock(return_value=None))
     def test_update_rider_undo_ban_should_remain_rider_availablity(
-        self, rider_availability, given_rider_availability, mock_jwt_token
+        self, rider_availability, given_rider_availability, mock_jwt_token_with_staff
     ):
         # Given: 라이더가 "근무 중"이거나 "근무 중이 아닌" 상태일 때,
         rider_availability.is_available = given_rider_availability
@@ -466,7 +466,7 @@ class TestRiderBan:
         input_body = self._make_request_body(rider_availability.rider.pk, is_banned=False)
 
         # When: 업무정지 API 호출 시,
-        response = self._call_api_update_rider_ban(input_body, mock_jwt_token)
+        response = self._call_api_update_rider_ban(input_body, mock_jwt_token_with_staff)
 
         # Then: 기존 상태를 유지한다 (근무 중 상태로 돌리지 않는다.)
         rider_availability.refresh_from_db()
@@ -487,13 +487,13 @@ class TestRiderBan:
     @patch("ras.rider_app.helpers.send_push_action")
     @patch("ras.common.messaging.helpers.sns_client.publish", Mock(return_value=None))
     def test_update_rider_ban_should_send_push(
-        self, mock_fcm_send, rider_profile, is_banned, push_action, mock_jwt_token
+        self, mock_fcm_send, rider_profile, is_banned, push_action, mock_jwt_token_with_staff
     ):
         # Given: 업무정지 상태가 변경된 경우
         input_body = self._make_request_body(rider_profile.pk, is_banned)
 
         # When: 업무정지 API 호출 시,
-        response = self._call_api_update_rider_ban(input_body, mock_jwt_token)
+        response = self._call_api_update_rider_ban(input_body, mock_jwt_token_with_staff)
 
         # Then: 올바른 푸시가 발생한다.
         mock_fcm_send.assert_called_once()
@@ -501,6 +501,23 @@ class TestRiderBan:
 
         # And: 200 응답코드가 반환된다.
         assert response.status_code == HTTPStatus.OK
+
+    @pytest.mark.parametrize("is_banned", [True, False])
+    @pytest.mark.django_db(transaction=True)
+    @patch("ras.rider_app.views.should_connect_jungleworks", Mock(return_value=False))
+    @patch("ras.rider_app.helpers.send_push_action", Mock(return_value=None))
+    def test_update_rider_ban_should_return_403_when_token_role_is_not_staff(
+        self, mock_jwt_token, rider_profile, is_banned
+    ):
+        print(is_banned)
+        # Given: 업무정지 상태가 변경된 경우
+        input_body = self._make_request_body(rider_profile.pk, is_banned=is_banned)
+
+        # When: 업무정지 API 호출 시,
+        response = self._call_api_update_rider_ban(input_body, mock_jwt_token)
+
+        # Then: 403 응답코드가 반환된다.
+        assert response.status_code == HTTPStatus.FORBIDDEN
 
 
 @pytest.mark.django_db(transaction=True)
