@@ -8,8 +8,8 @@ from ninja.router import Router
 from ras.common.integration.services.jungleworks.handlers import (
     should_connect_jungleworks,
 )
-from ras.common.messaging.helpers import handle_sns_notification
 from ras.common.messaging.schema import SNSMessageForSubscribe
+from ras.common.messaging.subscribers import handle_sns_notification
 from ras.common.schemas import ErrorResponse
 from ras.rider_app.helpers import (
     handle_dispatch_request_detail,
