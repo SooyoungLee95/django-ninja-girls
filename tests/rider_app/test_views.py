@@ -51,11 +51,18 @@ class TestUpdateRiderAvailability:
 
     @pytest.mark.django_db(transaction=True)
     @patch("ras.rider_app.views.should_connect_jungleworks")
-    def test_update_rider_availability_when_jw_disabled(self, mock_use_jungleworks, mock_jwt_token):
+    @patch("ras.common.messaging.publishers.publish_message")
+    def test_update_rider_availability_when_jw_disabled(
+        self, mock_publish, mock_use_jungleworks, mock_jwt_token, rider_profile, rider_state
+    ):
+        rider_state.state = "AVAILABLE"
+        rider_state.save()
+
         input_body = {"is_available": True}
 
         # Given: Jungleworks 기능이 비활성화된 경우
         mock_use_jungleworks.return_value = False
+        mock_publish.return_value = True
 
         # When: 라이더 업무 시작/종료 API 호출 시,
         with patch("ras.rider_app.helpers.query_update_rider_availability") as mock_query_update:
@@ -92,7 +99,9 @@ class TestUpdateRiderAvailability:
 
     @pytest.mark.django_db(transaction=True)
     @patch("ras.rider_app.views.should_connect_jungleworks")
-    def test_update_rider_availability_error_when_jw_disabled(self, mock_use_jungleworks, mock_jwt_token):
+    def test_update_rider_availability_error_when_jw_disabled(
+        self, mock_use_jungleworks, mock_jwt_token, rider_profile, rider_state
+    ):
         input_body = {"is_available": True}
 
         # Given: Jungleworks 기능이 비활성화된 경우
@@ -422,10 +431,19 @@ class TestRiderBan:
     @pytest.mark.django_db(transaction=True)
     @patch("ras.rider_app.views.should_connect_jungleworks", Mock(return_value=False))
     @patch("ras.rider_app.helpers.send_push_action", Mock(return_value=None))
-    @patch("ras.common.messaging.helpers.sns_client.publish")
+    @patch("ras.common.messaging.publishers.sns_client.publish")
     def test_update_rider_ban_should_change_rider_to_unavailable(
-        self, mock_publish, rider_availability, given_rider_availability, mock_jwt_token_with_staff
+        self,
+        mock_publish,
+        rider_availability,
+        given_rider_availability,
+        mock_jwt_token_with_staff,
+        rider_profile,
+        rider_state,
     ):
+        rider_state.state = "READY"
+        rider_state.save()
+
         # Given: 라이더가 "근무 중"이거나 "근무 중이 아닌" 상태일 때,
         rider_availability.is_available = given_rider_availability
         rider_availability.save()
@@ -457,8 +475,16 @@ class TestRiderBan:
     @patch("ras.rider_app.views.should_connect_jungleworks", Mock(return_value=False))
     @patch("ras.rider_app.helpers.send_push_action", Mock(return_value=None))
     def test_update_rider_undo_ban_should_remain_rider_availablity(
-        self, rider_availability, given_rider_availability, mock_jwt_token_with_staff
+        self,
+        rider_availability,
+        given_rider_availability,
+        mock_jwt_token_with_staff,
+        rider_profile,
+        rider_state,
     ):
+        rider_state.state = "PENDING"
+        rider_state.save()
+
         # Given: 라이더가 "근무 중"이거나 "근무 중이 아닌" 상태일 때,
         rider_availability.is_available = given_rider_availability
         rider_availability.save()
@@ -486,10 +512,19 @@ class TestRiderBan:
     @pytest.mark.django_db(transaction=True)
     @patch("ras.rider_app.views.should_connect_jungleworks", Mock(return_value=False))
     @patch("ras.rider_app.helpers.send_push_action")
-    @patch("ras.common.messaging.helpers.sns_client.publish", Mock(return_value=None))
+    @patch("ras.common.messaging.publishers.sns_client.publish", Mock(return_value=None))
     def test_update_rider_ban_should_send_push(
-        self, mock_fcm_send, rider_profile, is_banned, push_action, mock_jwt_token_with_staff
+        self,
+        mock_fcm_send,
+        rider_profile,
+        is_banned,
+        push_action,
+        mock_jwt_token_with_staff,
+        rider_state,
     ):
+        rider_state.state = "READY" if is_banned else "PENDING"
+        rider_state.save()
+
         # Given: 업무정지 상태가 변경된 경우
         input_body = self._make_request_body(rider_profile.pk, is_banned)
 

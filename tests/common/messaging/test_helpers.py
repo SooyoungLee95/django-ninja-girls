@@ -5,17 +5,17 @@ import orjson
 import pytest
 from ninja.errors import HttpError
 
-from ras.common.messaging.helpers import (
+from ras.common.messaging.publishers import publish_message
+from ras.common.messaging.schema import SNSMessageForPublish, SNSMessageForSubscribe
+from ras.common.messaging.subscribers import (
     handle_order_cancelled_notification,
     handle_sns_notification,
-    publish_message,
 )
-from ras.common.messaging.schema import SNSMessageForPublish, SNSMessageForSubscribe
 from ras.rideryo.enums import DeliveryState
 from ras.rideryo.models import RiderDeliveryCancelReason, RiderDeliveryStateHistory
 
 
-@patch("ras.common.messaging.helpers.sns_client.publish")
+@patch("ras.common.messaging.publishers.sns_client.publish")
 def test_publish_message(mock_sns_publish):
     # Given: SNSMessageForPublish Schema로 정의된 message가 있고
     sns_message = SNSMessageForPublish(topic_arn="test-topic-arn", message='{"test-message": 123}')
@@ -39,7 +39,7 @@ def test_handle_sns_notification_event(notification_data):
     # And: 이벤트 처리 함수를 mock 처리하고
     mock_handler = Mock()
     with patch.dict(
-        "ras.common.messaging.helpers.SNS_NOTIFICATION_HANDLER_MAP",
+        "ras.common.messaging.subscribers.SNS_NOTIFICATION_HANDLER_MAP",
         {sns_message.topic_arn: {sns_message.message["event_type"]: mock_handler}},
     ):
         # When: sns 이벤트 처리 함수를 실행하면,
@@ -54,7 +54,7 @@ def test_handle_sns_subscription_event(subscription_data):
     sns_message = SNSMessageForSubscribe.parse_obj(subscription_data)
     message_type = sns_message.type
 
-    with patch("ras.common.messaging.helpers.httpx.get") as mock_get:
+    with patch("ras.common.messaging.subscribers.httpx.get") as mock_get:
         # When: sns 이벤트 처리 함수를 실행하면,
         handle_sns_notification(message_type, sns_message)
 
@@ -67,7 +67,7 @@ def test_handle_sns_unsubscription_event(unsubscription_data):
     sns_message = SNSMessageForSubscribe.parse_obj(unsubscription_data)
     message_type = sns_message.type
 
-    with patch("ras.common.messaging.helpers.httpx.get") as mock_get:
+    with patch("ras.common.messaging.subscribers.httpx.get") as mock_get:
         # When: sns 이벤트 처리 함수를 실행하면,
         handle_sns_notification(message_type, sns_message)
 

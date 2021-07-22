@@ -4,6 +4,7 @@ from django.conf import settings
 from django.db.models import Count
 
 from ras.rideryo.enums import ContractType, DeliveryState, RiderResponse
+from ras.rideryo.enums import RiderState as RiderStateEnum
 from ras.rideryo.models import (
     DeliveryCity,
     DeliveryZone,
@@ -16,6 +17,7 @@ from ras.rideryo.models import (
     RiderDispatchRequestHistory,
     RiderDispatchResponseHistory,
     RiderProfile,
+    RiderState,
     VehicleType,
 )
 
@@ -47,6 +49,25 @@ def rider_profile():
         address="서울시 서초구 방배동",
     )
     return rider_profile
+
+
+@pytest.fixture
+def rider_state(rider_profile):
+    return RiderState.objects.create(rider=rider_profile, state=RiderStateEnum.INITIAL)
+
+
+@pytest.fixture
+def rider_state_temp():
+    # TODO: JWT 파싱 쪽 수정되면 제거
+    rider_account = RiderAccount.objects.create(id=1049903, email_address="test1@test.com", password="TestTest")
+    rider_profile = RiderProfile.objects.create(
+        rider=rider_account,
+        full_name="라이더1",
+        phone_number="01012341235",
+        date_of_birth="1999-10-10",
+        address="서울시 서초구 방배동",
+    )
+    return RiderState.objects.create(rider=rider_profile, state=RiderStateEnum.INITIAL)
 
 
 @pytest.fixture
