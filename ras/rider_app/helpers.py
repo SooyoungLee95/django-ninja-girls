@@ -236,4 +236,4 @@ def handle_rider_dispatch_acceptance_rate(rider_id, data: SearchDate):
         logger.error(f"[RiderDispatchAcceptanceRate] {e!r} {data}")
         return HTTPStatus.BAD_REQUEST, "유효한 검색 날짜가 아닙니다."
     else:
-        return HTTPStatus.OK, rider_dispatch_acceptance_rate
+        return HTTPStatus.OK, rider_dispatch_acceptance_rate["acceptance_rate"] if rider_dispatch_acceptance_rate else 0

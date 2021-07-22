@@ -237,10 +237,10 @@ def login(request, data: RiderLoginRequest):
 )
 def retrieve_rider_dispatch_acceptance_rate(request, data: SearchDate = Query(...)):
     # TODO: parse rider id from token
-    status, message = handle_rider_dispatch_acceptance_rate(data.rider_id, data)
+    status, rate = handle_rider_dispatch_acceptance_rate(data.rider_id, data)
     if status != HTTPStatus.OK:
-        return status, ErrorResponse(message=message)
-    return status, message
+        return status, ErrorResponse(message=rate)
+    return status, RiderDispatchAcceptanceRate(acceptance_rate=rate)
 
 
 @auth_router.get("test/jwt/authentication", url_name="test_authentication", summary="JWT 인증 테스트")

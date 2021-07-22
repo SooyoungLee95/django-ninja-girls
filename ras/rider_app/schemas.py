@@ -130,7 +130,7 @@ class RiderStatus(Schema):
 
 
 class RiderDispatchAcceptanceRate(Schema):
-    acceptance_rate: float
+    acceptance_rate: int
 
 
 class SearchDate(Schema):
