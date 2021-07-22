@@ -1,3 +1,4 @@
+import json
 from http import HTTPStatus
 from unittest.mock import Mock, patch
 
@@ -525,7 +526,6 @@ def test_retrieve_rider_profile_summary(rider_contract_type, mock_jwt_token):
     client = Client()
     response = client.get(
         reverse("ninja:retrieve_rider_profile_summary"),
-        data={"rider_id": rider_contract_type.rider_id},
         **{"HTTP_AUTHORIZATION": f"Bearer {mock_jwt_token}"},
     )
     # Then: 200 OK를 return 해야하고,
@@ -536,6 +536,21 @@ def test_retrieve_rider_profile_summary(rider_contract_type, mock_jwt_token):
         "contract_type": rider_contract_type.contract_type,
         "vehicle_name": rider_contract_type.vehicle_type.name,
     }
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("ras.rider_app.helpers.query_get_rider_profile_summary", Mock(return_value=None))
+def test_retrieve_rider_profile_summary_when_rider_profile_does_not_exist(rider_contract_type, mock_jwt_token):
+    # When: 라이더 프로필 조회 API를 호출 하였을 때
+    client = Client()
+    response = client.get(
+        reverse("ninja:retrieve_rider_profile_summary"),
+        **{"HTTP_AUTHORIZATION": f"Bearer {mock_jwt_token}"},
+    )
+    # Then: 404 NOT_FOUND를 return 해야하고,
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    # And: message는 라이더가 존재하지 않습니다. 이어야 한다
+    assert json.loads(response.content)["message"] == "라이더가 존재하지 않습니다."
 
 
 @pytest.mark.django_db(transaction=True)

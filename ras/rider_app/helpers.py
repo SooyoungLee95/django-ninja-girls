@@ -185,13 +185,11 @@ def handle_rider_ban(data: RiderBan):
 
 
 def handle_rider_profile_summary(rider_id):
-    try:
-        rider_profile_summary = query_get_rider_profile_summary(rider_id)
-    except RiderProfile.DoesNotExist as e:
-        logger.error(f"[RiderProfile] {e!r} {rider_id}")
-        return HTTPStatus.BAD_REQUEST, "라이더가 존재하지 않습니다."
-    else:
+    rider_profile_summary = query_get_rider_profile_summary(rider_id)
+    if rider_profile_summary:
         return HTTPStatus.OK, rider_profile_summary
+    else:
+        return HTTPStatus.NOT_FOUND, "라이더가 존재하지 않습니다."
 
 
 def handle_sns_notification_push_action(topic, message, instance):
