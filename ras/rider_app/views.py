@@ -64,8 +64,7 @@ token_authenticator = AuthyoTokenAuthenticator()
 
 def _extract_jwt_payload(request) -> dict[str, Union[str, int]]:
     _, token = request.headers["Authorization"].split()
-    payload = jwt.decode(jwt=token, key=settings.AUTHYO.SECRET_KEY, algorithms=[settings.AUTHYO.ALGORITHM])
-    return payload
+    return jwt.decode(jwt=token, key=settings.AUTHYO.SECRET_KEY, algorithms=[settings.AUTHYO.ALGORITHM])
 
 
 @rider_router.put(
@@ -76,8 +75,7 @@ def _extract_jwt_payload(request) -> dict[str, Union[str, int]]:
 )
 def update_rider_availability(request, data: RiderAvailabilitySchema):
     is_jungleworks = should_connect_jungleworks(request)
-    payload = _extract_jwt_payload(request)
-    status, message = handle_rider_availability_updates(data, is_jungleworks, rider_id=payload["sub_id"])
+    status, message = handle_rider_availability_updates(data, is_jungleworks, rider_id=request.auth.rider_id)
 
     if status != HTTPStatus.OK:
         return status, ErrorResponse(message=message)
@@ -172,8 +170,7 @@ def update_rider_ban(request, data: RiderBan):
     response={200: RiderProfileSummary, codes_4xx: ErrorResponse},
 )
 def retrieve_rider_profile_summary(request):
-    payload = _extract_jwt_payload(request)
-    status, message = handle_rider_profile_summary(payload["sub_id"])
+    status, message = handle_rider_profile_summary(request.auth.rider_id)
     if status != HTTPStatus.OK:
         return status, ErrorResponse(message=message)
     return status, message
@@ -200,8 +197,7 @@ def subscribe_sns_event(request, topic):
     response={200: RiderStatus, codes_4xx: ErrorResponse},
 )
 def retrieve_rider_status(request):
-    payload = _extract_jwt_payload(request)
-    return handle_rider_status(rider_id=payload["sub_id"])
+    return handle_rider_status(rider_id=request.auth.rider_id)
 
 
 @auth_router.post(
@@ -236,8 +232,7 @@ def login(request, data: RiderLoginRequest):
     response={200: RiderDispatchAcceptanceRate, codes_4xx: ErrorResponse},
 )
 def retrieve_rider_dispatch_acceptance_rate(request, data: SearchDate = Query(...)):
-    payload = _extract_jwt_payload(request)
-    status, rate = handle_rider_dispatch_acceptance_rate(data, rider_id=payload["sub_id"])
+    status, rate = handle_rider_dispatch_acceptance_rate(data, rider_id=request.auth.rider_id)
     if status != HTTPStatus.OK:
         return status, ErrorResponse(message=rate)
     return status, RiderDispatchAcceptanceRate(acceptance_rate=rate)
