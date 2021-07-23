@@ -9,10 +9,11 @@ from botocore.exceptions import BotoCoreError
 from ras.common.messaging.connections import sns_client
 from ras.common.messaging.consts import RIDER_WORKING_STATE
 from ras.common.messaging.schema import SNSMessageForPublish
+from ras.rideryo.enums import RiderState as RiderStateEnum
 from ras.rideryo.schemas import EventMsgRiderWorkingState
 
 if TYPE_CHECKING:
-    from ras.rideryo.models import RiderAvailability
+    from ras.rideryo.models import RiderState
 
 
 logger = logging.getLogger(__name__)
@@ -24,9 +25,12 @@ def publish_event(instance, event_type):
     raise NotImplementedError("publish_event must be implemented.")
 
 
-def publish_rider_working_state(instance: RiderAvailability):
+def publish_rider_working_state(instance: RiderState):
     event_msg_cls = event_cls_to_type[RIDER_WORKING_STATE]
-    event_msg = event_msg_cls(rider_id=instance.rider.pk, state="available" if instance.is_available else "unavailable")
+    event_msg = event_msg_cls(
+        rider_id=instance.rider.pk,
+        state="available" if instance.state == RiderStateEnum.READY else "unavailable",
+    )
     sns_message = SNSMessageForPublish(topic_arn=event_msg._arn, message=event_msg.json(exclude={"_arn"}))
     return publish_message(sns_message)
 

@@ -65,5 +65,4 @@ class RiderStateMachine(Machine):
         self.model.save()
 
     def handle_READY(self, event_data, *args, **kwargs):
-        rider_availability = event_data.kwargs["instance"]
-        publish_rider_working_state(rider_availability)
+        publish_rider_working_state(event_data.model)
