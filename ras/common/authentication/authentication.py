@@ -6,6 +6,7 @@ from jwt import InvalidTokenError
 from ninja.security import HttpBearer
 
 from ras.rider_app.enums import RideryoRole
+from ras.rideryo.models import RiderProfile
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,13 @@ class RideryoAuth(HttpBearer):
         if not self._validate_payload(payload):
             return None
 
-        return token
+        try:
+            rider = RiderProfile.objects.get(rider_id=payload["sub_id"])
+        except RiderProfile.DoesNotExist as e:
+            logger.error(f"[RideryoAuth] {e!r}")
+            return None
+
+        return rider
 
     def _validate_payload(self, payload):
         try:

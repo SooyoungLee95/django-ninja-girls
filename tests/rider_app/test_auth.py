@@ -112,6 +112,23 @@ class TestJWTAuthentication:
         response = self._call_test_api(token=token_with_invalid_payload)
         assert response.status_code == 401
 
+    @pytest.mark.django_db(transaction=True)
+    def test_jwt_auth_on_invalid_rider_id_does_not_exist(self):
+        token_with_invalid_rider_id = jwt.encode(
+            {
+                "iat": 1625703402,
+                "exp": 16257034020,
+                "sub_id": 12345,  # invalid rider_id does not exist
+                "platform": settings.RIDERYO_BASE_URL,
+                "base_url": settings.RIDERYO_ENV,
+                "role": "rider",
+            },
+            TEST_JWT_PRIVATE,
+            algorithm="RS256",
+        )
+        response = self._call_test_api(token=token_with_invalid_rider_id)
+        assert response.status_code == 401
+
     def test_jwt_auth_on_expired_token(self):
         expired_token = jwt.encode(
             {
