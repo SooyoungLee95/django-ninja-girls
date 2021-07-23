@@ -1,8 +1,6 @@
 from http import HTTPStatus
-from typing import Callable, Union
+from typing import Callable
 
-import jwt
-from django.conf import settings
 from ninja import Query
 from ninja.responses import codes_4xx
 from ninja.router import Router
@@ -28,7 +26,10 @@ from ras.rider_app.helpers import (
     mock_handle_rider_dispatch_request_creates,
 )
 
-from ..common.authentication.helpers import AuthyoTokenAuthenticator
+from ..common.authentication.helpers import (
+    AuthyoTokenAuthenticator,
+    extract_jwt_payload,
+)
 from ..rideryo.models import RiderAccount
 from .constants import AUTHYO_LOGIN_URL, RIDER_APP_INITIAL_PASSWORD
 from .enums import RideryoRole, WebhookName
@@ -60,11 +61,6 @@ WEBHOOK_MAP: dict[str, Callable] = {
 }
 
 token_authenticator = AuthyoTokenAuthenticator()
-
-
-def _extract_jwt_payload(request) -> dict[str, Union[str, int]]:
-    _, token = request.headers["Authorization"].split()
-    return jwt.decode(jwt=token, key=settings.AUTHYO.SECRET_KEY, algorithms=[settings.AUTHYO.ALGORITHM])
 
 
 @rider_router.put(
@@ -155,7 +151,7 @@ def retrieve_dispatch_requests_detail(request, id: str):
     auth=None,
 )
 def update_rider_ban(request, data: RiderBan):
-    payload = _extract_jwt_payload(request)
+    payload = extract_jwt_payload(request)
     if payload["role"] != RideryoRole.STAFF:
         return HTTPStatus.FORBIDDEN, ErrorResponse(message="권한이 올바르지 않습니다.")
     status, message = handle_rider_ban(data)
