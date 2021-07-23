@@ -161,20 +161,6 @@ class RiderStateHistory(CommonTimeStamp):
     to_state = models.CharField(max_length=20, choices=RiderStateEnum.choices, help_text="라이더 상태")
 
 
-class RiderAvailability(CommonTimeStamp):
-    """라이더의 운행 가능여부(운행 가능 / 불가능)"""
-
-    rider = models.OneToOneField("RiderProfile", primary_key=True, on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
-    is_available = models.BooleanField(default=False)
-
-
-class RiderAvailabilityHistory(CommonTimeStamp):
-    """라이더의 운행 가능여부(운행 가능 / 불가능) 변경 이력"""
-
-    rider = models.ForeignKey("RiderAvailability", on_delete=models.DO_NOTHING, help_text="라이더 운행가능여부 ID")
-    is_available = models.BooleanField()
-
-
 class RiderDispatchRequestHistory(CommonTimeStamp):
     """Dispatchyo로 부터 받은 배차 요청 이력"""
 

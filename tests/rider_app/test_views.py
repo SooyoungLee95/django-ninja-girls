@@ -506,27 +506,19 @@ class TestRiderBan:
     @patch("ras.rider_app.views.should_connect_jungleworks", Mock(return_value=False))
     @patch("ras.rider_app.helpers.send_push_action", Mock(return_value=None))
     def test_update_rider_undo_ban_should_change_from_pending_to_available(
-        self, rider_availability, mock_jwt_token_with_staff, rider_profile, rider_state
+        self, mock_jwt_token_with_staff, rider_profile, rider_state
     ):
         # Given: 라이더 상태가 Pending 이고,
         rider_state.state = RiderStateEnum.PENDING
         rider_state.save()
 
-        # And: 라이더가 "근무 중이 아닌" 상태일 때,
-        rider_availability.is_available = False
-        rider_availability.save()
-
         # And: 업무정지 해제가 된 경우
-        input_body = self._make_request_body(rider_availability.rider.pk, is_banned=False)
+        input_body = self._make_request_body(rider_state.rider.pk, is_banned=False)
 
         # When: 업무정지 API 호출 시,
         response = self._call_api_update_rider_ban(input_body, mock_jwt_token_with_staff)
 
-        # Then: 기존 상태를 유지한다 (근무 중 상태로 돌리지 않는다.)
-        rider_availability.refresh_from_db()
-        assert not rider_availability.is_available
-
-        # And: 200 응답코드가 반환된다.
+        # Then: 200 응답코드가 반환된다.
         assert response.status_code == HTTPStatus.OK
 
         # And: 라이더 상태가 Available로 전환된다
@@ -537,18 +529,14 @@ class TestRiderBan:
     @patch("ras.rider_app.views.should_connect_jungleworks", Mock(return_value=False))
     @patch("ras.rider_app.helpers.send_push_action", Mock(return_value=None))
     def test_update_rider_undo_ban_should_raise_error_when_state_is_not_pending(
-        self, rider_availability, mock_jwt_token_with_staff, rider_profile, rider_state
+        self, mock_jwt_token_with_staff, rider_profile, rider_state
     ):
         # Given: 라이더 상태가 Ready 이고,
         rider_state.state = RiderStateEnum.READY
         rider_state.save()
 
-        # And: 라이더가 "근무 중이 아닌" 상태일 때,
-        rider_availability.is_available = False
-        rider_availability.save()
-
         # And: 업무정지 해제가 된 경우
-        input_body = self._make_request_body(rider_availability.rider.pk, is_banned=False)
+        input_body = self._make_request_body(rider_state.rider.pk, is_banned=False)
 
         # When: 업무정지 API 호출 시,
         try:
