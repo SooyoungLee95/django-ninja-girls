@@ -10,15 +10,13 @@ from ras.rideryo.models import RiderProfile
 
 logger = logging.getLogger(__name__)
 
-AUTHORIZED_ROLES = {r.value for r in RideryoRole}
 
-
-class RideryoAuth(HttpBearer):
+class RiderAuth(HttpBearer):
     def authenticate(self, request, token):
         try:
             payload = jwt.decode(jwt=token, key=settings.AUTHYO.SECRET_KEY, algorithms=[settings.AUTHYO.ALGORITHM])
         except InvalidTokenError as e:
-            logger.error(f"[RideryoAuth] {e!r}")
+            logger.error(f"[RiderAuth] {e!r}")
             return None
 
         if not self._validate_payload(payload):
@@ -27,7 +25,7 @@ class RideryoAuth(HttpBearer):
         try:
             rider = RiderProfile.objects.get(rider_id=payload["sub_id"])
         except RiderProfile.DoesNotExist as e:
-            logger.error(f"[RideryoAuth] {e!r}")
+            logger.error(f"[RiderAuth] {e!r}")
             return None
 
         return rider
@@ -38,8 +36,8 @@ class RideryoAuth(HttpBearer):
                 payload["sub_id"]
                 and payload["platform"] == settings.RIDERYO_BASE_URL
                 and payload["base_url"] == settings.RIDERYO_ENV
-                and payload["role"] in AUTHORIZED_ROLES
+                and payload["role"] in RideryoRole.RIDER
             )
         except KeyError as e:
-            logger.error(f"[RideryoAuth] {e!r}")
+            logger.error(f"[RiderAuth] {e!r}")
             return False

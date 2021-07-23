@@ -152,6 +152,7 @@ def retrieve_dispatch_requests_detail(request, id: str):
     url_name="rider_app_update_rider_ban",
     summary="업무정지/해제",
     response={200: RiderBan, codes_4xx: ErrorResponse},
+    auth=None,
 )
 def update_rider_ban(request, data: RiderBan):
     payload = _extract_jwt_payload(request)

@@ -146,6 +146,6 @@ class TestJWTAuthentication:
         assert response.status_code == 401
 
     @pytest.mark.django_db(transaction=True)
-    def test_jwt_auth_on_valid_token_and_payload(self, mock_jwt_token_with_staff):
-        response = self._call_test_api(token=mock_jwt_token_with_staff)
+    def test_jwt_auth_on_valid_token_and_payload(self, mock_jwt_token):
+        response = self._call_test_api(token=mock_jwt_token)
         assert response.status_code == 200
