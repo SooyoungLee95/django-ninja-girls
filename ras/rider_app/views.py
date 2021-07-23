@@ -66,7 +66,7 @@ WEBHOOK_MAP: dict[str, Callable] = {
 )
 def update_rider_availability(request, data: RiderAvailabilitySchema):
     is_jungleworks = should_connect_jungleworks(request)
-    status, message = handle_rider_availability_updates(data, is_jungleworks, rider_id=request.auth.rider_id)
+    status, message = handle_rider_availability_updates(request.auth.rider_id, data, is_jungleworks)
 
     if status != HTTPStatus.OK:
         return status, ErrorResponse(message=message)

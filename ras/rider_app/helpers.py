@@ -54,27 +54,31 @@ delivery_state_push_action_map = {
 }
 
 
-def handle_rider_availability_updates(data: RiderAvailabilitySchema, is_jungleworks: bool, rider_id):
+def handle_rider_availability_updates(rider_id, data: RiderAvailabilitySchema, is_jungleworks: bool):
+    status, message = HTTPStatus.OK, ""
+
     if is_jungleworks:
         jw_response = async_to_sync(on_off_duty)(rider_id, data)
-        return jw_response.relevant_http_status(), jw_response.message
-    else:
-        try:
-            rider_state = query_rider_state(rider_id)
-            rider_avilability = query_update_rider_availability(data, rider_id)
+        status, message = jw_response.relevant_http_status(), jw_response.message
+        if not status == HTTPStatus.OK:
+            return status, message
 
-            if data.is_available:
-                rider_state.start_work_ondemand(instance=rider_avilability)
-            else:
-                rider_state.end_work(instance=rider_avilability)
+    try:
+        rider_state = query_rider_state(rider_id)
+        rider_avilability = query_update_rider_availability(data, rider_id)
 
-            return HTTPStatus.OK, ""
-        except IntegrityError as e:
-            logger.error(f"[RiderAvailability] {e!r} {data}")
-            return HTTPStatus.BAD_REQUEST, "라이더를 식별할 수 없습니다."
-        except OperationalError as e:
-            logger.error(f"[RiderAvailability] {e!r} {data}")
-            return HTTPStatus.CONFLICT, "업무상태를 변경 중입니다."
+        if data.is_available:
+            rider_state.start_work_ondemand(instance=rider_avilability)
+        else:
+            rider_state.end_work(instance=rider_avilability)
+        return status, message
+
+    except IntegrityError as e:
+        logger.error(f"[RiderAvailability] {e!r} {data}")
+        return HTTPStatus.BAD_REQUEST, "라이더를 식별할 수 없습니다."
+    except OperationalError as e:
+        logger.error(f"[RiderAvailability] {e!r} {data}")
+        return HTTPStatus.CONFLICT, "업무상태를 변경 중입니다."
 
 
 def handle_update_task_status(data: RiderDispatchResponse):

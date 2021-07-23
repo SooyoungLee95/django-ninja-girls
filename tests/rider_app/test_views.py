@@ -29,7 +29,12 @@ class TestUpdateRiderAvailability:
 
     @pytest.mark.django_db(transaction=True)
     @patch("ras.rider_app.views.should_connect_jungleworks")
-    def test_update_rider_availability_when_jw_enabled(self, mock_use_jungleworks, mock_jwt_token):
+    def test_update_rider_availability_when_jw_enabled(
+        self, mock_use_jungleworks, mock_jwt_token, rider_profile, rider_state
+    ):
+        rider_state.state = "AVAILABLE"
+        rider_state.save()
+
         input_body = {"is_available": True}
 
         # Given: Jungleworks 기능이 활성화되고,
