@@ -655,5 +655,5 @@ def test_retrieve_rider_dispatch_acceptance_rate(
 
     # Then: 200 OK를 return 해야하고,
     assert response.status_code == HTTPStatus.OK
-    # And: 라이더 배차 수락률은 100% 이어야 한다
+    # And: 라이더 배차 수락률이 일치해야한다.
     assert response.json() == {"acceptance_rate": dummy_rider_dispatch_acceptance_rate}
