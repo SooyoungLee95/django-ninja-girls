@@ -9,16 +9,6 @@ class Location(Schema):
     longitude: float
 
 
-class RiderState(str, Enum):
-    AVAILABLE = "available"
-    COMPLETED = "completed"
-    IN_TRANSIT = "in_transit"
-    NEAR_PICKUP = "near_pickup"
-    NEAR_DROPOFF = "near_dropoff"
-    NOT_WORKING = "not_working"
-    BREAK = "break"
-
-
 class EventType(Enum):
     ADD = "add"
     UPDATE = "update"

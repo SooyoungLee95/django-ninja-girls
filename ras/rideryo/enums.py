@@ -78,3 +78,14 @@ class JungleworksTaskStatus(str, Enum):
     SUCCESSFUL = "2"
     ACCEPTED = "7"
     DECLINE = "8"
+
+
+class RiderState(TextChoices):
+    INITIAL = "INITIAL"
+    APPLYING = "APPLYING"
+    AVAILABLE = "AVAILABLE"
+    STARTING = "STARTING"
+    READY = "READY"
+    ENDING = "ENDING"
+    BREAK = "BREAK"
+    PENDING = "PENDING"

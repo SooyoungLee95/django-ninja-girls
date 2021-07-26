@@ -20,6 +20,7 @@ httpx = {extras = ["http2"], version = "^0.18.1"}
 firebase-admin = "^5.0.0"
 cryptography = "^3.4.7"
 PyJWT = "^2.1.0"
+transitions = "^0.8.8"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.11.1"

@@ -4,6 +4,8 @@ from django.db import models
 from ras.crypto import decrypt, encrypt
 from ras.rideryo.enums import Bank, ContractType, DeliveryState
 from ras.rideryo.enums import RiderResponse as RiderResponseEnum
+from ras.rideryo.enums import RiderState as RiderStateEnum
+from ras.rideryo.state_machine import RiderStateMachine
 
 
 class ActiveQuerySet(models.QuerySet):
@@ -135,6 +137,24 @@ class RiderEvaluation(CommonTimeStamp):
     start_at = models.DateTimeField(help_text="배달 시작 시간")
     end_at = models.DateTimeField(help_text="배달 완료 시간")
     delivery_distance = models.PositiveSmallIntegerField(help_text="총 배달 거리(km)")
+
+
+class RiderState(CommonTimeStamp):
+    """라이더의 상태"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.machine = RiderStateMachine(model=self, initial=self.state)
+
+    rider = models.OneToOneField("RiderProfile", primary_key=True, on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
+    state = models.CharField(max_length=20, choices=RiderStateEnum.choices, help_text="라이더 상태")
+
+
+class RiderStateHistory(CommonTimeStamp):
+    """라이더의 상태 변경 이력"""
+
+    rider = models.OneToOneField("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
+    to_state = models.CharField(max_length=20, choices=RiderStateEnum.choices, help_text="라이더 상태")
 
 
 class RiderAvailability(CommonTimeStamp):
