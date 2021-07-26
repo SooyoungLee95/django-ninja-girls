@@ -26,10 +26,7 @@ from ras.rider_app.helpers import (
     mock_handle_rider_dispatch_request_creates,
 )
 
-from ..common.authentication.helpers import (
-    AuthyoTokenAuthenticator,
-    extract_jwt_payload,
-)
+from ..common.authentication.helpers import extract_jwt_payload, get_encrypted_payload
 from ..rideryo.models import RiderAccount
 from .constants import AUTHYO_LOGIN_URL, RIDER_APP_INITIAL_PASSWORD
 from .enums import RideryoRole, WebhookName
@@ -59,8 +56,6 @@ WEBHOOK_MAP: dict[str, Callable] = {
     WebhookName.AUTO_ALLOCATION_SUCCESS: handle_rider_dispatch_request_creates,
     WebhookName.MOCK_AUTO_ALLOCATION_SUCCESS: mock_handle_rider_dispatch_request_creates,
 }
-
-token_authenticator = AuthyoTokenAuthenticator()
 
 
 @rider_router.put(
@@ -214,7 +209,7 @@ def login(request, data: RiderLoginRequest):
     if not rider.is_valid_password(input_password=request_body["password"]):
         return HTTPStatus.BAD_REQUEST, ErrorResponse(message="패스워드가 일치하지 않습니다.")
 
-    encrypted_payload = token_authenticator.get_encrypted_payload(payload=AuthyoPayload(sub_id=rider.id))
+    encrypted_payload = get_encrypted_payload(payload=AuthyoPayload(sub_id=rider.id))
 
     return HTTPStatus.OK, RiderLoginResponse(
         authorization_url=f"{AUTHYO_LOGIN_URL}?code={encrypted_payload}",

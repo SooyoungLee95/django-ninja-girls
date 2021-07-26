@@ -25,9 +25,7 @@ def _call_login_api(input_body):
 
 
 @pytest.mark.django_db(transaction=True)
-@patch(
-    "ras.common.authentication.helpers.AuthyoTokenAuthenticator.get_encrypted_payload", Mock(return_value="mock_token")
-)
+@patch("ras.rider_app.views.get_encrypted_payload", Mock(return_value="mock_token"))
 def test_login_api_on_success_with_initial_password(rider_profile):
     # Given: 최초 패스워드를 사용하고 있는 라이더의 로그인 요청을 받고,
     input_body = RiderLoginRequest(email_address="test@test.com", password=RIDER_APP_INITIAL_PASSWORD)
@@ -44,9 +42,7 @@ def test_login_api_on_success_with_initial_password(rider_profile):
 
 
 @pytest.mark.django_db(transaction=True)
-@patch(
-    "ras.common.authentication.helpers.AuthyoTokenAuthenticator.get_encrypted_payload", Mock(return_value="mock_token")
-)
+@patch("ras.rider_app.views.get_encrypted_payload", Mock(return_value="mock_token"))
 def test_login_api_on_success_with_no_initial_password(rider_profile):
     # Given: rider의 password를 최초 패스워드가 아니도록 설정하고
     rider_account = rider_profile.rider
