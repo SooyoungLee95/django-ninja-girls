@@ -150,3 +150,13 @@ AUTHYO = SimpleNamespace(
 
 RIDERYO_BASE_URL = env.str("RIDERYO_BASE_URL", default="127.0.0.1")
 RIDERYO_ENV = env.str("RIDERYO_ENV", default="rideryo-dev")
+LOGGING = {
+    "disable_existing_loggers": False,
+    "version": 1,
+    "formatters": {"verbose": {"format": "%(asctime)s %(name)s %(funcName)s:%(lineno)d %(levelname)s %(message)s"}},
+    "handlers": {"console": {"class": "logging.StreamHandler", "level": "DEBUG", "formatter": "verbose"}},
+    "loggers": {
+        "ras": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+        "django.db": {},
+    },
+}

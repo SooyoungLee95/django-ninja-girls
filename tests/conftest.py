@@ -10,7 +10,6 @@ from ras.rideryo.models import (
     DeliveryZone,
     DispatchRequestJungleworksTask,
     RiderAccount,
-    RiderAvailability,
     RiderContract,
     RiderDeliveryCancelReason,
     RiderDeliveryStateHistory,
@@ -113,11 +112,6 @@ def dispatch_request_jw_task(rider_dispatch_request):
         dispatch_request=rider_dispatch_request, pickup_task_id=1, delivery_task_id=2
     )
     return tasks
-
-
-@pytest.fixture
-def rider_availability(rider_profile):
-    return RiderAvailability.objects.create(rider=rider_profile)
 
 
 @pytest.fixture

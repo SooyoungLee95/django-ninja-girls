@@ -1,9 +1,12 @@
+import logging
+
 from transitions import Machine
 
 from ras.common.messaging.consts import RIDER_WORKING_STATE
 from ras.common.messaging.publishers import publish_rider_working_state
 from ras.rideryo.enums import RiderState as rs
 
+logger = logging.getLogger(__name__)
 event_type_publish_func = {RIDER_WORKING_STATE: publish_rider_working_state}
 
 
@@ -59,11 +62,15 @@ class RiderStateMachine(Machine):
 
     def _ondemand_auto_transit(self, *args, **kwargs):
         self.model.state = rs.STARTING
-        self._save_model()
+        self._save_model(*args, **kwargs)
 
     def _save_model(self, *args, **kwargs):
         self.model.save()
+        event_data = args[0]
+        logger.info(
+            f"Rider:{self.model.rider.pk} {event_data.event.name} "
+            f"[{event_data.transition.source} -> {event_data.transition.dest}]"
+        )
 
     def handle_READY(self, event_data, *args, **kwargs):
-        rider_availability = event_data.kwargs["instance"]
-        publish_rider_working_state(rider_availability)
+        publish_rider_working_state(event_data.model)

@@ -23,17 +23,12 @@ from ras.rider_app.queries import (
     query_get_rider_profile_summary,
     query_rider_current_deliveries,
     query_rider_state,
-    query_rider_status,
-    query_update_rider_availability,
 )
 from ras.rideryo.enums import DeliveryState, RiderResponse
+from ras.rideryo.enums import RiderState as RiderStateEnum
 
 from ..common.fcm import FCMSender
-from ..rideryo.models import (
-    RiderAvailability,
-    RiderDispatchRequestHistory,
-    RiderProfile,
-)
+from ..rideryo.models import RiderDispatchRequestHistory, RiderProfile, RiderState
 from .schemas import DispatchRequestDetail, FcmPushPayload, MockRiderDispatch
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import (
@@ -65,15 +60,14 @@ def handle_rider_availability_updates(rider_id, data: RiderAvailabilitySchema, i
 
     try:
         rider_state = query_rider_state(rider_id)
-        rider_avilability = query_update_rider_availability(data, rider_id)
 
         if data.is_available:
-            rider_state.start_work_ondemand(instance=rider_avilability)
+            rider_state.start_work_ondemand()
         else:
-            rider_state.end_work(instance=rider_avilability)
+            rider_state.end_work()
         return status, message
 
-    except IntegrityError as e:
+    except (RiderState.DoesNotExist, IntegrityError) as e:
         logger.error(f"[RiderAvailability] {e!r} {data}")
         return HTTPStatus.BAD_REQUEST, "라이더를 식별할 수 없습니다."
     except OperationalError as e:
@@ -184,14 +178,14 @@ def handle_rider_ban(data: RiderBan):
 
     if data.is_banned:
         try:
-            rider_availability = query_update_rider_availability(False, rider_id)
+            rider_state = query_rider_state(rider_id)
         except IntegrityError as e:
             logger.error(f"[RiderBan] {e!r} {data}")
             return HTTPStatus.BAD_REQUEST, "라이더를 식별할 수 없습니다."
         except OperationalError as e:
             logger.error(f"[RiderBan] {e!r} {data}")
             return HTTPStatus.CONFLICT, "업무상태를 변경 중입니다."
-        rider_state.block(instance=rider_availability)
+        rider_state.block()
     else:
         rider_state.unblock()
 
@@ -233,9 +227,9 @@ def handle_dispatch_request_detail(dispatch_request_ids: list[int]):
 
 def handle_rider_status(rider_id):
     try:
-        availability = query_rider_status(rider_id)
-        status = "working" if availability.is_available else "not_working"
-    except RiderAvailability.DoesNotExist:
+        rider_state = query_rider_state(rider_id)
+        status = "working" if rider_state.state == RiderStateEnum.READY else "not_working"
+    except RiderState.DoesNotExist:
         return HTTPStatus.NOT_FOUND, ""
     current_deliveries = query_rider_current_deliveries(rider_id)
     return HTTPStatus.OK, RiderStatus(
