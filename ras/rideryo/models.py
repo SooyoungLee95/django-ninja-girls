@@ -149,11 +149,15 @@ class RiderState(CommonTimeStamp):
     rider = models.OneToOneField("RiderProfile", primary_key=True, on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
     state = models.CharField(max_length=20, choices=RiderStateEnum.choices, help_text="라이더 상태")
 
+    @staticmethod
+    def _post_save_signal(sender, instance, **kwargs):
+        RiderStateHistory.objects.create(rider=instance.rider, to_state=instance.state)
+
 
 class RiderStateHistory(CommonTimeStamp):
     """라이더의 상태 변경 이력"""
 
-    rider = models.OneToOneField("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
+    rider = models.ForeignKey("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
     to_state = models.CharField(max_length=20, choices=RiderStateEnum.choices, help_text="라이더 상태")
 
 
@@ -212,3 +216,7 @@ class RiderDeliveryCancelReason(CommonTimeStamp):
 
     dispatch_request = models.ForeignKey("RiderDispatchRequestHistory", on_delete=models.DO_NOTHING, help_text="배차 ID")
     reason = models.CharField(max_length=150, help_text="배달취소 사유")
+
+
+# Signals (separate into diff file if necessary)
+models.signals.post_save.connect(sender=RiderState, receiver=RiderState._post_save_signal)

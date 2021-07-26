@@ -8,8 +8,8 @@ from ninja.router import Router
 from ras.common.integration.services.jungleworks.handlers import (
     should_connect_jungleworks,
 )
-from ras.common.messaging.helpers import handle_sns_notification
 from ras.common.messaging.schema import SNSMessageForSubscribe
+from ras.common.messaging.subscribers import handle_sns_notification
 from ras.common.schemas import ErrorResponse
 from ras.rider_app.helpers import (
     handle_dispatch_request_detail,
@@ -66,7 +66,7 @@ WEBHOOK_MAP: dict[str, Callable] = {
 )
 def update_rider_availability(request, data: RiderAvailabilitySchema):
     is_jungleworks = should_connect_jungleworks(request)
-    status, message = handle_rider_availability_updates(data, is_jungleworks, rider_id=request.auth.rider_id)
+    status, message = handle_rider_availability_updates(request.auth.rider_id, data, is_jungleworks)
 
     if status != HTTPStatus.OK:
         return status, ErrorResponse(message=message)

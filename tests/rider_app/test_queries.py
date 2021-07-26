@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 import pytest
 from django.db.utils import IntegrityError
 
@@ -9,8 +7,7 @@ from ras.rideryo.models import RiderAvailabilityHistory
 
 
 @pytest.mark.django_db(transaction=True)
-@patch("ras.common.messaging.helpers.sns_client.publish")
-def test_query_update_rider_availability(mock_publish, rider_profile):
+def test_query_update_rider_availability(rider_profile):
     # Given: 기존에 라이더 업무내역 수
     prev_history_count = RiderAvailabilityHistory.objects.filter(rider_id=rider_profile.pk).count()
 
@@ -24,9 +21,6 @@ def test_query_update_rider_availability(mock_publish, rider_profile):
     assert availability.is_available is True
     # And: 업무내역이 전보다 하나 더 증가한지 확인한다.
     assert prev_history_count + 1 == RiderAvailabilityHistory.objects.filter(rider_id=rider_profile.pk).count()
-
-    # And: rider 근무 상태 이벤트가 발생한다.
-    mock_publish.assert_called_once()
 
 
 @pytest.mark.django_db(transaction=True)

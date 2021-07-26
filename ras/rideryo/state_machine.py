@@ -1,6 +1,10 @@
 from transitions import Machine
 
+from ras.common.messaging.consts import RIDER_WORKING_STATE
+from ras.common.messaging.publishers import publish_rider_working_state
 from ras.rideryo.enums import RiderState as rs
+
+event_type_publish_func = {RIDER_WORKING_STATE: publish_rider_working_state}
 
 
 class RiderStateMachine(Machine):
@@ -45,9 +49,21 @@ class RiderStateMachine(Machine):
         # 업무정지 해제
         self.add_transition("unblock", rs.PENDING, rs.AVAILABLE)
 
+        # 상태별 콜백 추가
+        self._add_state_callbacks()
+
+    def _add_state_callbacks(self):
+        # 근무시작/종료 SNS 이벤트 발송
+        self.on_enter_READY(self.handle_READY)
+        self.on_exit_READY(self.handle_READY)
+
     def _ondemand_auto_transit(self, *args, **kwargs):
         self.model.state = rs.STARTING
         self._save_model()
 
     def _save_model(self, *args, **kwargs):
-        return self.model.save()
+        self.model.save()
+
+    def handle_READY(self, event_data, *args, **kwargs):
+        rider_availability = event_data.kwargs["instance"]
+        publish_rider_working_state(rider_availability)

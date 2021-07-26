@@ -3,7 +3,7 @@ from http import HTTPStatus
 
 from ninja.router import Router
 
-from ras.common.messaging.helpers import publish_message
+from ras.common.messaging.publishers import publish_message
 from ras.common.messaging.schema import SNSMessageForPublish
 from ras.debug.schemas import DebugEventTriggerMessage, Event, event_to_topic
 
