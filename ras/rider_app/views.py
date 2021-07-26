@@ -26,15 +26,10 @@ from ras.rider_app.helpers import (
     mock_handle_rider_dispatch_request_creates,
 )
 
-from ..common.authentication.helpers import AuthyoTokenAuthenticator
+from ..common.authentication.helpers import extract_jwt_payload, get_encrypted_payload
 from ..rideryo.models import RiderAccount
-from .constants import (
-    AUTHYO_LOGIN_URL,
-    MOCK_JWT_ACCESS_TOKEN,
-    MOCK_JWT_REFRESH_TOKEN,
-    RIDER_APP_INITIAL_PASSWORD,
-)
-from .enums import WebhookName
+from .constants import AUTHYO_LOGIN_URL, RIDER_APP_INITIAL_PASSWORD
+from .enums import RideryoRole, WebhookName
 from .schemas import AuthyoPayload, DispatchRequestDetail
 from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
 from .schemas import RiderAvailability as RiderAvailabilitySchema
@@ -62,8 +57,6 @@ WEBHOOK_MAP: dict[str, Callable] = {
     WebhookName.MOCK_AUTO_ALLOCATION_SUCCESS: mock_handle_rider_dispatch_request_creates,
 }
 
-token_authenticator = AuthyoTokenAuthenticator()
-
 
 @rider_router.put(
     "/availability",
@@ -73,8 +66,7 @@ token_authenticator = AuthyoTokenAuthenticator()
 )
 def update_rider_availability(request, data: RiderAvailabilitySchema):
     is_jungleworks = should_connect_jungleworks(request)
-    rider_id = 1049903  # TODO: parse rider id from token
-    status, message = handle_rider_availability_updates(rider_id, data, is_jungleworks)
+    status, message = handle_rider_availability_updates(data, is_jungleworks, rider_id=request.auth.rider_id)
 
     if status != HTTPStatus.OK:
         return status, ErrorResponse(message=message)
@@ -117,15 +109,6 @@ def mock_webhook_handler(request, webhook_type: WebhookName, data: MockRiderDisp
     return HTTPStatus.OK, {}
 
 
-@mock_authyo_router.get(
-    "authorize",
-    url_name="mock_token_generate",
-    summary="Mock Access, Refresh 토큰 발급",
-)
-def get_token(request, code: str):
-    return HTTPStatus.OK, {"access_token": MOCK_JWT_ACCESS_TOKEN, "refresh_token": MOCK_JWT_REFRESH_TOKEN}
-
-
 @rider_router.post(
     "/delivery-state",
     url_name="create_rider_delivery_state",
@@ -160,9 +143,12 @@ def retrieve_dispatch_requests_detail(request, id: str):
     url_name="rider_app_update_rider_ban",
     summary="업무정지/해제",
     response={200: RiderBan, codes_4xx: ErrorResponse},
+    auth=None,
 )
 def update_rider_ban(request, data: RiderBan):
-    # TODO: requires permission check! Admin only!
+    payload = extract_jwt_payload(request)
+    if payload["role"] != RideryoRole.STAFF:
+        return HTTPStatus.FORBIDDEN, ErrorResponse(message="권한이 올바르지 않습니다.")
     status, message = handle_rider_ban(data)
     if status != HTTPStatus.OK:
         return status, ErrorResponse(message=message)
@@ -175,9 +161,8 @@ def update_rider_ban(request, data: RiderBan):
     summary="라이더 프로필 정보 조회",
     response={200: RiderProfileSummary, codes_4xx: ErrorResponse},
 )
-def retrieve_rider_profile_summary(request, rider_id):
-    # TODO: parse rider id from token
-    status, message = handle_rider_profile_summary(rider_id)
+def retrieve_rider_profile_summary(request):
+    status, message = handle_rider_profile_summary(request.auth.rider_id)
     if status != HTTPStatus.OK:
         return status, ErrorResponse(message=message)
     return status, message
@@ -203,9 +188,8 @@ def subscribe_sns_event(request, topic):
     summary="라이더 상태 조회",
     response={200: RiderStatus, codes_4xx: ErrorResponse},
 )
-def retrieve_rider_status(request, rider_id):
-    # TODO: parse rider id from token
-    return handle_rider_status(rider_id)
+def retrieve_rider_status(request):
+    return handle_rider_status(rider_id=request.auth.rider_id)
 
 
 @auth_router.post(
@@ -225,7 +209,7 @@ def login(request, data: RiderLoginRequest):
     if not rider.is_valid_password(input_password=request_body["password"]):
         return HTTPStatus.BAD_REQUEST, ErrorResponse(message="패스워드가 일치하지 않습니다.")
 
-    encrypted_payload = token_authenticator.get_encrypted_payload(payload=AuthyoPayload(sub_id=rider.id))
+    encrypted_payload = get_encrypted_payload(payload=AuthyoPayload(sub_id=rider.id))
 
     return HTTPStatus.OK, RiderLoginResponse(
         authorization_url=f"{AUTHYO_LOGIN_URL}?code={encrypted_payload}",
@@ -240,11 +224,10 @@ def login(request, data: RiderLoginRequest):
     response={200: RiderDispatchAcceptanceRate, codes_4xx: ErrorResponse},
 )
 def retrieve_rider_dispatch_acceptance_rate(request, data: SearchDate = Query(...)):
-    # TODO: parse rider id from token
-    status, message = handle_rider_dispatch_acceptance_rate(data.rider_id, data)
+    status, rate = handle_rider_dispatch_acceptance_rate(data, rider_id=request.auth.rider_id)
     if status != HTTPStatus.OK:
-        return status, ErrorResponse(message=message)
-    return status, message
+        return status, ErrorResponse(message=rate)
+    return status, RiderDispatchAcceptanceRate(acceptance_rate=rate)
 
 
 @auth_router.get("test/jwt/authentication", url_name="test_authentication", summary="JWT 인증 테스트")

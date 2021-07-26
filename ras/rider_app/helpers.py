@@ -53,7 +53,7 @@ delivery_state_push_action_map = {
 }
 
 
-def handle_rider_availability_updates(rider_id, data: RiderAvailabilitySchema, is_jungleworks: bool):
+def handle_rider_availability_updates(data: RiderAvailabilitySchema, is_jungleworks: bool, rider_id):
     if is_jungleworks:
         jw_response = async_to_sync(on_off_duty)(rider_id, data)
         return jw_response.relevant_http_status(), jw_response.message
@@ -185,13 +185,11 @@ def handle_rider_ban(data: RiderBan):
 
 
 def handle_rider_profile_summary(rider_id):
-    try:
-        rider_profile_summary = query_get_rider_profile_summary(rider_id)
-    except RiderProfile.DoesNotExist as e:
-        logger.error(f"[RiderProfile] {e!r} {rider_id}")
-        return HTTPStatus.BAD_REQUEST, "라이더가 존재하지 않습니다."
-    else:
+    rider_profile_summary = query_get_rider_profile_summary(rider_id)
+    if rider_profile_summary:
         return HTTPStatus.OK, rider_profile_summary
+    else:
+        return HTTPStatus.NOT_FOUND, "라이더가 존재하지 않습니다."
 
 
 def handle_sns_notification_push_action(topic, message, instance):
@@ -229,11 +227,11 @@ def handle_rider_status(rider_id):
     )
 
 
-def handle_rider_dispatch_acceptance_rate(rider_id, data: SearchDate):
+def handle_rider_dispatch_acceptance_rate(data: SearchDate, rider_id):
     try:
         rider_dispatch_acceptance_rate = query_get_rider_dispatch_acceptance_rate(rider_id, data)
     except IntegrityError as e:
         logger.error(f"[RiderDispatchAcceptanceRate] {e!r} {data}")
         return HTTPStatus.BAD_REQUEST, "유효한 검색 날짜가 아닙니다."
     else:
-        return HTTPStatus.OK, rider_dispatch_acceptance_rate
+        return HTTPStatus.OK, rider_dispatch_acceptance_rate["acceptance_rate"] if rider_dispatch_acceptance_rate else 0

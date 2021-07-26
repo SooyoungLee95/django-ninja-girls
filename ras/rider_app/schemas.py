@@ -13,7 +13,7 @@ from ras.rider_app.constants import (
     RESTAURANT_ISSUE,
     SYSTEM_ISSUE,
 )
-from ras.rider_app.enums import PushAction
+from ras.rider_app.enums import PushAction, RideryoRole
 from ras.rideryo.enums import DeliveryState
 from ras.rideryo.enums import RiderResponse as RiderResponseEnum
 
@@ -76,7 +76,7 @@ class AuthyoPayload(Schema):
     sub_id: int  # rider id
     platform: str = settings.RIDERYO_BASE_URL
     base_url: str = settings.RIDERYO_ENV
-    role: str = "rider"
+    role: str = RideryoRole.RIDER
 
 
 class RiderDeliveryState(Schema):
@@ -130,11 +130,9 @@ class RiderStatus(Schema):
 
 
 class RiderDispatchAcceptanceRate(Schema):
-    acceptance_rate: float
+    acceptance_rate: int
 
 
 class SearchDate(Schema):
-    # TODO: remove rider_id
-    rider_id: int
     start_at: date = date.today()
     end_at: date = date.today()

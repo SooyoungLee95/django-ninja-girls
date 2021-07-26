@@ -13,3 +13,8 @@ class PushAction(str, Enum):
     BAN = "dispatch-request:ban"
     UNDO_BAN = "dispatch-request:undo-ban"
     DELIVERY_CANCEL = "dispatch-request:cancel"
+
+
+class RideryoRole(str, Enum):
+    STAFF = "staff"
+    RIDER = "rider"

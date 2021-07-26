@@ -5,23 +5,30 @@ from django.conf import settings
 from jwt import InvalidTokenError
 from ninja.security import HttpBearer
 
+from ras.rider_app.enums import RideryoRole
+from ras.rideryo.models import RiderProfile
+
 logger = logging.getLogger(__name__)
 
-AUTHORIZED_ROLES = {"rider", "staff"}
 
-
-class RideryoAuth(HttpBearer):
+class RiderAuth(HttpBearer):
     def authenticate(self, request, token):
         try:
             payload = jwt.decode(jwt=token, key=settings.AUTHYO.SECRET_KEY, algorithms=[settings.AUTHYO.ALGORITHM])
         except InvalidTokenError as e:
-            logger.error(f"[RideryoAuth] {e!r}")
+            logger.error(f"[RiderAuth] {e!r}")
             return None
 
         if not self._validate_payload(payload):
             return None
 
-        return token
+        try:
+            rider = RiderProfile.objects.get(rider_id=payload["sub_id"])
+        except RiderProfile.DoesNotExist as e:
+            logger.error(f"[RiderAuth] {e!r}")
+            return None
+
+        return rider
 
     def _validate_payload(self, payload):
         try:
@@ -29,8 +36,8 @@ class RideryoAuth(HttpBearer):
                 payload["sub_id"]
                 and payload["platform"] == settings.RIDERYO_BASE_URL
                 and payload["base_url"] == settings.RIDERYO_ENV
-                and payload["role"] in AUTHORIZED_ROLES
+                and payload["role"] in RideryoRole.RIDER
             )
         except KeyError as e:
-            logger.error(f"[RideryoAuth] {e!r}")
+            logger.error(f"[RiderAuth] {e!r}")
             return False

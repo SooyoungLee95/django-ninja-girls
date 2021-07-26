@@ -80,11 +80,10 @@ def rider_dispatch_request_state_cancelled(rider_dispatch_request):
 
 @pytest.fixture
 def rider_dispatch_response(rider_dispatch_request):
-    rider_dispatch_response = RiderDispatchResponseHistory.objects.create(
+    return RiderDispatchResponseHistory.objects.create(
         response=RiderResponse.ACCEPTED,
         dispatch_request=rider_dispatch_request,
     )
-    return rider_dispatch_response
 
 
 @pytest.fixture
@@ -183,11 +182,11 @@ def unsubscription_data():
     }
 
 
-def _generate_payload(role):
+def _generate_payload(role, rider_id):
     return {
         "iat": 1625703402,
         "exp": 2247783524,
-        "sub_id": 1,
+        "sub_id": rider_id,
         "platform": settings.RIDERYO_BASE_URL,
         "base_url": settings.RIDERYO_ENV,
         "role": role,
@@ -195,18 +194,18 @@ def _generate_payload(role):
 
 
 @pytest.fixture
-def mock_jwt_token():
+def mock_jwt_token(rider_profile):
     return jwt.encode(
-        _generate_payload("rider"),
+        _generate_payload("rider", rider_profile.rider_id),
         TEST_JWT_PRIVATE,
         algorithm="RS256",
     )
 
 
 @pytest.fixture
-def mock_jwt_token_with_staff():
+def mock_jwt_token_with_staff(rider_profile):
     return jwt.encode(
-        _generate_payload("staff"),
+        _generate_payload("staff", rider_profile.rider_id),
         TEST_JWT_PRIVATE,
         algorithm="RS256",
     )

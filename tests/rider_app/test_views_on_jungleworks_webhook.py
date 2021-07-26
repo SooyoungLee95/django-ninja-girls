@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
@@ -62,8 +63,8 @@ def test_rider_app_auto_allocation_success_on_404_error(rider_profile):
     # When: auto_allocation_success webhook handler 를 호출 하면,
     response = call_api(webhook_type=WebhookName.AUTO_ALLOCATION_SUCCESS.value, input_body=input_body)
 
-    # Then: status는 200, logger.error 가 호출 되어야 한다
-    assert response.status_code == 200
+    # Then: status는 HTTPStatus.OK, logger.error 가 호출 되어야 한다
+    assert response.status_code == HTTPStatus.OK
     # And: RiderDispatchRequestHistory 와 DispatchRequestJungleworksTask 값은 생성되지 않아야 한다.
     assert not RiderDispatchRequestHistory.objects.exists()
     assert not DispatchRequestJungleworksTask.objects.exists()
@@ -81,8 +82,8 @@ def test_rider_app_auto_allocation_success_on_database_error(mock_logger_error, 
         mock_query_create.side_effect = DatabaseError()
         response = call_api(webhook_type=WebhookName.AUTO_ALLOCATION_SUCCESS.value, input_body=input_body)
 
-    # Then: status는 200, logger.error 가 호출 되어야 한다
-    assert response.status_code == 200
+    # Then: status는 HTTPStatus.OK, logger.error 가 호출 되어야 한다
+    assert response.status_code == HTTPStatus.OK
     mock_logger_error.assert_called_once()
     # And: RiderDispatchRequestHistory 와 DispatchRequestJungleworksTask 값은 생성되지 않아야 한다.
     assert RiderDispatchRequestHistory.objects.count() == 0
