@@ -1,11 +1,12 @@
 import jwt
 import pytest
 from django.conf import settings
-from django.db.models import Count
+from django.db.models import Count, Sum
 
 from ras.rideryo.enums import ContractType, DeliveryState, RiderResponse
 from ras.rideryo.models import (
     DeliveryCity,
+    DeliveryCommission,
     DeliveryZone,
     DispatchRequestJungleworksTask,
     RiderAccount,
@@ -15,6 +16,7 @@ from ras.rideryo.models import (
     RiderDeliveryStateHistory,
     RiderDispatchRequestHistory,
     RiderDispatchResponseHistory,
+    RiderPaymentHistory,
     RiderProfile,
     VehicleType,
 )
@@ -137,6 +139,22 @@ def rider_contract_type(vehicle_type, delivery_zone, rider_profile):
 
 
 @pytest.fixture
+def rider_delivery_commission():
+    return DeliveryCommission.objects.create(
+        name="기본",
+        fee=1500,
+        is_active=True,
+    )
+
+
+@pytest.fixture
+def rider_payment_history(rider_delivery_commission, rider_dispatch_request):
+    return RiderPaymentHistory.objects.create(
+        delivery_commission=rider_delivery_commission, dispatch_request=rider_dispatch_request
+    )
+
+
+@pytest.fixture
 def notification_data():
     return {
         "Type": "Notification",
@@ -233,3 +251,18 @@ def dummy_rider_dispatch_acceptance_rate(rider_dispatch_response):
         .first()
     )
     return round(dispatch_accepted["count"] / dispatch_all["count"] * 100)
+
+
+@pytest.fixture
+def dummy_rider_working_today_report(rider_dispatch_response, rider_payment_history):
+    total_delivery_count = RiderDispatchResponseHistory.objects.filter(
+        dispatch_request__rider__rider_id=rider_dispatch_response.dispatch_request.rider_id,
+        response=RiderResponse.ACCEPTED,
+    ).count()
+    total_commission = (
+        RiderPaymentHistory.objects.filter(dispatch_request=rider_dispatch_response.dispatch_request)
+        .annotate(total_commission=Sum("delivery_commission__fee"))
+        .values_list("total_commission")
+        .first()
+    )
+    return {"total_delivery_count": total_delivery_count, "total_commission": total_commission[0]}
