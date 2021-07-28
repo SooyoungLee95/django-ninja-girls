@@ -21,6 +21,7 @@ from ras.rider_app.helpers import (
     handle_rider_dispatch_response,
     handle_rider_profile_summary,
     handle_rider_status,
+    handle_rider_working_today_report,
     handle_sns_notification_push_action,
     mock_delivery_state_push_action,
     mock_handle_rider_dispatch_request_creates,
@@ -42,6 +43,7 @@ from .schemas import (
     RiderLoginResponse,
     RiderProfileSummary,
     RiderStatus,
+    RiderWorkingSummaryReport,
     SearchDate,
 )
 
@@ -233,3 +235,16 @@ def retrieve_rider_dispatch_acceptance_rate(request, data: SearchDate = Query(..
 @auth_router.get("test/jwt/authentication", url_name="test_authentication", summary="JWT 인증 테스트")
 def mock_api_for_auth(request):
     return HTTPStatus.OK, {}
+
+
+@rider_router.get(
+    "/working-today-report",
+    url_name="retrieve_rider_working_today_report",
+    summary="라이더 프로필 오늘의 내역",
+    response={200: RiderWorkingSummaryReport, codes_4xx: ErrorResponse},
+)
+def retrieve_rider_working_today_report(request):
+    status, report = handle_rider_working_today_report(rider_id=request.auth.rider_id)
+    if status != HTTPStatus.OK:
+        return status, ErrorResponse(message=report)
+    return status, report

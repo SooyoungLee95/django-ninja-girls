@@ -657,3 +657,19 @@ def test_retrieve_rider_dispatch_acceptance_rate(
     assert response.status_code == HTTPStatus.OK
     # And: 라이더 배차 수락률이 일치해야한다.
     assert response.json() == {"acceptance_rate": dummy_rider_dispatch_acceptance_rate}
+
+
+@pytest.mark.django_db(transaction=True)
+def test_retrieve_rider_working_today_report(rider_dispatch_response, mock_jwt_token, dummy_rider_working_today_report):
+    # Given: 라이더가 총 배차 1회 중 1회 수락 하였을 때,
+    # When: 라이더 오늘의 내역 조회 API를 호출 하였을 때
+    client = Client()
+    response = client.get(
+        reverse("ninja:retrieve_rider_working_today_report"),
+        **{"HTTP_AUTHORIZATION": f"Bearer {mock_jwt_token}"},
+    )
+
+    # Then: 200 OK를 return 해야하고,
+    assert response.status_code == HTTPStatus.OK
+    # And: 라이더 오늘의 내역 정보가 일치해야한다.
+    assert response.json() == dummy_rider_working_today_report

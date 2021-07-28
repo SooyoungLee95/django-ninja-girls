@@ -136,3 +136,8 @@ class RiderDispatchAcceptanceRate(Schema):
 class SearchDate(Schema):
     start_at: date = date.today()
     end_at: date = date.today()
+
+
+class RiderWorkingSummaryReport(Schema):
+    total_delivery_count: int
+    total_commission: int

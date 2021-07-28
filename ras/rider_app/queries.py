@@ -190,3 +190,25 @@ def query_get_rider_dispatch_acceptance_rate(rider_id, data):
         .order_by("dispatch_request__rider__rider_id")
         .first()
     )
+
+
+def query_get_rider_working_today_report(rider_id):
+    today = datetime.date.today()
+    start_at = datetime.datetime.combine(today, datetime.time(1, 0, 0))
+    end_at = datetime.datetime.combine(today, datetime.time(0, 59, 59)) + datetime.timedelta(days=1)
+    return (
+        RiderDispatchResponseHistory.objects.select_related("dispatch_request__riderpaymenthistory_set")
+        .filter(
+            dispatch_request__rider__rider_id=rider_id,
+            created_at__range=[start_at, end_at],
+            response=RiderResponse.ACCEPTED,
+        )
+        .values("dispatch_request__rider__rider_id")
+        .annotate(
+            total_delivery_count=Count("id", distinct=True),
+            total_commission=Sum("dispatch_request__riderpaymenthistory__delivery_commission__fee"),
+        )
+        .values("total_delivery_count", "total_commission")
+        .order_by("dispatch_request__rider__rider_id")
+        .first()
+    )

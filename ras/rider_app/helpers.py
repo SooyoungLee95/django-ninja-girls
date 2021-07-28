@@ -21,6 +21,7 @@ from ras.rider_app.queries import (
     query_get_dispatch_request_states,
     query_get_rider_dispatch_acceptance_rate,
     query_get_rider_profile_summary,
+    query_get_rider_working_today_report,
     query_rider_current_deliveries,
     query_rider_status,
     query_update_rider_availability,
@@ -235,3 +236,11 @@ def handle_rider_dispatch_acceptance_rate(data: SearchDate, rider_id):
         return HTTPStatus.BAD_REQUEST, "유효한 검색 날짜가 아닙니다."
     else:
         return HTTPStatus.OK, rider_dispatch_acceptance_rate["acceptance_rate"] if rider_dispatch_acceptance_rate else 0
+
+
+def handle_rider_working_today_report(rider_id):
+    rider_working_today_report = query_get_rider_working_today_report(rider_id)
+    if rider_working_today_report:
+        return HTTPStatus.OK, rider_working_today_report
+    else:
+        return HTTPStatus.NOT_FOUND, "라이더가 존재하지 않습니다."
