@@ -29,7 +29,7 @@ class RiderStateMachine(Machine):
         self.add_transition("approve", rs.APPLYING, rs.AVAILABLE)
 
         # 근무시작 (온디멘드)
-        self.add_transition("start_work_ondemand", rs.AVAILABLE, rs.READY, prepare=self._ondemand_auto_transit)
+        self.add_transition("start_work_ondemand", rs.AVAILABLE, rs.STARTING)
 
         # 근무시작 (스케줄)
         self.add_transition("start_work_schedule", rs.AVAILABLE, rs.STARTING)
@@ -60,10 +60,6 @@ class RiderStateMachine(Machine):
         self.on_enter_READY(self.handle_READY)
         self.on_exit_READY(self.handle_READY)
 
-    def _ondemand_auto_transit(self, *args, **kwargs):
-        self.model.state = rs.STARTING
-        self._save_model(*args, **kwargs)
-
     def _save_model(self, *args, **kwargs):
         self.model.save()
         event_data = args[0]
@@ -71,6 +67,8 @@ class RiderStateMachine(Machine):
             f"Rider:{self.model.rider.pk} {event_data.event.name} "
             f"[{event_data.transition.source} -> {event_data.transition.dest}]"
         )
+        if event_data.event.name == "start_work_ondemand":
+            self.model.start_dispatch()
 
     def handle_READY(self, event_data, *args, **kwargs):
         publish_rider_working_state(event_data.model)
