@@ -210,7 +210,7 @@ class RiderServiceAgreement(CommonTimeStamp):
 
     rider = models.ForeignKey("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
     agreement_type = models.CharField(max_length=150, choices=ServiceAgreementType.choices, help_text="이용약관 타입")
-    agreed = models.BooleanField(default=True, help_text="이용약관 동의여부")
+    agreed = models.BooleanField(default=False, help_text="이용약관 동의여부")
 
 
 # Signals (separate into diff file if necessary)
