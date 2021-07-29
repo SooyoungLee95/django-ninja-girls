@@ -198,7 +198,7 @@ def query_get_rider_working_report(data: SearchDate, rider_id):
         RiderDispatchResponseHistory.objects.select_related("dispatch_request__riderpaymenthistory_set")
         .filter(
             dispatch_request__rider__rider_id=rider_id,
-            created_at__range=[data.set_start_at_report(data.start_at), data.set_end_at_report(data.end_at)],
+            created_at__range=[data.set_start_at_report(), data.set_end_at_report()],
             response=RiderResponse.ACCEPTED,
         )
         .values("dispatch_request__rider__rider_id")

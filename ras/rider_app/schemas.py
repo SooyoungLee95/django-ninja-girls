@@ -138,13 +138,11 @@ class SearchDate(Schema):
     start_at: date = date.today()
     end_at: date = date.today()
 
-    @staticmethod
-    def set_start_at_report(v):
-        return datetime.datetime.combine(v, datetime.time(1, 0, 0))
+    def set_start_at_report(self):
+        return datetime.datetime.combine(self.start_at, datetime.time(1, 0, 0))
 
-    @staticmethod
-    def set_end_at_report(v):
-        return datetime.datetime.combine(v, datetime.time(0, 59, 59)) + datetime.timedelta(days=1)
+    def set_end_at_report(self):
+        return datetime.datetime.combine(self.end_at, datetime.time(0, 59, 59)) + datetime.timedelta(days=1)
 
 
 class RiderMypage(RiderProfileSummary, RiderDispatchAcceptanceRate, Schema):
