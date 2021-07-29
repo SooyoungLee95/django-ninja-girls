@@ -189,3 +189,7 @@ class RiderServiceAgreementOut(Schema):
     def validate_agreement_saved_time(cls, value):
         if datetime.strptime(value, "%Y-%m-%d %H:%M:%S"):
             return value
+
+
+class VerificationCodeRequest(Schema):
+    phone_number: str

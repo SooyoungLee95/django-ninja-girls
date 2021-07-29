@@ -32,8 +32,9 @@ from ras.rider_app.helpers import (
     mock_handle_rider_dispatch_request_creates,
 )
 
-from ..common.authentication.helpers import extract_jwt_payload
-from .constants import MSG_MUST_AGREE_REQUIRED_AGREEMENTS
+from ..common.authentication.helpers import extract_jwt_payload, get_encrypted_payload
+from ..rideryo.models import RiderAccount, RiderProfile
+from .constants import MSG_MUST_AGREE_REQUIRED_AGREEMENTS, AUTHYO_LOGIN_URL, RIDER_APP_INITIAL_PASSWORD
 from .enums import RideryoRole, WebhookName
 from .schemas import DispatchRequestDetail
 from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
@@ -52,6 +53,7 @@ from .schemas import (
     RiderServiceAgreementPartial,
     RiderStatus,
     SearchDate,
+    VerificationCodeRequest,
 )
 
 rider_router = Router()
@@ -59,6 +61,7 @@ auth_router = Router()
 mock_authyo_router = Router()
 dispatch_request_router = Router()
 sns_router = Router()
+sms_router = Router()
 
 
 WEBHOOK_MAP: dict[str, Callable] = {
@@ -198,6 +201,23 @@ def retrieve_rider_status(request):
 )
 def login(request, data: RiderLoginRequest):
     return HTTPStatus.OK, handle_rider_authorization(data)
+
+
+@auth_router.post(
+    "/verification-code",
+    url_name="send_verification_code_via_sms",
+    summary="라이더 앱 SMS를 이용한 인증번호 전송 API",
+    response={200: None},
+    auth=None,
+)
+def send_verification_code_via_sms(request, data: VerificationCodeRequest):
+    request_body = data.dict()
+    try:
+        RiderProfile.objects.get(phone_number=request_body["phone_number"])
+    except RiderProfile.DoesNotExist:
+        pass
+    else:
+        return HTTPStatus.OK, {}
 
 
 @rider_router.get(

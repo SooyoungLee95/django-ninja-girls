@@ -257,3 +257,20 @@ class TestSendSMSViaHubyoClient:
 
         # Then: 응답의 상태 값으로 빈 값 받아야 한다.
         assert response == {}
+
+
+class TestSendVerificationCodeViaSMSView:
+    @pytest.mark.django_db(transaction=True)
+    def test_send_verification_code_via_sms_view_on_success(self, rider_profile):
+        # Given: DB에 존재하는 phone_number가 주어지고,
+        valid_phone_number = {"phone_number": rider_profile.phone_number}
+
+        # When: 인증요청 API를 호출 했을 때,
+        response = client.post(
+            reverse("ninja:send_verification_code_via_sms"),
+            data=valid_phone_number,
+            content_type="application/json",
+        )
+
+        # Then: 상태 코드 200을 리턴 해야한다.
+        assert response.status_code == HTTPStatus.OK
