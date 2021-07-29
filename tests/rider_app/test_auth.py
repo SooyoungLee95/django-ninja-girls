@@ -9,6 +9,7 @@ from django.test import Client
 from django.urls import reverse
 from pydantic import ValidationError
 
+from ras.common.sms.helpers import send_sms_via_hubyo
 from ras.rider_app.constants import AUTHYO_LOGIN_URL
 from ras.rider_app.helpers import RIDER_APP_INITIAL_PASSWORD
 from ras.rider_app.schemas import RiderLoginRequest
@@ -176,3 +177,36 @@ class TestJWTAuthentication:
     def test_jwt_auth_on_valid_token_and_payload(self, mock_jwt_token):
         response = self._call_test_api(token=mock_jwt_token)
         assert response.status_code == HTTPStatus.OK
+
+
+class TestPasswordReset:
+    @patch("ras.common.sms.helpers.hubyo_client.send")
+    def test_verification_code_via_sms(self, mock_send):
+        # Given: SMS를 보내기 위한 유효한 정보가 주어지고,
+        valid_infos = {
+            "event": "send_sms",
+            "entity": "sms",
+            "tracking_id": "01073314120",
+            "msg": {
+                "data": {
+                    "target": "01073314120",
+                    "text": "test mock 인증번호는 1122334 입니다",
+                    "sender": "1661-5270",
+                    "is_lms": False,
+                    "lms_subject": "",
+                }
+            },
+        }
+        # And: 정상적인 응답으로 주는 것을 세팅하고
+        mock_send.return_value = {
+            "MessageId": "2772c9a1-8f60-567d-af8a-90daa21f7134",
+            "ResponseMetadata": {
+                "HTTPStatusCode": 200,
+            },
+        }
+
+        # When: SMS 전달 요청을 호출 하면,
+        response = send_sms_via_hubyo(valid_infos)
+
+        # Then: 응답의 상태 값으로 200을 받아야 한다
+        assert response["ResponseMetadata"]["HTTPStatusCode"] == HTTPStatus.OK

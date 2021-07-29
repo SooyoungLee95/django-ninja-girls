@@ -15,6 +15,8 @@ from types import SimpleNamespace
 import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+from hubyo_client.client import HubyoConfig
+
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 env = environ.Env()
@@ -160,3 +162,13 @@ LOGGING = {
         "django.db": {},
     },
 }
+
+
+HUBYO_CONFIG = HubyoConfig(
+    SNS_TOPIC_ARN=HubyoConfig.SNSTopicEnv.DEV,
+    PLATFORM=HubyoConfig.Platform.YGY_STAGING_G,  # TODO: HubyoConfig.Platform.RIDERYO-STAGING 으로 수정 필요
+    PUBLISHER=HubyoConfig.Publisher.ETC,  # TODO: HubyoConfig.Publisher.RIDERYO 로 수정 필요
+    AWS_ACCESS_KEY=env.str("HUBYO_AWS_ACCESS_KEY", default=""),
+    AWS_SECRET_ACCESS_KEY=env.str("HUBYO_AWS_SECRET_ACCESS_KEY", default=""),
+    AWS_REGION_NAME=env.str("HUBYO_AWS_REGION_NAME", default="ap-northeast-2"),
+)
