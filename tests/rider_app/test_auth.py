@@ -292,3 +292,18 @@ class TestSendVerificationCodeViaSMSView:
         assert response.status_code == HTTPStatus.OK
         # And: send_sms_via_hubyo를 호출 해야 한다
         mock_send_sms_via_hubyo.assert_called_once_with(info)
+
+    @pytest.mark.django_db(transaction=True)
+    def test_send_verification_code_via_sms_view_on_400_bad_request(self, rider_profile):
+        # Given: DB에 존재하는 phone_number가 주어지고,
+        not_exist_phone_number = {"phone_number": "not_exist_phone_number"}
+
+        # When: 인증요청 API를 호출 했을 때,
+        response = client.post(
+            reverse("ninja:send_verification_code_via_sms"),
+            data=not_exist_phone_number,
+            content_type="application/json",
+        )
+
+        # Then: 상태 코드 400을 리턴 해야한다.
+        assert response.status_code == HTTPStatus.BAD_REQUEST
