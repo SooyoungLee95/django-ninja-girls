@@ -173,7 +173,7 @@ def query_get_rider_service_agreements(rider_id):
 def query_create_rider_service_agreements(rider_id, data: RiderServiceAgreementSchema):
     models = []
 
-    for agreement_type, agreement_label in ServiceAgreementType._value2label_map_:
+    for agreement_type, agreement_label in ServiceAgreementType._value2label_map_.items():
         agreed = getattr(data, agreement_label)
         models.append(RiderServiceAgreement(rider_id=rider_id, agreement_type=agreement_type, agreed=agreed))
     return RiderServiceAgreement.objects.bulk_create(models)
