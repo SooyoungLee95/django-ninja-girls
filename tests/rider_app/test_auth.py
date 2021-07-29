@@ -179,9 +179,9 @@ class TestJWTAuthentication:
         assert response.status_code == HTTPStatus.OK
 
 
-class TestPasswordReset:
+class TestSendSMSViaHubyoClient:
     @patch("ras.common.sms.helpers.hubyo_client.send")
-    def test_verification_code_via_sms(self, mock_send):
+    def test_verification_code_via_sms_on_success(self, mock_send):
         # Given: SMS를 보내기 위한 유효한 정보가 주어지고,
         valid_infos = {
             "event": "send_sms",
@@ -210,3 +210,50 @@ class TestPasswordReset:
 
         # Then: 응답의 상태 값으로 200을 받아야 한다
         assert response["ResponseMetadata"]["HTTPStatusCode"] == HTTPStatus.OK
+
+    def test_verification_code_via_sms_with_missing_tracking_id(self):
+        # Given: SMS를 보내기 위한 유효하지 않은 정보가 주어지고,
+        invalid_infos = {
+            "event": "send_sms",
+            "entity": "sms",
+            "tracking_id": "",  # tracking_id를 빈 값으로 처리
+            "msg": {
+                "data": {
+                    "target": "01073314120",
+                    "text": "test mock 인증번호는 1122334 입니다",
+                    "sender": "1661-5270",
+                    "is_lms": False,
+                    "lms_subject": "",
+                }
+            },
+        }
+
+        # When: SMS 전달 요청을 호출 하면,
+        response = send_sms_via_hubyo(invalid_infos)
+
+        # Then: 응답의 상태 값으로 빈 값 받아야 한다.
+        assert response == {}
+
+    @patch("ras.common.sms.helpers.hubyo_client.send", Mock(side_effect=Exception))
+    def test_verification_code_via_sms_with_unexpected_error(self):
+        # Given: SMS를 보내기 위한 유효하지 않은 정보가 주어지고,
+        valid_infos = {
+            "event": "send_sms",
+            "entity": "sms",
+            "tracking_id": "01073314120",
+            "msg": {
+                "data": {
+                    "target": "01073314120",
+                    "text": "test mock 인증번호는 1122334 입니다",
+                    "sender": "1661-5270",
+                    "is_lms": False,
+                    "lms_subject": "",
+                }
+            },
+        }
+
+        # When: SMS 전달 요청을 호출 하면,
+        response = send_sms_via_hubyo(valid_infos)
+
+        # Then: 응답의 상태 값으로 빈 값 받아야 한다.
+        assert response == {}
