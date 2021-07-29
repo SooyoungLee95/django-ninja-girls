@@ -20,6 +20,7 @@ from ras.rider_app.helpers import (
     handle_rider_dispatch_request_creates,
     handle_rider_dispatch_response,
     handle_rider_profile_summary,
+    handle_rider_service_agreements,
     handle_rider_status,
     handle_sns_notification_push_action,
     mock_delivery_state_push_action,
@@ -41,6 +42,7 @@ from .schemas import (
     RiderLoginRequest,
     RiderLoginResponse,
     RiderProfileSummary,
+    RiderServiceAgreement,
     RiderStatus,
     SearchDate,
 )
@@ -228,6 +230,18 @@ def retrieve_rider_dispatch_acceptance_rate(request, data: SearchDate = Query(..
     if status != HTTPStatus.OK:
         return status, ErrorResponse(message=rate)
     return status, RiderDispatchAcceptanceRate(acceptance_rate=rate)
+
+
+@rider_router.get(
+    "/service-agreements",
+    url_name="retrieve_rider_service_agreements",
+    summary="라이더 서비스 이용약관 동의여부 조회",
+    response={200: RiderServiceAgreement, codes_4xx: ErrorResponse},
+    exclude_none=True,
+)
+def retrieve_rider_service_agreements(request):
+    status, agreement = handle_rider_service_agreements(rider_id=request.auth.pk)
+    return status, agreement
 
 
 @auth_router.get("test/jwt/authentication", url_name="test_authentication", summary="JWT 인증 테스트")
