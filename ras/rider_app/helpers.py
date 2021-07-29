@@ -1,4 +1,5 @@
 import logging
+import random
 from http import HTTPStatus
 
 from asgiref.sync import async_to_sync
@@ -342,3 +343,7 @@ def handle_rider_authorization(data: RiderLoginRequest) -> RiderLoginResponse:
         password_change_required=data.password == RIDER_APP_INITIAL_PASSWORD,
         checked_service_agreements=agreed,
     )
+
+
+def generate_random_verification_code():
+    return "".join(map(str, [random.choice(range(10)) for _ in range(6)]))

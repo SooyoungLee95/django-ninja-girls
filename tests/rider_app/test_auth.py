@@ -190,7 +190,7 @@ class TestSendSMSViaHubyoClient:
             "msg": {
                 "data": {
                     "target": "01073314120",
-                    "text": "test mock 인증번호는 1122334 입니다",
+                    "text": "비밀번호 재설정 인증번호: 112233",
                     "sender": "1661-5270",
                     "is_lms": False,
                     "lms_subject": "",
@@ -220,7 +220,7 @@ class TestSendSMSViaHubyoClient:
             "msg": {
                 "data": {
                     "target": "01073314120",
-                    "text": "test mock 인증번호는 1122334 입니다",
+                    "text": "비밀번호 재설정 인증번호: 112233",
                     "sender": "1661-5270",
                     "is_lms": False,
                     "lms_subject": "",
@@ -244,7 +244,7 @@ class TestSendSMSViaHubyoClient:
             "msg": {
                 "data": {
                     "target": "01073314120",
-                    "text": "test mock 인증번호는 1122334 입니다",
+                    "text": "비밀번호 재설정 인증번호: 112233",
                     "sender": "1661-5270",
                     "is_lms": False,
                     "lms_subject": "",
@@ -260,12 +260,13 @@ class TestSendSMSViaHubyoClient:
 
 
 class TestSendVerificationCodeViaSMSView:
+    @patch("ras.rider_app.views.generate_random_verification_code", Mock(return_value="112233"))
     @patch("ras.rider_app.views.send_sms_via_hubyo")
     @pytest.mark.django_db(transaction=True)
     def test_send_verification_code_via_sms_view_on_success(self, mock_send_sms_via_hubyo, rider_profile):
         # Given: DB에 존재하는 phone_number가 주어지고,
         valid_phone_number = {"phone_number": rider_profile.phone_number}
-        # And:
+        # And: 유효한 sms message info 정보가 주어지고,
         info = {
             "event": "send_sms",
             "entity": "sms",
@@ -273,7 +274,7 @@ class TestSendVerificationCodeViaSMSView:
             "msg": {
                 "data": {
                     "target": rider_profile.phone_number,
-                    "text": "test mock 인증번호는 1122334 입니다",
+                    "text": "비밀번호 재설정 인증번호: 112233",
                     "sender": "1661-5270",
                     "is_lms": False,
                     "lms_subject": "",
@@ -294,7 +295,7 @@ class TestSendVerificationCodeViaSMSView:
         mock_send_sms_via_hubyo.assert_called_once_with(info)
 
     @pytest.mark.django_db(transaction=True)
-    def test_send_verification_code_via_sms_view_on_400_bad_request(self, rider_profile):
+    def test_send_verification_code_via_sms_view_on_does_not_exist_phone_number(self, rider_profile):
         # Given: DB에 존재하는 phone_number가 주어지고,
         not_exist_phone_number = {"phone_number": "not_exist_phone_number"}
 
@@ -307,3 +308,27 @@ class TestSendVerificationCodeViaSMSView:
 
         # Then: 상태 코드 400을 리턴 해야한다.
         assert response.status_code == HTTPStatus.BAD_REQUEST
+        # AND: 등록된 휴대폰 번호가 없습니다. 메세지를 리턴해야한다.
+        assert json.loads(response.content)["message"] == "등록된 휴대폰 번호가 없습니다."
+
+    @patch("ras.rider_app.views.send_sms_via_hubyo")
+    @pytest.mark.django_db(transaction=True)
+    def test_send_verification_code_via_sms_view_on_unexpected_internal_server_error(
+        self, mock_send_sms_via_hubyo, rider_profile
+    ):
+        # Given: DB에 존재하는 phone_number가 주어지고,
+        valid_phone_number = {"phone_number": rider_profile.phone_number}
+        # And: send_sms_via_hubyo 내부에서 SMS 전달이 되지 않고 실패한 상황에서,
+        mock_send_sms_via_hubyo.return_value = {}
+
+        # When: 인증요청 API를 호출 했을 때,
+        response = client.post(
+            reverse("ninja:send_verification_code_via_sms"),
+            data=valid_phone_number,
+            content_type="application/json",
+        )
+
+        # Then: 상태 코드 500을 리턴 해야한다.
+        assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
+        # And: 인증번호 SMS 전송에 실패 하였습니다. 메세지를 리턴해야한다
+        assert json.loads(response.content)["message"] == "인증번호 SMS 전송에 실패 하였습니다."

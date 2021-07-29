@@ -14,6 +14,7 @@ from ras.common.messaging.subscribers import handle_sns_notification
 from ras.common.schemas import ErrorResponse
 from ras.rider_app.helpers import (
     handle_create_rider_service_agreements,
+    generate_random_verification_code,
     handle_dispatch_request_detail,
     handle_partial_update_rider_service_agreements,
     handle_retrieve_rider_service_agreements,
@@ -210,7 +211,7 @@ def login(request, data: RiderLoginRequest):
     "/verification-code",
     url_name="send_verification_code_via_sms",
     summary="라이더 앱 SMS를 이용한 인증번호 전송 API",
-    response={200: None, codes_4xx: ErrorResponse},
+    response={200: None, codes_4xx: ErrorResponse, 500: ErrorResponse},
     auth=None,
 )
 def send_verification_code_via_sms(request, data: VerificationCodeRequest):
@@ -219,14 +220,18 @@ def send_verification_code_via_sms(request, data: VerificationCodeRequest):
     if not RiderProfile.objects.filter(phone_number=input_phone_number).exists():
         return HTTPStatus.BAD_REQUEST, ErrorResponse(message="등록된 휴대폰 번호가 없습니다.")
 
+    verification_code = generate_random_verification_code()
+    # TODO: verification_code를 TTL 300으로, redis에 저장 - ex) input_phone_number: verification_code
     sms_message_info = SMSMessageInfo(
         event="send_sms",
         entity="sms",
         tracking_id=input_phone_number,
-        msg={"data": SMSMessageData(target=input_phone_number, text="test mock 인증번호는 1122334 입니다")},
+        msg={"data": SMSMessageData(target=input_phone_number, text=f"비밀번호 재설정 인증번호: {verification_code}")},
     ).dict()
 
-    send_sms_via_hubyo(sms_message_info)
+    if not send_sms_via_hubyo(sms_message_info):
+        return HTTPStatus.INTERNAL_SERVER_ERROR, ErrorResponse(message="인증번호 SMS 전송에 실패 하였습니다.")
+
     return HTTPStatus.OK, {}
 
 
