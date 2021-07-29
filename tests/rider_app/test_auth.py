@@ -260,10 +260,26 @@ class TestSendSMSViaHubyoClient:
 
 
 class TestSendVerificationCodeViaSMSView:
+    @patch("ras.rider_app.views.send_sms_via_hubyo")
     @pytest.mark.django_db(transaction=True)
-    def test_send_verification_code_via_sms_view_on_success(self, rider_profile):
+    def test_send_verification_code_via_sms_view_on_success(self, mock_send_sms_via_hubyo, rider_profile):
         # Given: DB에 존재하는 phone_number가 주어지고,
         valid_phone_number = {"phone_number": rider_profile.phone_number}
+        # And:
+        info = {
+            "event": "send_sms",
+            "entity": "sms",
+            "tracking_id": "01073314120",
+            "msg": {
+                "data": {
+                    "target": "01073314120",
+                    "text": "test mock 인증번호는 1122334 입니다",
+                    "sender": "1661-5270",
+                    "is_lms": False,
+                    "lms_subject": "",
+                }
+            },
+        }
 
         # When: 인증요청 API를 호출 했을 때,
         response = client.post(
@@ -274,3 +290,5 @@ class TestSendVerificationCodeViaSMSView:
 
         # Then: 상태 코드 200을 리턴 해야한다.
         assert response.status_code == HTTPStatus.OK
+        # And: send_sms_via_hubyo를 호출 해야 한다
+        mock_send_sms_via_hubyo.assert_called_once_with(info)

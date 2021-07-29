@@ -33,6 +33,7 @@ from ras.rider_app.helpers import (
 )
 
 from ..common.authentication.helpers import extract_jwt_payload, get_encrypted_payload
+from ..common.sms.helpers import send_sms_via_hubyo
 from ..rideryo.models import RiderAccount, RiderProfile
 from .constants import MSG_MUST_AGREE_REQUIRED_AGREEMENTS, AUTHYO_LOGIN_URL, RIDER_APP_INITIAL_PASSWORD
 from .enums import RideryoRole, WebhookName
@@ -217,6 +218,21 @@ def send_verification_code_via_sms(request, data: VerificationCodeRequest):
     except RiderProfile.DoesNotExist:
         pass
     else:
+        info = {
+            "event": "send_sms",
+            "entity": "sms",
+            "tracking_id": "01073314120",
+            "msg": {
+                "data": {
+                    "target": "01073314120",
+                    "text": "test mock 인증번호는 1122334 입니다",
+                    "sender": "1661-5270",
+                    "is_lms": False,
+                    "lms_subject": "",
+                }
+            },
+        }
+        send_sms_via_hubyo(info)
         return HTTPStatus.OK, {}
 
 
