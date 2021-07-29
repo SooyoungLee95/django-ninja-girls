@@ -190,7 +190,7 @@ class TestSendSMSViaHubyoClient:
             "msg": {
                 "data": {
                     "target": "01073314120",
-                    "text": "비밀번호 재설정 인증번호: 112233",
+                    "text": "[요기요라이더] 인증번호는 112233 입니다.",
                     "sender": "1661-5270",
                     "is_lms": False,
                     "lms_subject": "",
@@ -220,7 +220,7 @@ class TestSendSMSViaHubyoClient:
             "msg": {
                 "data": {
                     "target": "01073314120",
-                    "text": "비밀번호 재설정 인증번호: 112233",
+                    "text": "[요기요라이더] 인증번호는 112233 입니다.",
                     "sender": "1661-5270",
                     "is_lms": False,
                     "lms_subject": "",
@@ -244,7 +244,7 @@ class TestSendSMSViaHubyoClient:
             "msg": {
                 "data": {
                     "target": "01073314120",
-                    "text": "비밀번호 재설정 인증번호: 112233",
+                    "text": "[요기요라이더] 인증번호는 112233 입니다.",
                     "sender": "1661-5270",
                     "is_lms": False,
                     "lms_subject": "",
@@ -260,6 +260,13 @@ class TestSendSMSViaHubyoClient:
 
 
 class TestSendVerificationCodeViaSMSView:
+    def _call_send_verification_code_via_sms_api(self, valid_phone_number):
+        return client.post(
+            reverse("ninja:send_verification_code_via_sms"),
+            data=valid_phone_number,
+            content_type="application/json",
+        )
+
     @patch("ras.rider_app.views.generate_random_verification_code", Mock(return_value="112233"))
     @patch("ras.rider_app.views.send_sms_via_hubyo")
     @pytest.mark.django_db(transaction=True)
@@ -274,7 +281,7 @@ class TestSendVerificationCodeViaSMSView:
             "msg": {
                 "data": {
                     "target": rider_profile.phone_number,
-                    "text": "비밀번호 재설정 인증번호: 112233",
+                    "text": "[요기요라이더] 인증번호는 112233 입니다.",
                     "sender": "1661-5270",
                     "is_lms": False,
                     "lms_subject": "",
@@ -283,11 +290,7 @@ class TestSendVerificationCodeViaSMSView:
         }
 
         # When: 인증요청 API를 호출 했을 때,
-        response = client.post(
-            reverse("ninja:send_verification_code_via_sms"),
-            data=valid_phone_number,
-            content_type="application/json",
-        )
+        response = self._call_send_verification_code_via_sms_api(valid_phone_number)
 
         # Then: 상태 코드 200을 리턴 해야한다.
         assert response.status_code == HTTPStatus.OK
@@ -300,11 +303,7 @@ class TestSendVerificationCodeViaSMSView:
         not_exist_phone_number = {"phone_number": "not_exist_phone_number"}
 
         # When: 인증요청 API를 호출 했을 때,
-        response = client.post(
-            reverse("ninja:send_verification_code_via_sms"),
-            data=not_exist_phone_number,
-            content_type="application/json",
-        )
+        response = self._call_send_verification_code_via_sms_api(not_exist_phone_number)
 
         # Then: 상태 코드 400을 리턴 해야한다.
         assert response.status_code == HTTPStatus.BAD_REQUEST
@@ -322,11 +321,7 @@ class TestSendVerificationCodeViaSMSView:
         mock_send_sms_via_hubyo.return_value = {}
 
         # When: 인증요청 API를 호출 했을 때,
-        response = client.post(
-            reverse("ninja:send_verification_code_via_sms"),
-            data=valid_phone_number,
-            content_type="application/json",
-        )
+        response = self._call_send_verification_code_via_sms_api(valid_phone_number)
 
         # Then: 상태 코드 500을 리턴 해야한다.
         assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR

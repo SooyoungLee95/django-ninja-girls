@@ -12,6 +12,7 @@ from ras.rider_app.constants import (
     CUSTOMER_ISSUE,
     RESTAURANT_ISSUE,
     SYSTEM_ISSUE,
+    YOGIYO_CUSTOMER_CENTER_PHONE_NUMBER,
 )
 from ras.rider_app.enums import PushAction, RideryoRole
 from ras.rideryo.enums import DeliveryState
@@ -198,13 +199,13 @@ class VerificationCodeRequest(Schema):
 class SMSMessageData(Schema):
     target: str
     text: str
-    sender: str = "1661-5270"
+    sender: str = YOGIYO_CUSTOMER_CENTER_PHONE_NUMBER
     is_lms: bool = False
     lms_subject: str = ""
 
 
 class SMSMessageInfo(Schema):
-    event: str
-    entity: str
+    event: str = "send_sms"
+    entity: str = "sms"
     tracking_id: str
     msg: dict[str, SMSMessageData]

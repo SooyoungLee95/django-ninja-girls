@@ -221,12 +221,10 @@ def send_verification_code_via_sms(request, data: VerificationCodeRequest):
         return HTTPStatus.BAD_REQUEST, ErrorResponse(message="등록된 휴대폰 번호가 없습니다.")
 
     verification_code = generate_random_verification_code()
-    # TODO: verification_code를 TTL 300으로, redis에 저장 - ex) input_phone_number: verification_code
+    # TODO: verification_code를 TTL 300으로, rdis에 저장 - ex) input_phone_number: verification_code
     sms_message_info = SMSMessageInfo(
-        event="send_sms",
-        entity="sms",
         tracking_id=input_phone_number,
-        msg={"data": SMSMessageData(target=input_phone_number, text=f"비밀번호 재설정 인증번호: {verification_code}")},
+        msg={"data": SMSMessageData(target=input_phone_number, text=f"[요기요라이더] 인증번호는 {verification_code} 입니다.")},
     ).dict()
 
     if not send_sms_via_hubyo(sms_message_info):
