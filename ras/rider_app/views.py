@@ -19,9 +19,9 @@ from ras.rider_app.helpers import (
     handle_rider_dispatch_acceptance_rate,
     handle_rider_dispatch_request_creates,
     handle_rider_dispatch_response,
+    handle_rider_mypage,
     handle_rider_profile_summary,
     handle_rider_status,
-    handle_rider_working_today_report,
     handle_sns_notification_push_action,
     mock_delivery_state_push_action,
     mock_handle_rider_dispatch_request_creates,
@@ -41,9 +41,9 @@ from .schemas import RiderDispatchResponse as RiderDispatchResponseSchema
 from .schemas import (
     RiderLoginRequest,
     RiderLoginResponse,
+    RiderMypage,
     RiderProfileSummary,
     RiderStatus,
-    RiderWorkingSummaryReport,
     SearchDate,
 )
 
@@ -238,13 +238,13 @@ def mock_api_for_auth(request):
 
 
 @rider_router.get(
-    "/working-today-report",
-    url_name="retrieve_rider_working_today_report",
-    summary="라이더 프로필 오늘의 내역",
-    response={200: RiderWorkingSummaryReport, codes_4xx: ErrorResponse},
+    "/mypage",
+    url_name="retrieve_rider_mypage",
+    summary="라이더 마이페이지",
+    response={200: RiderMypage, codes_4xx: ErrorResponse},
 )
-def retrieve_rider_working_today_report(request):
-    status, report = handle_rider_working_today_report(rider_id=request.auth.rider_id)
+def retrieve_rider_working_today_report(request, data: SearchDate = Query(...)):
+    status, report = handle_rider_mypage(data, rider_id=request.auth.rider_id)
     if status != HTTPStatus.OK:
         return status, ErrorResponse(message=report)
     return status, report

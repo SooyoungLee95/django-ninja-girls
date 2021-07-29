@@ -230,6 +230,15 @@ def mock_jwt_token_with_staff(rider_profile):
 
 
 @pytest.fixture
+def dummy_rider_profile(rider_contract_type):
+    return {
+        "full_name": rider_contract_type.rider.full_name,
+        "contract_type": rider_contract_type.contract_type,
+        "vehicle_name": rider_contract_type.vehicle_type.name,
+    }
+
+
+@pytest.fixture
 def dummy_rider_dispatch_acceptance_rate(rider_dispatch_response):
     dispatch_accepted = (
         RiderDispatchResponseHistory.objects.filter(
@@ -250,11 +259,11 @@ def dummy_rider_dispatch_acceptance_rate(rider_dispatch_response):
         .values("count")
         .first()
     )
-    return round(dispatch_accepted["count"] / dispatch_all["count"] * 100)
+    return {"acceptance_rate": round(dispatch_accepted["count"] / dispatch_all["count"] * 100)}
 
 
 @pytest.fixture
-def dummy_rider_working_today_report(rider_dispatch_response, rider_payment_history):
+def dummy_rider_working_report(rider_dispatch_response, rider_payment_history):
     total_delivery_count = RiderDispatchResponseHistory.objects.filter(
         dispatch_request__rider__rider_id=rider_dispatch_response.dispatch_request.rider_id,
         response=RiderResponse.ACCEPTED,

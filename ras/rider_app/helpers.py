@@ -21,7 +21,7 @@ from ras.rider_app.queries import (
     query_get_dispatch_request_states,
     query_get_rider_dispatch_acceptance_rate,
     query_get_rider_profile_summary,
-    query_get_rider_working_today_report,
+    query_get_rider_working_report,
     query_rider_current_deliveries,
     query_rider_status,
     query_update_rider_availability,
@@ -230,7 +230,7 @@ def handle_rider_status(rider_id):
 
 def handle_rider_dispatch_acceptance_rate(data: SearchDate, rider_id):
     try:
-        rider_dispatch_acceptance_rate = query_get_rider_dispatch_acceptance_rate(rider_id, data)
+        rider_dispatch_acceptance_rate = query_get_rider_dispatch_acceptance_rate(data, rider_id)
     except IntegrityError as e:
         logger.error(f"[RiderDispatchAcceptanceRate] {e!r} {data}")
         return HTTPStatus.BAD_REQUEST, "유효한 검색 날짜가 아닙니다."
@@ -238,9 +238,18 @@ def handle_rider_dispatch_acceptance_rate(data: SearchDate, rider_id):
         return HTTPStatus.OK, rider_dispatch_acceptance_rate["acceptance_rate"] if rider_dispatch_acceptance_rate else 0
 
 
-def handle_rider_working_today_report(rider_id):
-    rider_working_today_report = query_get_rider_working_today_report(rider_id)
-    if rider_working_today_report:
-        return HTTPStatus.OK, rider_working_today_report
+def handle_rider_mypage(data: SearchDate, rider_id):
+    try:
+        rider_profile_summary = query_get_rider_profile_summary(rider_id)
+        rider_dispatch_acceptance_rate = query_get_rider_dispatch_acceptance_rate(data, rider_id)
+        rider_working_report = query_get_rider_working_report(data, rider_id)
+    except IntegrityError as e:
+        logger.error(f"[RiderDispatchAcceptanceRate] {e!r} {data}")
+        return HTTPStatus.BAD_REQUEST, "유효한 검색 날짜가 아닙니다."
     else:
-        return HTTPStatus.NOT_FOUND, "라이더가 존재하지 않습니다."
+        if not (rider_profile_summary and rider_working_report):
+            return HTTPStatus.BAD_REQUEST, "라이더가 존재하지 않습니다."
+        else:
+            if not rider_dispatch_acceptance_rate:
+                rider_dispatch_acceptance_rate = {"acceptance_rate": 0}
+            return HTTPStatus.OK, rider_profile_summary | rider_dispatch_acceptance_rate | rider_working_report

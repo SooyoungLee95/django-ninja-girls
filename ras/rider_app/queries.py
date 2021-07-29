@@ -169,7 +169,7 @@ def query_rider_current_deliveries(rider_id):
     )
 
 
-def query_get_rider_dispatch_acceptance_rate(rider_id, data):
+def query_get_rider_dispatch_acceptance_rate(data, rider_id):
     start_at = datetime.datetime.combine(data.start_at, datetime.time(1, 0, 0))
     end_at = datetime.datetime.combine(data.end_at, datetime.time(0, 59, 59)) + datetime.timedelta(days=1)
     return (
@@ -192,10 +192,9 @@ def query_get_rider_dispatch_acceptance_rate(rider_id, data):
     )
 
 
-def query_get_rider_working_today_report(rider_id):
-    today = datetime.date.today()
-    start_at = datetime.datetime.combine(today, datetime.time(1, 0, 0))
-    end_at = datetime.datetime.combine(today, datetime.time(0, 59, 59)) + datetime.timedelta(days=1)
+def query_get_rider_working_report(data, rider_id):
+    start_at = datetime.datetime.combine(data.start_at, datetime.time(1, 0, 0))
+    end_at = datetime.datetime.combine(data.end_at, datetime.time(0, 59, 59)) + datetime.timedelta(days=1)
     return (
         RiderDispatchResponseHistory.objects.select_related("dispatch_request__riderpaymenthistory_set")
         .filter(
