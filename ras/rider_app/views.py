@@ -54,6 +54,8 @@ from .schemas import (
     RiderServiceAgreementPartial,
     RiderStatus,
     SearchDate,
+    SMSMessageData,
+    SMSMessageInfo,
     VerificationCodeRequest,
 )
 
@@ -212,26 +214,19 @@ def login(request, data: RiderLoginRequest):
     auth=None,
 )
 def send_verification_code_via_sms(request, data: VerificationCodeRequest):
-    request_body = data.dict()
+    input_phone_number = data.dict()["phone_number"]
     try:
-        RiderProfile.objects.get(phone_number=request_body["phone_number"])
+        RiderProfile.objects.get(phone_number=input_phone_number)
     except RiderProfile.DoesNotExist:
         pass
     else:
-        info = {
-            "event": "send_sms",
-            "entity": "sms",
-            "tracking_id": "01073314120",
-            "msg": {
-                "data": {
-                    "target": "01073314120",
-                    "text": "test mock 인증번호는 1122334 입니다",
-                    "sender": "1661-5270",
-                    "is_lms": False,
-                    "lms_subject": "",
-                }
-            },
-        }
+        info = SMSMessageInfo(
+            event="send_sms",
+            entity="sms",
+            tracking_id=input_phone_number,
+            msg={"data": SMSMessageData(target=input_phone_number, text="test mock 인증번호는 1122334 입니다")},
+        ).dict()
+
         send_sms_via_hubyo(info)
         return HTTPStatus.OK, {}
 

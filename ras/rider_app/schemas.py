@@ -193,3 +193,18 @@ class RiderServiceAgreementOut(Schema):
 
 class VerificationCodeRequest(Schema):
     phone_number: str
+
+
+class SMSMessageData(Schema):
+    target: str
+    text: str
+    sender: str = "1661-5270"
+    is_lms: bool = False
+    lms_subject: str = ""
+
+
+class SMSMessageInfo(Schema):
+    event: str
+    entity: str
+    tracking_id: str
+    msg: dict[str, SMSMessageData]

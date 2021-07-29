@@ -269,10 +269,10 @@ class TestSendVerificationCodeViaSMSView:
         info = {
             "event": "send_sms",
             "entity": "sms",
-            "tracking_id": "01073314120",
+            "tracking_id": rider_profile.phone_number,
             "msg": {
                 "data": {
-                    "target": "01073314120",
+                    "target": rider_profile.phone_number,
                     "text": "test mock 인증번호는 1122334 입니다",
                     "sender": "1661-5270",
                     "is_lms": False,
