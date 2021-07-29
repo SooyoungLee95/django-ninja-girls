@@ -148,10 +148,6 @@ class RiderServiceAgreement(Schema):
         return self.personal_information and self.location_based_service
 
 
-class RiderServiceAgreementIn(RiderServiceAgreement):
-    pass
-
-
 class RiderServiceAgreementOut(Schema):
     agreement_saved_time: str
 

@@ -25,6 +25,7 @@ from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
 from .schemas import RiderDeliveryState
 from .schemas import RiderDispatch as RiderDispatchResultSchema
 from .schemas import RiderDispatchResponse as RiderDispatchResponseSchema
+from .schemas import RiderServiceAgreement as RiderServiceAgreementSchema
 
 logger = logging.getLogger(__name__)
 
@@ -169,7 +170,7 @@ def query_get_rider_service_agreements(rider_id):
     return RiderServiceAgreement.objects.filter(rider_id=rider_id)
 
 
-def query_create_rider_service_agreements(rider_id, data: RiderServiceAgreement):
+def query_create_rider_service_agreements(rider_id, data: RiderServiceAgreementSchema):
     models = []
 
     for agreement_type, agreement_label in ServiceAgreementType._value2label_map_:

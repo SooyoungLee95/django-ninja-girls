@@ -2,6 +2,7 @@ from http import HTTPStatus
 from typing import Callable
 
 from ninja import Query
+from ninja.errors import HttpError
 from ninja.responses import codes_4xx
 from ninja.router import Router
 
@@ -12,7 +13,9 @@ from ras.common.messaging.schema import SNSMessageForSubscribe
 from ras.common.messaging.subscribers import handle_sns_notification
 from ras.common.schemas import ErrorResponse
 from ras.rider_app.helpers import (
+    handle_create_rider_service_agreements,
     handle_dispatch_request_detail,
+    handle_retrieve_rider_service_agreements,
     handle_rider_availability_updates,
     handle_rider_ban,
     handle_rider_delivery_state,
@@ -20,7 +23,6 @@ from ras.rider_app.helpers import (
     handle_rider_dispatch_request_creates,
     handle_rider_dispatch_response,
     handle_rider_profile_summary,
-    handle_rider_service_agreements,
     handle_rider_status,
     handle_sns_notification_push_action,
     mock_delivery_state_push_action,
@@ -43,6 +45,7 @@ from .schemas import (
     RiderLoginResponse,
     RiderProfileSummary,
     RiderServiceAgreement,
+    RiderServiceAgreementOut,
     RiderStatus,
     SearchDate,
 )
@@ -234,12 +237,24 @@ def retrieve_rider_dispatch_acceptance_rate(request, data: SearchDate = Query(..
 
 @rider_router.get(
     "/service-agreements",
-    url_name="retrieve_rider_service_agreements",
+    url_name="rider_service_agreements",
     summary="라이더 서비스 이용약관 동의여부 조회",
     response={200: RiderServiceAgreement, codes_4xx: ErrorResponse},
 )
 def retrieve_rider_service_agreements(request):
-    return handle_rider_service_agreements(rider_id=request.auth.pk)
+    return handle_retrieve_rider_service_agreements(rider_id=request.auth.pk)
+
+
+@rider_router.post(
+    "/service-agreements",
+    url_name="rider_service_agreements",
+    summary="라이더 서비스 이용약관 동의여부 저장",
+    response={200: RiderServiceAgreementOut, codes_4xx: ErrorResponse},
+)
+def create_rider_service_agreements(request, data: RiderServiceAgreement):
+    if not data.agreed_required():
+        raise HttpError(HTTPStatus.BAD_REQUEST, "필수 이용약관에 동의해주세요.")
+    return HTTPStatus.OK, handle_create_rider_service_agreements(rider_id=request.auth.pk, data=data)
 
 
 @auth_router.get("test/jwt/authentication", url_name="test_authentication", summary="JWT 인증 테스트")

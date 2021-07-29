@@ -3,6 +3,7 @@ from http import HTTPStatus
 
 from asgiref.sync import async_to_sync
 from django.db.utils import DatabaseError, IntegrityError, OperationalError
+from django.utils import timezone
 from ninja.errors import HttpError
 from pydantic import ValidationError
 
@@ -19,6 +20,7 @@ from ras.rider_app.queries import (
     query_create_dispatch_request_with_task,
     query_create_rider_delivery_state,
     query_create_rider_dispatch_response,
+    query_create_rider_service_agreements,
     query_fcm_token,
     query_get_dispatch_request_states,
     query_get_rider_dispatch_acceptance_rate,
@@ -40,6 +42,7 @@ from .schemas import (
     RiderDispatch,
     RiderDispatchResponse,
     RiderServiceAgreement,
+    RiderServiceAgreementOut,
     RiderStatus,
     SearchDate,
 )
@@ -251,7 +254,7 @@ def handle_rider_dispatch_acceptance_rate(data: SearchDate, rider_id):
         return HTTPStatus.OK, rider_dispatch_acceptance_rate["acceptance_rate"] if rider_dispatch_acceptance_rate else 0
 
 
-def handle_rider_service_agreements(rider_id):
+def handle_retrieve_rider_service_agreements(rider_id):
     agreements = query_get_rider_service_agreements(rider_id=rider_id)
     try:
         rider_agreements = RiderServiceAgreement(
@@ -261,3 +264,13 @@ def handle_rider_service_agreements(rider_id):
         raise HttpError(HTTPStatus.NOT_FOUND, "서비스 이용약관에 먼저 동의해주세요.")
     else:
         return HTTPStatus.OK, rider_agreements
+
+
+def handle_create_rider_service_agreements(rider_id, data: RiderServiceAgreement) -> RiderServiceAgreementOut:
+    try:
+        agreements = query_create_rider_service_agreements(rider_id, data)
+    except IntegrityError:
+        raise HttpError(HTTPStatus.BAD_REQUEST, "이미 서비스 이용약관에 동의하셨습니다.")
+    return RiderServiceAgreementOut(
+        agreement_saved_time=timezone.localtime(agreements[-1].modified_at).strftime("%Y-%m-%d %H:%M:%S")
+    )
