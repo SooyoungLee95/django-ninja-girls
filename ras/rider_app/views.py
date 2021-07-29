@@ -21,6 +21,7 @@ from ras.rider_app.helpers import (
     handle_rider_dispatch_response,
     handle_rider_profile_summary,
     handle_rider_status,
+    handle_rider_working_report,
     handle_sns_notification_push_action,
     mock_delivery_state_push_action,
     mock_handle_rider_dispatch_request_creates,
@@ -40,6 +41,7 @@ from .schemas import RiderDispatchResponse as RiderDispatchResponseSchema
 from .schemas import (
     RiderLoginRequest,
     RiderLoginResponse,
+    RiderMypage,
     RiderProfileSummary,
     RiderStatus,
     SearchDate,
@@ -224,12 +226,32 @@ def login(request, data: RiderLoginRequest):
     response={200: RiderDispatchAcceptanceRate, codes_4xx: ErrorResponse},
 )
 def retrieve_rider_dispatch_acceptance_rate(request, data: SearchDate = Query(...)):
-    status, rate = handle_rider_dispatch_acceptance_rate(data, rider_id=request.auth.rider_id)
+    status, acceptance_rate = handle_rider_dispatch_acceptance_rate(data, rider_id=request.auth.rider_id)
     if status != HTTPStatus.OK:
-        return status, ErrorResponse(message=rate)
-    return status, RiderDispatchAcceptanceRate(acceptance_rate=rate)
+        return status, ErrorResponse(message=acceptance_rate)
+    return status, acceptance_rate
 
 
 @auth_router.get("test/jwt/authentication", url_name="test_authentication", summary="JWT 인증 테스트")
 def mock_api_for_auth(request):
     return HTTPStatus.OK, {}
+
+
+@rider_router.get(
+    "/mypage",
+    url_name="retrieve_rider_mypage",
+    summary="라이더 마이페이지",
+    response={200: RiderMypage, codes_4xx: ErrorResponse},
+)
+def retrieve_rider_mypage(request, data: SearchDate = Query(...)):
+    report: dict = {}
+    for status, result in [
+        handle_rider_profile_summary(rider_id=request.auth.rider.pk),
+        handle_rider_dispatch_acceptance_rate(data, request.auth.rider.pk),
+        handle_rider_working_report(data, request.auth.rider.pk),
+    ]:
+        if status != HTTPStatus.OK:
+            return status, ErrorResponse(message=result)
+        else:
+            report |= result
+    return HTTPStatus.OK, report

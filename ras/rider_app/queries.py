@@ -4,7 +4,7 @@ import logging
 from asgiref.sync import sync_to_async
 from django.db import transaction
 from django.db.models import Case, Count, F, FloatField, Sum, When
-from django.db.models.functions import Round
+from django.db.models.functions import Coalesce, Round
 from django.db.models.query import Prefetch
 
 from ras.rideryo.enums import DeliveryState
@@ -24,6 +24,7 @@ from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
 from .schemas import RiderDeliveryState
 from .schemas import RiderDispatch as RiderDispatchResultSchema
 from .schemas import RiderDispatchResponse as RiderDispatchResponseSchema
+from .schemas import SearchDate
 
 logger = logging.getLogger(__name__)
 
@@ -141,7 +142,7 @@ def query_rider_current_deliveries(rider_id):
     )
 
 
-def query_get_rider_dispatch_acceptance_rate(rider_id, data):
+def query_get_rider_dispatch_acceptance_rate(data: SearchDate, rider_id):
     start_at = datetime.datetime.combine(data.start_at, datetime.time(1, 0, 0))
     end_at = datetime.datetime.combine(data.end_at, datetime.time(0, 59, 59)) + datetime.timedelta(days=1)
     return (
@@ -159,6 +160,25 @@ def query_get_rider_dispatch_acceptance_rate(rider_id, data):
             )
         )
         .values("acceptance_rate")
+        .order_by("dispatch_request__rider__rider_id")
+        .first()
+    )
+
+
+def query_get_rider_working_report(data: SearchDate, rider_id):
+    return (
+        RiderDispatchResponseHistory.objects.select_related("dispatch_request__riderpaymenthistory_set")
+        .filter(
+            dispatch_request__rider__rider_id=rider_id,
+            created_at__range=[data.set_start_at_report(), data.set_end_at_report()],
+            response=RiderResponse.ACCEPTED,
+        )
+        .values("dispatch_request__rider__rider_id")
+        .annotate(
+            total_delivery_count=Count("id", distinct=True),
+            total_commission=Coalesce(Sum("dispatch_request__riderpaymenthistory__delivery_commission__fee"), 0),
+        )
+        .values("total_delivery_count", "total_commission")
         .order_by("dispatch_request__rider__rider_id")
         .first()
     )
