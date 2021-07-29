@@ -141,5 +141,5 @@ class SearchDate(Schema):
 class RiderServiceAgreement(Schema):
     personal_information: bool
     location_based_service: bool
-    promotion_receivable: bool
-    night_promotion_receivable: bool
+    promotion_receivable: bool = False
+    night_promotion_receivable: bool = False
