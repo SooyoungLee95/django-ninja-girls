@@ -1,3 +1,4 @@
+import datetime
 from datetime import date
 from typing import Any, Optional
 
@@ -137,9 +138,15 @@ class SearchDate(Schema):
     start_at: date = date.today()
     end_at: date = date.today()
 
+    @staticmethod
+    def set_start_at_report(v):
+        return datetime.datetime.combine(v, datetime.time(1, 0, 0))
+
+    @staticmethod
+    def set_end_at_report(v):
+        return datetime.datetime.combine(v, datetime.time(0, 59, 59)) + datetime.timedelta(days=1)
+
 
 class RiderMypage(RiderProfileSummary, RiderDispatchAcceptanceRate, Schema):
-    RiderProfileSummary
-    RiderDispatchAcceptanceRate
     total_delivery_count: int
     total_commission: int
