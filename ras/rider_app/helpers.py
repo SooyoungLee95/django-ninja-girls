@@ -21,6 +21,7 @@ from ras.rider_app.queries import (
     query_get_dispatch_request_states,
     query_get_rider_dispatch_acceptance_rate,
     query_get_rider_profile_summary,
+    query_get_rider_service_agreements,
     query_rider_current_deliveries,
     query_rider_state,
 )
@@ -36,6 +37,7 @@ from .schemas import (
     RiderDeliveryState,
     RiderDispatch,
     RiderDispatchResponse,
+    RiderServiceAgreement,
     RiderStatus,
     SearchDate,
 )
@@ -245,3 +247,10 @@ def handle_rider_dispatch_acceptance_rate(data: SearchDate, rider_id):
         return HTTPStatus.BAD_REQUEST, "유효한 검색 날짜가 아닙니다."
     else:
         return HTTPStatus.OK, rider_dispatch_acceptance_rate["acceptance_rate"] if rider_dispatch_acceptance_rate else 0
+
+
+def handle_rider_service_agreements(rider_id):
+    agreements = query_get_rider_service_agreements(rider_id=rider_id)
+    return HTTPStatus.OK, RiderServiceAgreement(
+        **{agreement.get_agreement_type_display(): agreement.agreed for agreement in agreements}
+    )

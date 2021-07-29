@@ -136,3 +136,10 @@ class RiderDispatchAcceptanceRate(Schema):
 class SearchDate(Schema):
     start_at: date = date.today()
     end_at: date = date.today()
+
+
+class RiderServiceAgreement(Schema):
+    personal_information: bool
+    location_based_service: bool
+    promotion_receivable: bool
+    night_promotion_receivable: bool

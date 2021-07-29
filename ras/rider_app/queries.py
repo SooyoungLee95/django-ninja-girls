@@ -16,6 +16,7 @@ from ras.rideryo.models import (
     RiderDispatchResponseHistory,
     RiderFCMToken,
     RiderProfile,
+    RiderServiceAgreement,
     RiderState,
 )
 
@@ -162,3 +163,7 @@ def query_get_rider_dispatch_acceptance_rate(rider_id, data):
         .order_by("dispatch_request__rider__rider_id")
         .first()
     )
+
+
+def query_get_rider_service_agreements(rider_id):
+    return RiderServiceAgreement.objects.filter(rider_id=rider_id)
