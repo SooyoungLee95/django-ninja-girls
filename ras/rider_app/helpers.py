@@ -3,7 +3,8 @@ from http import HTTPStatus
 
 from asgiref.sync import async_to_sync
 from django.db.utils import DatabaseError, IntegrityError, OperationalError
-from ninja.errors import HttpError, ValidationError
+from ninja.errors import HttpError
+from pydantic import ValidationError
 
 from ras.common.integration.services.jungleworks.handlers import (
     on_off_duty,
@@ -257,6 +258,6 @@ def handle_rider_service_agreements(rider_id):
             **{agreement.get_agreement_type_display(): agreement.agreed for agreement in agreements}
         )
     except ValidationError:
-        raise HttpError(HTTPStatus.BAD_REQUEST, "서비스 이용약관에 먼저 동의해주세요.")
+        raise HttpError(HTTPStatus.NOT_FOUND, "서비스 이용약관에 먼저 동의해주세요.")
     else:
         return HTTPStatus.OK, rider_agreements

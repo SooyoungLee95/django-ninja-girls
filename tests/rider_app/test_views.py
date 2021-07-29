@@ -761,3 +761,23 @@ def test_retrieve_rider_service_agreements(rider_profile, rider_service_agreemen
     assert data["location_based_service"] is True
     assert data["promotion_receivable"] is False
     assert data["night_promotion_receivable"] is False
+
+
+@pytest.mark.django_db(transaction=True)
+def test_retrieve_rider_service_agreements_return_not_found_when_missing_required_agreements(
+    rider_profile, mock_jwt_token
+):
+    # Given: 라이더가 서비스 이용약관에 동의하지 않은 경우
+    # When: 서비스 이용약관 조회 API를 호출 하였을 때
+    client = Client()
+    response = client.get(
+        reverse("ninja:retrieve_rider_service_agreements"),
+        **{"HTTP_AUTHORIZATION": f"Bearer {mock_jwt_token}"},
+    )
+
+    # Then: 200 OK를 return 해야하고,
+    assert response.status_code == HTTPStatus.NOT_FOUND
+
+    # And: 이용약관에 대한 응답이 반환되어야 한다.
+    data = response.json()
+    assert data["message"] == "서비스 이용약관에 먼저 동의해주세요."
