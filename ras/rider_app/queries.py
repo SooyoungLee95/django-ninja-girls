@@ -20,7 +20,7 @@ from ras.rideryo.models import (
     RiderState,
 )
 
-from ..rideryo.enums import RiderResponse
+from ..rideryo.enums import RiderResponse, ServiceAgreementType
 from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
 from .schemas import RiderDeliveryState
 from .schemas import RiderDispatch as RiderDispatchResultSchema
@@ -167,3 +167,12 @@ def query_get_rider_dispatch_acceptance_rate(rider_id, data):
 
 def query_get_rider_service_agreements(rider_id):
     return RiderServiceAgreement.objects.filter(rider_id=rider_id)
+
+
+def query_create_rider_service_agreements(rider_id, data: RiderServiceAgreement):
+    models = []
+
+    for agreement_type, agreement_label in ServiceAgreementType._value2label_map_:
+        agreed = getattr(data, agreement_label)
+        models.append(RiderServiceAgreement(rider_id=rider_id, agreement_type=agreement_type, agreed=agreed))
+    return RiderServiceAgreement.objects.bulk_create(models)
