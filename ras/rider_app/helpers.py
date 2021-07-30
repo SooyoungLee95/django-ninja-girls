@@ -71,8 +71,8 @@ def handle_rider_availability_updates(rider_id, data: RiderAvailabilitySchema, i
     if is_jungleworks:
         jw_response = async_to_sync(on_off_duty)(rider_id, data)
         status, message = jw_response.relevant_http_status(), jw_response.message
-        if not status == HTTPStatus.OK:
-            return status, message
+        if status != HTTPStatus.OK:
+            raise HttpError(status, message)
 
     try:
         rider_state = query_rider_state(rider_id)
@@ -81,14 +81,14 @@ def handle_rider_availability_updates(rider_id, data: RiderAvailabilitySchema, i
             rider_state.start_work_ondemand()
         else:
             rider_state.end_work()
-        return status, message
+        return message
 
     except (RiderState.DoesNotExist, IntegrityError) as e:
         logger.error(f"[RiderAvailability] {e!r} {data}")
-        return HTTPStatus.BAD_REQUEST, "라이더를 식별할 수 없습니다."
+        raise HttpError(HTTPStatus.BAD_REQUEST, "라이더를 식별할 수 없습니다.")
     except OperationalError as e:
         logger.error(f"[RiderAvailability] {e!r} {data}")
-        return HTTPStatus.CONFLICT, "업무상태를 변경 중입니다."
+        raise HttpError(HTTPStatus.CONFLICT, "업무상태를 변경 중입니다.")
 
 
 def handle_update_task_status(data: RiderDispatchResponse):
@@ -107,12 +107,10 @@ def handle_rider_dispatch_response(data: RiderDispatchResponse, is_jungleworks: 
         query_create_rider_dispatch_response(data)
     except IntegrityError as e:
         logger.error(f"[RiderDispatchResponse] {e!r} {data}")
-        return HTTPStatus.BAD_REQUEST, "유효한 ID 값이 아닙니다."
+        raise HttpError(HTTPStatus.BAD_REQUEST, "유효한 ID 값이 아닙니다.")
     except ValueError as e:
         logger.error(f"[RiderDispatchResponse] {e!r} {data}")
-        return HTTPStatus.BAD_REQUEST, str(e)
-    else:
-        return HTTPStatus.OK, ""
+        raise HttpError(HTTPStatus.BAD_REQUEST, str(e))
 
 
 def handle_rider_dispatch_request_creates(data: RiderDispatch):
@@ -169,9 +167,7 @@ def handle_rider_delivery_state(data: RiderDeliveryState, is_jungleworks: bool):
         query_create_rider_delivery_state(data)
     except (IntegrityError, ValueError) as e:
         logger.error(f"[RiderDeliveryState] {e!r} {data}")
-        return HTTPStatus.BAD_REQUEST, "배달 상태를 업데이트 할 수 없습니다."
-    else:
-        return HTTPStatus.OK, ""
+        raise HttpError(HTTPStatus.BAD_REQUEST, "배달 상태를 업데이트 할 수 없습니다.")
 
 
 def mock_delivery_state_push_action(delivery_state: RiderDeliveryState):
@@ -197,25 +193,24 @@ def handle_rider_ban(data: RiderBan):
             rider_state = query_rider_state(rider_id)
         except IntegrityError as e:
             logger.error(f"[RiderBan] {e!r} {data}")
-            return HTTPStatus.BAD_REQUEST, "라이더를 식별할 수 없습니다."
+            raise HttpError(HTTPStatus.BAD_REQUEST, "라이더를 식별할 수 없습니다.")
         except OperationalError as e:
             logger.error(f"[RiderBan] {e!r} {data}")
-            return HTTPStatus.CONFLICT, "업무상태를 변경 중입니다."
+            raise HttpError(HTTPStatus.CONFLICT, "업무상태를 변경 중입니다.")
         rider_state.block()
     else:
         rider_state.unblock()
 
     action = PushAction.BAN if data.is_banned else PushAction.UNDO_BAN
     send_push_action(rider_id=rider_id, action=action, id=rider_id)
-    return HTTPStatus.OK, ""
 
 
 def handle_rider_profile_summary(rider_id):
     rider_profile_summary = query_get_rider_profile_summary(rider_id)
     if rider_profile_summary:
-        return HTTPStatus.OK, rider_profile_summary
+        return rider_profile_summary
     else:
-        return HTTPStatus.NOT_FOUND, "라이더가 존재하지 않습니다."
+        raise HttpError(HTTPStatus.NOT_FOUND, "라이더가 존재하지 않습니다.")
 
 
 def handle_sns_notification_push_action(topic, message, instance):
@@ -238,7 +233,7 @@ def handle_dispatch_request_detail(dispatch_request_ids: list[int]):
         for request in dispatch_requests
     ]
 
-    return HTTPStatus.OK, states
+    return states
 
 
 def handle_rider_status(rider_id):
@@ -246,11 +241,9 @@ def handle_rider_status(rider_id):
         rider_state = query_rider_state(rider_id)
         status = "working" if rider_state.state == RiderStateEnum.READY else "not_working"
     except RiderState.DoesNotExist:
-        return HTTPStatus.NOT_FOUND, ""
+        raise HttpError(HTTPStatus.NOT_FOUND, "")
     current_deliveries = query_rider_current_deliveries(rider_id)
-    return HTTPStatus.OK, RiderStatus(
-        status=status, current_deliveries=",".join(str(delivery.pk) for delivery in current_deliveries)
-    )
+    return RiderStatus(status=status, current_deliveries=",".join(str(delivery.pk) for delivery in current_deliveries))
 
 
 def handle_rider_dispatch_acceptance_rate(data: SearchDate, rider_id):
@@ -258,19 +251,19 @@ def handle_rider_dispatch_acceptance_rate(data: SearchDate, rider_id):
         rider_dispatch_acceptance_rate = query_get_rider_dispatch_acceptance_rate(data, rider_id)
     except IntegrityError as e:
         logger.error(f"[RiderDispatchAcceptanceRate] {e!r} {data}")
-        return HTTPStatus.BAD_REQUEST, "유효한 검색 날짜가 아닙니다."
+        raise HttpError(HTTPStatus.BAD_REQUEST, "유효한 검색 날짜가 아닙니다.")
     else:
         if not rider_dispatch_acceptance_rate:
             rider_dispatch_acceptance_rate = {"acceptance_rate": 0}
-        return HTTPStatus.OK, rider_dispatch_acceptance_rate
+        return rider_dispatch_acceptance_rate
 
 
 def handle_rider_working_report(data: SearchDate, rider_id):
     rider_working_report = query_get_rider_working_report(data, rider_id)
     if rider_working_report:
-        return HTTPStatus.OK, rider_working_report
+        return rider_working_report
     else:
-        return HTTPStatus.NOT_FOUND, "검색 결과가 존재하지 않습니다."
+        raise HttpError(HTTPStatus.NOT_FOUND, "검색 결과가 존재하지 않습니다.")
 
 
 def handle_retrieve_rider_service_agreements(rider_id):
@@ -282,7 +275,7 @@ def handle_retrieve_rider_service_agreements(rider_id):
     except ValidationError:
         raise HttpError(HTTPStatus.NOT_FOUND, MSG_AGREEMENT_NOT_SUBMITTED)
     else:
-        return HTTPStatus.OK, rider_agreements
+        return rider_agreements
 
 
 def handle_create_rider_service_agreements(rider_id, data: RiderServiceAgreement) -> RiderServiceAgreementOut:
