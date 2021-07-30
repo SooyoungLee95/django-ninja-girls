@@ -89,3 +89,10 @@ class RiderState(TextChoices):
     ENDING = "ENDING"
     BREAK = "BREAK"
     PENDING = "PENDING"
+
+
+class ServiceAgreementType(TextChoices):
+    PERSONAL_INFORMATION = "PERSONAL", "personal_information"
+    LOCATION_BASED_SERVICE = "LOCATION", "location_based_service"
+    PROMOTION_RECEIVABLE = "PROMO", "promotion_receivable"
+    NIGHT_PROMOTION_RECEIVABLE = "NIGHT_PROMO", "night_promotion_receivable"

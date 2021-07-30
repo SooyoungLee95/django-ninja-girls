@@ -5,6 +5,7 @@ from ras.crypto import decrypt, encrypt
 from ras.rideryo.enums import Bank, ContractType, DeliveryState
 from ras.rideryo.enums import RiderResponse as RiderResponseEnum
 from ras.rideryo.enums import RiderState as RiderStateEnum
+from ras.rideryo.enums import ServiceAgreementType
 from ras.rideryo.state_machine import RiderStateMachine
 
 
@@ -202,6 +203,17 @@ class RiderDeliveryCancelReason(CommonTimeStamp):
 
     dispatch_request = models.ForeignKey("RiderDispatchRequestHistory", on_delete=models.DO_NOTHING, help_text="배차 ID")
     reason = models.CharField(max_length=150, help_text="배달취소 사유")
+
+
+class RiderServiceAgreement(CommonTimeStamp):
+    """라이더의 서비스 이용약관 동의여부"""
+
+    rider = models.ForeignKey("RiderProfile", on_delete=models.DO_NOTHING, help_text="라이더 프로필 ID")
+    agreement_type = models.CharField(max_length=150, choices=ServiceAgreementType.choices, help_text="이용약관 타입")
+    agreed = models.BooleanField(default=False, help_text="이용약관 동의여부")
+
+    class Meta:
+        unique_together = [["rider", "agreement_type"]]
 
 
 # Signals (separate into diff file if necessary)

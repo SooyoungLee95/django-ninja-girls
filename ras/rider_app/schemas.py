@@ -1,5 +1,4 @@
-import datetime
-from datetime import date
+from datetime import date, datetime, time, timedelta
 from typing import Any, Optional
 
 from django.conf import settings
@@ -139,12 +138,36 @@ class SearchDate(Schema):
     end_at: date = date.today()
 
     def set_start_at_report(self):
-        return datetime.datetime.combine(self.start_at, datetime.time(1, 0, 0))
+        return datetime.combine(self.start_at, time(1, 0, 0))
 
     def set_end_at_report(self):
-        return datetime.datetime.combine(self.end_at, datetime.time(0, 59, 59)) + datetime.timedelta(days=1)
+        return datetime.combine(self.end_at, time(0, 59, 59)) + timedelta(days=1)
 
 
 class RiderMypage(RiderProfileSummary, RiderDispatchAcceptanceRate, Schema):
     total_delivery_count: int
     total_commission: int
+
+
+class RiderServiceAgreement(Schema):
+    personal_information: bool
+    location_based_service: bool
+    promotion_receivable: bool = False
+    night_promotion_receivable: bool = False
+
+    def agreed_required(self):
+        return self.personal_information and self.location_based_service
+
+
+class RiderServiceAgreementPartial(Schema):
+    promotion_receivable: Optional[bool]
+    night_promotion_receivable: Optional[bool]
+
+
+class RiderServiceAgreementOut(Schema):
+    agreement_saved_time: str
+
+    @validator("agreement_saved_time", pre=True)
+    def validate_agreement_saved_time(cls, value):
+        if datetime.strptime(value, "%Y-%m-%d %H:%M:%S"):
+            return value

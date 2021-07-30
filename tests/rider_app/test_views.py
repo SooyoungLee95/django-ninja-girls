@@ -9,14 +9,26 @@ from django.conf import settings
 from django.db.utils import IntegrityError
 from django.test import Client
 from django.urls import reverse
+from django.utils import timezone
+from freezegun import freeze_time
 
 from ras.common.integration.services.jungleworks.schemas import JungleworksResponseBody
-from ras.rider_app.constants import CUSTOMER_ISSUE
+from ras.rider_app.constants import (
+    CUSTOMER_ISSUE,
+    MSG_AGREEMENT_ALREADY_SUBMITTED,
+    MSG_AGREEMENT_NOT_SUBMITTED,
+    MSG_MUST_AGREE_REQUIRED_AGREEMENTS,
+)
 from ras.rider_app.enums import PushAction
 from ras.rider_app.schemas import RiderBan, RiderDeliveryState, RiderDispatchResponse
 from ras.rideryo.enums import DeliveryState
 from ras.rideryo.enums import RiderState as RiderStateEnum
-from ras.rideryo.models import RiderDeliveryStateHistory, RiderState
+from ras.rideryo.enums import ServiceAgreementType
+from ras.rideryo.models import (
+    RiderDeliveryStateHistory,
+    RiderServiceAgreement,
+    RiderState,
+)
 
 
 class TestUpdateRiderAvailability:
@@ -758,3 +770,172 @@ def test_retrieve_rider_mypage(
     assert response.status_code == HTTPStatus.OK
     # And: 라이더 마이페이지 정보가 일치해야한다.
     assert response.json() == dummy_rider_profile | dummy_rider_dispatch_acceptance_rate | dummy_rider_working_report
+
+
+@pytest.mark.django_db(transaction=True)
+def test_retrieve_rider_service_agreements(rider_profile, rider_service_agreements, mock_jwt_token):
+    # Given: 라이더가 서비스 이용약관에 동의한 경우
+    # When: 서비스 이용약관 조회 API를 호출 하였을 때
+    client = Client()
+    response = client.get(
+        reverse("ninja:rider_service_agreements"),
+        HTTP_AUTHORIZATION=f"Bearer {mock_jwt_token}",
+    )
+
+    # Then: 200 OK를 return 해야하고,
+    assert response.status_code == HTTPStatus.OK
+
+    # And: 이용약관에 대한 응답이 반환되어야 한다.
+    data = response.json()
+    assert data["personal_information"] is True
+    assert data["location_based_service"] is True
+    assert data["promotion_receivable"] is False
+    assert data["night_promotion_receivable"] is False
+
+
+@pytest.mark.django_db(transaction=True)
+def test_retrieve_rider_service_agreements_return_not_found_when_missing_required_agreements(
+    rider_profile, mock_jwt_token
+):
+    # Given: 라이더가 서비스 이용약관에 동의하지 않은 경우
+    # When: 서비스 이용약관 조회 API를 호출 하였을 때
+    client = Client()
+    response = client.get(
+        reverse("ninja:rider_service_agreements"),
+        HTTP_AUTHORIZATION=f"Bearer {mock_jwt_token}",
+    )
+
+    # Then: 200 OK를 return 해야하고,
+    assert response.status_code == HTTPStatus.NOT_FOUND
+
+    # And: 이용약관에 대한 응답이 반환되어야 한다.
+    data = response.json()
+    assert data["message"] == MSG_AGREEMENT_NOT_SUBMITTED
+
+
+@pytest.mark.django_db(transaction=True)
+def test_create_rider_service_agreements(rider_profile, mock_jwt_token):
+    # Given: 라이더의 서비스 이용약관 정보가 없고
+    assert not RiderServiceAgreement.objects.filter(rider_id=rider_profile.pk)
+
+    # When: 서비스 이용약관 저장 API를 호출 하였을 때
+    input_body = {
+        "personal_information": True,
+        "location_based_service": True,
+        "promotion_receivable": False,
+        "night_promotion_receivable": False,
+    }
+
+    client = Client()
+    current_time = timezone.localtime()
+    with freeze_time(current_time):
+        response = client.post(
+            reverse("ninja:rider_service_agreements"),
+            data=input_body,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {mock_jwt_token}",
+        )
+
+        # Then: 200 OK를 return 해야하고,
+        assert response.status_code == HTTPStatus.OK
+
+        # And: 이용약관 저장 시간이 반환된다.
+        data = response.json()
+        assert data["agreement_saved_time"] == current_time.strftime("%Y-%m-%d %H:%M:%S")
+
+
+@pytest.mark.django_db(transaction=True)
+def test_create_rider_service_agreements_return_error_when_required_is_false(rider_profile, mock_jwt_token):
+    # Given: 라이더의 서비스 이용약관 정보가 없고
+    assert not RiderServiceAgreement.objects.filter(rider_id=rider_profile.pk)
+
+    # When: 서비스 이용약관 저장 API를 호출 하였을 때
+    input_body = {
+        "personal_information": False,
+        "location_based_service": True,
+        "promotion_receivable": False,
+        "night_promotion_receivable": False,
+    }
+
+    client = Client()
+    current_time = timezone.localtime()
+    with freeze_time(current_time):
+        response = client.post(
+            reverse("ninja:rider_service_agreements"),
+            data=input_body,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {mock_jwt_token}",
+        )
+
+        # Then: 400를 return 해야하고,
+        assert response.status_code == HTTPStatus.BAD_REQUEST
+
+        # And: 에러메시지가 반환된다.
+        data = response.json()
+        assert data["message"] == MSG_MUST_AGREE_REQUIRED_AGREEMENTS
+
+
+@pytest.mark.django_db(transaction=True)
+def test_create_rider_service_agreements_return_error_when_exist(
+    rider_profile, rider_service_agreements, mock_jwt_token
+):
+    # Given: 라이더의 서비스 이용약관 정보가 있는 경우
+    assert RiderServiceAgreement.objects.filter(rider_id=rider_profile.pk)
+
+    # When: 서비스 이용약관 저장 API를 호출 하였을 때
+    input_body = {
+        "personal_information": True,
+        "location_based_service": True,
+        "promotion_receivable": False,
+        "night_promotion_receivable": False,
+    }
+
+    client = Client()
+    current_time = timezone.localtime()
+    with freeze_time(current_time):
+        response = client.post(
+            reverse("ninja:rider_service_agreements"),
+            data=input_body,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {mock_jwt_token}",
+        )
+
+        # Then: 400를 return 해야하고,
+        assert response.status_code == HTTPStatus.BAD_REQUEST
+
+        # And: 에러메시지가 반환된다.
+        data = response.json()
+        assert data["message"] == MSG_AGREEMENT_ALREADY_SUBMITTED
+
+
+@pytest.mark.django_db(transaction=True)
+def test_partial_update_rider_service_agreements(rider_profile, rider_service_agreements, mock_jwt_token):
+    # Given: 라이더의 서비스 이용약관 정보가 있고
+    agreement = RiderServiceAgreement.objects.get(
+        rider_id=rider_profile.pk,
+        agreement_type=ServiceAgreementType.PROMOTION_RECEIVABLE,
+    )
+    assert agreement.agreed is False
+
+    # When: 서비스 이용약관 저장 API를 호출 하였을 때
+    input_body = {"promotion_receivable": True}
+
+    client = Client()
+    current_time = timezone.localtime()
+    with freeze_time(current_time):
+        response = client.patch(
+            reverse("ninja:rider_service_agreements"),
+            data=input_body,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {mock_jwt_token}",
+        )
+
+        # Then: 200 OK를 return 해야하고,
+        assert response.status_code == HTTPStatus.OK
+
+        # And: 이용약관 저장 시간이 반환된다.
+        data = response.json()
+        assert data["agreement_saved_time"] == current_time.strftime("%Y-%m-%d %H:%M:%S")
+
+    agreement.refresh_from_db()
+    assert agreement.agreed is True

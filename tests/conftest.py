@@ -5,6 +5,7 @@ from django.db.models import Count, Sum
 
 from ras.rideryo.enums import ContractType, DeliveryState, RiderResponse
 from ras.rideryo.enums import RiderState as RiderStateEnum
+from ras.rideryo.enums import ServiceAgreementType
 from ras.rideryo.models import (
     DeliveryCity,
     DeliveryCommission,
@@ -18,6 +19,7 @@ from ras.rideryo.models import (
     RiderDispatchResponseHistory,
     RiderPaymentHistory,
     RiderProfile,
+    RiderServiceAgreement,
     RiderState,
     VehicleType,
 )
@@ -290,3 +292,17 @@ def dummy_rider_working_report(rider_dispatch_response, rider_payment_history):
         .first()
     )
     return {"total_delivery_count": total_delivery_count, "total_commission": total_commission[0]}
+
+
+@pytest.fixture
+def rider_service_agreements(rider_profile):
+    agreements = []
+    for _type in (ServiceAgreementType.PERSONAL_INFORMATION, ServiceAgreementType.LOCATION_BASED_SERVICE):
+        agmt = RiderServiceAgreement.objects.create(rider=rider_profile, agreement_type=_type, agreed=True)
+        agreements.append(agmt)
+
+    for _type in (ServiceAgreementType.PROMOTION_RECEIVABLE, ServiceAgreementType.NIGHT_PROMOTION_RECEIVABLE):
+        agmt = RiderServiceAgreement.objects.create(rider=rider_profile, agreement_type=_type, agreed=False)
+        agreements.append(agmt)
+
+    return agreements

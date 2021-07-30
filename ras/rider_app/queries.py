@@ -16,15 +16,17 @@ from ras.rideryo.models import (
     RiderDispatchResponseHistory,
     RiderFCMToken,
     RiderProfile,
+    RiderServiceAgreement,
     RiderState,
 )
 
-from ..rideryo.enums import RiderResponse
+from ..rideryo.enums import RiderResponse, ServiceAgreementType
 from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
 from .schemas import RiderDeliveryState
 from .schemas import RiderDispatch as RiderDispatchResultSchema
 from .schemas import RiderDispatchResponse as RiderDispatchResponseSchema
-from .schemas import SearchDate
+from .schemas import RiderServiceAgreement as RiderServiceAgreementSchema
+from .schemas import RiderServiceAgreementPartial, SearchDate
 
 logger = logging.getLogger(__name__)
 
@@ -182,3 +184,31 @@ def query_get_rider_working_report(data: SearchDate, rider_id):
         .order_by("dispatch_request__rider__rider_id")
         .first()
     )
+
+
+def query_get_rider_service_agreements(rider_id):
+    return RiderServiceAgreement.objects.filter(rider_id=rider_id)
+
+
+def query_create_rider_service_agreements(rider_id, data: RiderServiceAgreementSchema):
+    models = []
+
+    for agreement_type, agreement_label in ServiceAgreementType._value2label_map_.items():
+        agreed = getattr(data, agreement_label)
+        models.append(RiderServiceAgreement(rider_id=rider_id, agreement_type=agreement_type, agreed=agreed))
+    return RiderServiceAgreement.objects.bulk_create(models)
+
+
+def query_partial_update_rider_service_agreements(rider_id, data: RiderServiceAgreementPartial):
+    models = []
+    with transaction.atomic():
+        for agreement_type, agreement_label in ServiceAgreementType._value2label_map_.items():
+            agreed = getattr(data, agreement_label, None)
+            if agreed is not None:
+                instance, _ = RiderServiceAgreement.objects.get_or_create(
+                    rider_id=rider_id, agreement_type=agreement_type
+                )
+                instance.agreed = agreed
+                instance.save()
+                models.append(instance)
+    return models
