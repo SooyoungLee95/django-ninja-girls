@@ -18,6 +18,7 @@ from ras.rider_app.enums import PushAction
 from ras.rider_app.schemas import RiderBan, RiderDeliveryState, RiderDispatchResponse
 from ras.rideryo.enums import DeliveryState
 from ras.rideryo.enums import RiderState as RiderStateEnum
+from ras.rideryo.enums import ServiceAgreementType
 from ras.rideryo.models import (
     RiderDeliveryStateHistory,
     RiderServiceAgreement,
@@ -882,3 +883,36 @@ def test_create_rider_service_agreements_return_error_when_exist(
         # And: 에러메시지가 반환된다.
         data = response.json()
         assert data["message"] == "이미 서비스 이용약관에 동의하셨습니다."
+
+
+@pytest.mark.django_db(transaction=True)
+def test_partial_update_rider_service_agreements(rider_profile, rider_service_agreements, mock_jwt_token):
+    # Given: 라이더의 서비스 이용약관 정보가 있고
+    agreement = RiderServiceAgreement.objects.get(
+        rider_id=rider_profile.pk,
+        agreement_type=ServiceAgreementType.PROMOTION_RECEIVABLE,
+    )
+    assert agreement.agreed is False
+
+    # When: 서비스 이용약관 저장 API를 호출 하였을 때
+    input_body = {"promotion_receivable": True}
+
+    client = Client()
+    current_time = timezone.localtime()
+    with freeze_time(current_time):
+        response = client.patch(
+            reverse("ninja:rider_service_agreements"),
+            data=input_body,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {mock_jwt_token}",
+        )
+
+        # Then: 200 OK를 return 해야하고,
+        assert response.status_code == HTTPStatus.OK
+
+        # And: 이용약관 저장 시간이 반환된다.
+        data = response.json()
+        assert data["agreement_saved_time"] == current_time.strftime("%Y-%m-%d %H:%M:%S")
+
+    agreement.refresh_from_db()
+    assert agreement.agreed is True
