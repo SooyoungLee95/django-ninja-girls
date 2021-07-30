@@ -218,9 +218,17 @@ def login(request, data: RiderLoginRequest):
 
     encrypted_payload = get_encrypted_payload(payload=AuthyoPayload(sub_id=rider.id))
 
+    try:
+        _, agreements = handle_retrieve_rider_service_agreements(rider_id=rider.pk)
+    except HttpError:
+        agreed = False
+    else:
+        agreed = agreements.agreed_required()
+
     return HTTPStatus.OK, RiderLoginResponse(
         authorization_url=f"{AUTHYO_LOGIN_URL}?code={encrypted_payload}",
         password_change_required=request_body["password"] == RIDER_APP_INITIAL_PASSWORD,
+        checked_service_agreements=agreed,
     )
 
 
