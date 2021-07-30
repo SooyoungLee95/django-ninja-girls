@@ -15,6 +15,7 @@ from ras.common.schemas import ErrorResponse
 from ras.rider_app.helpers import (
     handle_create_rider_service_agreements,
     handle_dispatch_request_detail,
+    handle_partial_update_rider_service_agreements,
     handle_retrieve_rider_service_agreements,
     handle_rider_availability_updates,
     handle_rider_ban,
@@ -46,6 +47,7 @@ from .schemas import (
     RiderProfileSummary,
     RiderServiceAgreement,
     RiderServiceAgreementOut,
+    RiderServiceAgreementPartial,
     RiderStatus,
     SearchDate,
 )
@@ -255,6 +257,16 @@ def create_rider_service_agreements(request, data: RiderServiceAgreement):
     if not data.agreed_required():
         raise HttpError(HTTPStatus.BAD_REQUEST, "필수 이용약관에 동의해주세요.")
     return HTTPStatus.OK, handle_create_rider_service_agreements(rider_id=request.auth.pk, data=data)
+
+
+@rider_router.patch(
+    "/service-agreements",
+    url_name="rider_service_agreements",
+    summary="라이더 서비스 이용약관 동의여부 개별저장",
+    response={200: RiderServiceAgreementOut, codes_4xx: ErrorResponse},
+)
+def partial_update_rider_service_agreements(request, data: RiderServiceAgreementPartial):
+    return HTTPStatus.OK, handle_partial_update_rider_service_agreements(rider_id=request.auth.pk, data=data)
 
 
 @auth_router.get("test/jwt/authentication", url_name="test_authentication", summary="JWT 인증 테스트")

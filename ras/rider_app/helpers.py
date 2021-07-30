@@ -26,6 +26,7 @@ from ras.rider_app.queries import (
     query_get_rider_dispatch_acceptance_rate,
     query_get_rider_profile_summary,
     query_get_rider_service_agreements,
+    query_partial_update_rider_service_agreements,
     query_rider_current_deliveries,
     query_rider_state,
 )
@@ -43,6 +44,7 @@ from .schemas import (
     RiderDispatchResponse,
     RiderServiceAgreement,
     RiderServiceAgreementOut,
+    RiderServiceAgreementPartial,
     RiderStatus,
     SearchDate,
 )
@@ -54,6 +56,8 @@ delivery_state_push_action_map = {
     DeliveryState.NEAR_PICKUP: PushAction.NEAR_PICKUP,
     DeliveryState.NEAR_DROPOFF: PushAction.NEAR_DROPOFF,
 }
+
+SAVED_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 def handle_rider_availability_updates(rider_id, data: RiderAvailabilitySchema, is_jungleworks: bool):
@@ -272,5 +276,14 @@ def handle_create_rider_service_agreements(rider_id, data: RiderServiceAgreement
     except IntegrityError:
         raise HttpError(HTTPStatus.BAD_REQUEST, "이미 서비스 이용약관에 동의하셨습니다.")
     return RiderServiceAgreementOut(
-        agreement_saved_time=timezone.localtime(agreements[-1].modified_at).strftime("%Y-%m-%d %H:%M:%S")
+        agreement_saved_time=timezone.localtime(agreements[-1].modified_at).strftime(SAVED_TIME_FORMAT)
+    )
+
+
+def handle_partial_update_rider_service_agreements(
+    rider_id, data: RiderServiceAgreementPartial
+) -> RiderServiceAgreementOut:
+    agreements = query_partial_update_rider_service_agreements(rider_id, data)
+    return RiderServiceAgreementOut(
+        agreement_saved_time=timezone.localtime(agreements[-1].modified_at).strftime(SAVED_TIME_FORMAT)
     )
