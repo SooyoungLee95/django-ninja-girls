@@ -13,7 +13,12 @@ from django.utils import timezone
 from freezegun import freeze_time
 
 from ras.common.integration.services.jungleworks.schemas import JungleworksResponseBody
-from ras.rider_app.constants import CUSTOMER_ISSUE
+from ras.rider_app.constants import (
+    CUSTOMER_ISSUE,
+    MSG_AGREEMENT_ALREADY_SUBMITTED,
+    MSG_AGREEMENT_NOT_SUBMITTED,
+    MSG_MUST_AGREE_REQUIRED_AGREEMENTS,
+)
 from ras.rider_app.enums import PushAction
 from ras.rider_app.schemas import RiderBan, RiderDeliveryState, RiderDispatchResponse
 from ras.rideryo.enums import DeliveryState
@@ -787,7 +792,7 @@ def test_retrieve_rider_service_agreements_return_not_found_when_missing_require
 
     # And: 이용약관에 대한 응답이 반환되어야 한다.
     data = response.json()
-    assert data["message"] == "서비스 이용약관에 먼저 동의해주세요."
+    assert data["message"] == MSG_AGREEMENT_NOT_SUBMITTED
 
 
 @pytest.mark.django_db(transaction=True)
@@ -849,7 +854,7 @@ def test_create_rider_service_agreements_return_error_when_required_is_false(rid
 
         # And: 에러메시지가 반환된다.
         data = response.json()
-        assert data["message"] == "필수 이용약관에 동의해주세요."
+        assert data["message"] == MSG_MUST_AGREE_REQUIRED_AGREEMENTS
 
 
 @pytest.mark.django_db(transaction=True)
@@ -882,7 +887,7 @@ def test_create_rider_service_agreements_return_error_when_exist(
 
         # And: 에러메시지가 반환된다.
         data = response.json()
-        assert data["message"] == "이미 서비스 이용약관에 동의하셨습니다."
+        assert data["message"] == MSG_AGREEMENT_ALREADY_SUBMITTED
 
 
 @pytest.mark.django_db(transaction=True)

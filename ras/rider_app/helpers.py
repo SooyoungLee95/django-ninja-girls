@@ -13,7 +13,11 @@ from ras.common.integration.services.jungleworks.handlers import (
     update_task_status,
     update_task_status_from_delivery_state,
 )
-from ras.rider_app.constants import MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1
+from ras.rider_app.constants import (
+    MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1,
+    MSG_AGREEMENT_ALREADY_SUBMITTED,
+    MSG_AGREEMENT_NOT_SUBMITTED,
+)
 from ras.rider_app.enums import PushAction
 from ras.rider_app.queries import (
     mock_query_create_dispatch_request_with_task,
@@ -265,7 +269,7 @@ def handle_retrieve_rider_service_agreements(rider_id):
             **{agreement.get_agreement_type_display(): agreement.agreed for agreement in agreements}
         )
     except ValidationError:
-        raise HttpError(HTTPStatus.NOT_FOUND, "서비스 이용약관에 먼저 동의해주세요.")
+        raise HttpError(HTTPStatus.NOT_FOUND, MSG_AGREEMENT_NOT_SUBMITTED)
     else:
         return HTTPStatus.OK, rider_agreements
 
@@ -274,7 +278,7 @@ def handle_create_rider_service_agreements(rider_id, data: RiderServiceAgreement
     try:
         agreements = query_create_rider_service_agreements(rider_id, data)
     except IntegrityError:
-        raise HttpError(HTTPStatus.BAD_REQUEST, "이미 서비스 이용약관에 동의하셨습니다.")
+        raise HttpError(HTTPStatus.BAD_REQUEST, MSG_AGREEMENT_ALREADY_SUBMITTED)
     return RiderServiceAgreementOut(
         agreement_saved_time=timezone.localtime(agreements[-1].modified_at).strftime(SAVED_TIME_FORMAT)
     )

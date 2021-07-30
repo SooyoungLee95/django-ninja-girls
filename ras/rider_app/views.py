@@ -32,7 +32,11 @@ from ras.rider_app.helpers import (
 
 from ..common.authentication.helpers import extract_jwt_payload, get_encrypted_payload
 from ..rideryo.models import RiderAccount
-from .constants import AUTHYO_LOGIN_URL, RIDER_APP_INITIAL_PASSWORD
+from .constants import (
+    AUTHYO_LOGIN_URL,
+    MSG_MUST_AGREE_REQUIRED_AGREEMENTS,
+    RIDER_APP_INITIAL_PASSWORD,
+)
 from .enums import RideryoRole, WebhookName
 from .schemas import AuthyoPayload, DispatchRequestDetail
 from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
@@ -255,7 +259,7 @@ def retrieve_rider_service_agreements(request):
 )
 def create_rider_service_agreements(request, data: RiderServiceAgreement):
     if not data.agreed_required():
-        raise HttpError(HTTPStatus.BAD_REQUEST, "필수 이용약관에 동의해주세요.")
+        raise HttpError(HTTPStatus.BAD_REQUEST, MSG_MUST_AGREE_REQUIRED_AGREEMENTS)
     return HTTPStatus.OK, handle_create_rider_service_agreements(rider_id=request.auth.pk, data=data)
 
 
