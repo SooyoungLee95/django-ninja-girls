@@ -212,6 +212,9 @@ class RiderServiceAgreement(CommonTimeStamp):
     agreement_type = models.CharField(max_length=150, choices=ServiceAgreementType.choices, help_text="이용약관 타입")
     agreed = models.BooleanField(default=False, help_text="이용약관 동의여부")
 
+    class Meta:
+        unique_together = [["rider", "agreement_type"]]
+
 
 # Signals (separate into diff file if necessary)
 models.signals.post_save.connect(sender=RiderState, receiver=RiderState._post_save_signal)

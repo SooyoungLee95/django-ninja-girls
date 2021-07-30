@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from typing import Any, Optional
 
 from django.conf import settings
@@ -143,3 +143,20 @@ class RiderServiceAgreement(Schema):
     location_based_service: bool
     promotion_receivable: bool = False
     night_promotion_receivable: bool = False
+
+    def agreed_required(self):
+        return self.personal_information and self.location_based_service
+
+
+class RiderServiceAgreementPartial(Schema):
+    promotion_receivable: Optional[bool]
+    night_promotion_receivable: Optional[bool]
+
+
+class RiderServiceAgreementOut(Schema):
+    agreement_saved_time: str
+
+    @validator("agreement_saved_time", pre=True)
+    def validate_agreement_saved_time(cls, value):
+        if datetime.strptime(value, "%Y-%m-%d %H:%M:%S"):
+            return value
