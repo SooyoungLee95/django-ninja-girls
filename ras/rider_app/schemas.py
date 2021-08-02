@@ -70,6 +70,7 @@ class RiderLoginRequest(Schema):
 class RiderLoginResponse(Schema):
     authorization_url: str
     password_change_required: bool
+    checked_service_agreements: bool
 
 
 class AuthyoPayload(Schema):

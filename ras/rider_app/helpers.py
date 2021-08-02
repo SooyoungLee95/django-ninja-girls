@@ -7,6 +7,7 @@ from django.utils import timezone
 from ninja.errors import HttpError
 from pydantic import ValidationError
 
+from ras.common.authentication.helpers import get_encrypted_payload
 from ras.common.integration.services.jungleworks.handlers import (
     on_off_duty,
     retrieve_delivery_task_id,
@@ -14,9 +15,11 @@ from ras.common.integration.services.jungleworks.handlers import (
     update_task_status_from_delivery_state,
 )
 from ras.rider_app.constants import (
+    AUTHYO_LOGIN_URL,
     MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1,
     MSG_AGREEMENT_ALREADY_SUBMITTED,
     MSG_AGREEMENT_NOT_SUBMITTED,
+    RIDER_APP_INITIAL_PASSWORD,
 )
 from ras.rider_app.enums import PushAction
 from ras.rider_app.queries import (
@@ -39,14 +42,26 @@ from ras.rideryo.enums import DeliveryState, RiderResponse
 from ras.rideryo.enums import RiderState as RiderStateEnum
 
 from ..common.fcm import FCMSender
-from ..rideryo.models import RiderDispatchRequestHistory, RiderProfile, RiderState
-from .schemas import DispatchRequestDetail, FcmPushPayload, MockRiderDispatch
+from ..rideryo.models import (
+    RiderAccount,
+    RiderDispatchRequestHistory,
+    RiderProfile,
+    RiderState,
+)
+from .schemas import (
+    AuthyoPayload,
+    DispatchRequestDetail,
+    FcmPushPayload,
+    MockRiderDispatch,
+)
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import (
     RiderBan,
     RiderDeliveryState,
     RiderDispatch,
     RiderDispatchResponse,
+    RiderLoginRequest,
+    RiderLoginResponse,
     RiderServiceAgreement,
     RiderServiceAgreementOut,
     RiderServiceAgreementPartial,
@@ -301,4 +316,36 @@ def handle_partial_update_rider_service_agreements(
     agreements = query_partial_update_rider_service_agreements(rider_id, data)
     return RiderServiceAgreementOut(
         agreement_saved_time=timezone.localtime(agreements[-1].modified_at).strftime(SAVED_TIME_FORMAT)
+    )
+
+
+def handle_rider_login(email_address, password) -> RiderAccount:
+    try:
+        rider = RiderAccount.objects.active().get(email_address=email_address)
+    except RiderAccount.DoesNotExist:
+        raise HttpError(HTTPStatus.BAD_REQUEST, "이메일이 존재하지 않습니다.")
+
+    if not rider.is_valid_password(input_password=password):
+        raise HttpError(HTTPStatus.BAD_REQUEST, "패스워드가 일치하지 않습니다.")
+
+    return rider
+
+
+def check_rider_agreed_required_agreements(rider_id):
+    try:
+        _, agreements = handle_retrieve_rider_service_agreements(rider_id=rider_id)
+    except HttpError:
+        return False
+    return agreements.agreed_required()
+
+
+def handle_rider_authorization(data: RiderLoginRequest) -> RiderLoginResponse:
+    rider = handle_rider_login(email_address=data.email_address, password=data.password)
+    encrypted_payload = get_encrypted_payload(payload=AuthyoPayload(sub_id=rider.id))
+    agreed = check_rider_agreed_required_agreements(rider.pk)
+
+    return RiderLoginResponse(
+        authorization_url=f"{AUTHYO_LOGIN_URL}?code={encrypted_payload}",
+        password_change_required=data.password == RIDER_APP_INITIAL_PASSWORD,
+        checked_service_agreements=agreed,
     )

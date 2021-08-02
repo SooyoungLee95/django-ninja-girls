@@ -17,6 +17,7 @@ from ras.rider_app.helpers import (
     handle_dispatch_request_detail,
     handle_partial_update_rider_service_agreements,
     handle_retrieve_rider_service_agreements,
+    handle_rider_authorization,
     handle_rider_availability_updates,
     handle_rider_ban,
     handle_rider_delivery_state,
@@ -31,15 +32,10 @@ from ras.rider_app.helpers import (
     mock_handle_rider_dispatch_request_creates,
 )
 
-from ..common.authentication.helpers import extract_jwt_payload, get_encrypted_payload
-from ..rideryo.models import RiderAccount
-from .constants import (
-    AUTHYO_LOGIN_URL,
-    MSG_MUST_AGREE_REQUIRED_AGREEMENTS,
-    RIDER_APP_INITIAL_PASSWORD,
-)
+from ..common.authentication.helpers import extract_jwt_payload
+from .constants import MSG_MUST_AGREE_REQUIRED_AGREEMENTS
 from .enums import RideryoRole, WebhookName
-from .schemas import AuthyoPayload, DispatchRequestDetail
+from .schemas import DispatchRequestDetail
 from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import RiderBan, RiderDeliveryState
@@ -213,21 +209,7 @@ def retrieve_rider_status(request):
     auth=None,
 )
 def login(request, data: RiderLoginRequest):
-    request_body = data.dict()
-    try:
-        rider = RiderAccount.objects.active().get(email_address=request_body["email_address"])
-    except RiderAccount.DoesNotExist:
-        return HTTPStatus.BAD_REQUEST, ErrorResponse(message="이메일이 존재하지 않습니다.")
-
-    if not rider.is_valid_password(input_password=request_body["password"]):
-        return HTTPStatus.BAD_REQUEST, ErrorResponse(message="패스워드가 일치하지 않습니다.")
-
-    encrypted_payload = get_encrypted_payload(payload=AuthyoPayload(sub_id=rider.id))
-
-    return HTTPStatus.OK, RiderLoginResponse(
-        authorization_url=f"{AUTHYO_LOGIN_URL}?code={encrypted_payload}",
-        password_change_required=request_body["password"] == RIDER_APP_INITIAL_PASSWORD,
-    )
+    return HTTPStatus.OK, handle_rider_authorization(data)
 
 
 @rider_router.get(
