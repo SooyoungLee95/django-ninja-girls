@@ -5,8 +5,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from ninja.schema import Field, Schema
-from pydantic import validator
-from pydantic.class_validators import root_validator
+from pydantic import root_validator, validator
 
 from ras.rider_app.constants import (
     CANCEL_REASON_ISSUE_MAP,
@@ -139,7 +138,7 @@ class SearchDate(Schema):
     start_at: date = date.today()
     end_at: date = date.today()
 
-    @root_validator()
+    @root_validator
     def check_valid_date(cls, values):
         start_at = values.get("start_at")
         end_at = values.get("end_at")
