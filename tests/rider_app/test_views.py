@@ -939,3 +939,63 @@ def test_partial_update_rider_service_agreements(rider_profile, rider_service_ag
 
     agreement.refresh_from_db()
     assert agreement.agreed is True
+
+
+@pytest.mark.django_db(transaction=True)
+def test_partial_update_rider_service_agreements_return_when_attempt_to_update_required_agreement(
+    rider_profile, rider_service_agreements, mock_jwt_token
+):
+    # Given: 라이더의 서비스 이용약관 정보가 있고, 필수 이용약관 동의한 경우
+    agreement = RiderServiceAgreement.objects.get(
+        rider_id=rider_profile.pk,
+        agreement_type=ServiceAgreementType.PERSONAL_INFORMATION,
+    )
+    assert agreement.agreed is True
+
+    # And: 수정 가능한 이용약관 외에 정보를 입력한 경우 (필수 이용약관 거절)
+    invalid_body = {"personal_information": False}
+
+    # When: 서비스 이용약관 저장 API를 호출 하였을 때
+    client = Client()
+    current_time = timezone.localtime()
+    with freeze_time(current_time):
+        response = client.patch(
+            reverse("ninja:rider_service_agreements"),
+            data=invalid_body,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {mock_jwt_token}",
+        )
+
+        # Then: 422 UNPROCESSABLE_ENTITY를 return 해야하고,
+        assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+        data = response.json()
+        assert data["message"] == "요청을 처리할 수 없습니다."
+
+    # And: 값은 변경되지 않는다.
+    agreement.refresh_from_db()
+    assert agreement.agreed is True
+
+
+@pytest.mark.django_db(transaction=True)
+def test_partial_update_rider_service_agreements_return_when_invalid_request(
+    rider_profile, rider_service_agreements, mock_jwt_token
+):
+    # Given: 라이더의 서비스 이용약관 정보가 있고, 필수 이용약관 동의한 경우
+    # And: 수정 가능한 이용약관 외에 정보를 입력한 경우 (이상한 값)
+    invalid_body = {"morning_promotion_receivable": False}
+
+    # When: 서비스 이용약관 저장 API를 호출 하였을 때
+    client = Client()
+    current_time = timezone.localtime()
+    with freeze_time(current_time):
+        response = client.patch(
+            reverse("ninja:rider_service_agreements"),
+            data=invalid_body,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {mock_jwt_token}",
+        )
+
+        # Then: 422 UNPROCESSABLE_ENTITY를 return 해야한다
+        assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+        data = response.json()
+        assert data["message"] == "요청을 처리할 수 없습니다."
