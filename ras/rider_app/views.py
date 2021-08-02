@@ -166,8 +166,7 @@ def update_rider_ban(request, data: RiderBan):
     response={200: RiderProfileSummary, codes_4xx: ErrorResponse},
 )
 def retrieve_rider_profile_summary(request):
-    profile_summary = handle_rider_profile_summary(request.auth.rider_id)
-    return HTTPStatus.OK, profile_summary
+    return HTTPStatus.OK, handle_rider_profile_summary(request.auth.rider_id)
 
 
 @sns_router.post(
