@@ -1,6 +1,7 @@
 from http import HTTPStatus
 from typing import Callable
 
+from jwt import InvalidTokenError
 from ninja import Query
 from ninja.errors import HttpError
 from ninja.responses import codes_4xx
@@ -15,6 +16,7 @@ from ras.common.schemas import ErrorResponse
 from ras.rider_app.helpers import (
     handle_create_rider_service_agreements,
     generate_random_verification_code,
+    get_rider_account_info,
     handle_dispatch_request_detail,
     handle_partial_update_rider_service_agreements,
     handle_retrieve_rider_service_agreements,
@@ -215,16 +217,10 @@ def login(request, data: RiderLoginRequest):
     auth=None,
 )
 def send_verification_code_via_sms(request, data: VerificationCodeRequest):
-    request_body = data.dict()
     try:
-        payload = extract_jwt_payload(request)
-    except KeyError:
-        input_email_address = request_body["email_address"]
-        input_phone_number = request_body["phone_number"]
-    else:
-        rider = RiderAccount.objects.get(pk=payload["sub_id"])
-        input_email_address = rider.email_address
-        input_phone_number = request_body["phone_number"]
+        input_email_address, input_phone_number = get_rider_account_info(request, data.dict())
+    except InvalidTokenError:
+        return HTTPStatus.UNAUTHORIZED, ErrorResponse(message="토큰이 유효하지 않습니다.")
 
     if not RiderProfile.objects.filter(
         rider__email_address=input_email_address, phone_number=input_phone_number

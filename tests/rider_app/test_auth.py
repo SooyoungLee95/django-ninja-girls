@@ -314,8 +314,9 @@ class TestSendVerificationCodeViaSMSView:
     ):
         # Given: DB에 존재하는 phone_number가 주어지고,
         rider_phone_number = rider_profile.phone_number
+        # And: 유효한 request body 정보가 주어지고, - email을 제외하고 phone_number가 보내짐
         valid_request_body = {"phone_number": rider_phone_number}
-        # And: 유효한 sms message info 정보가 주어지고,
+        # And: 유효한 sms message info 정보가 주어지면서,
         info = {
             "event": "send_sms",
             "entity": "sms",
@@ -340,6 +341,25 @@ class TestSendVerificationCodeViaSMSView:
         assert response.status_code == HTTPStatus.OK
         # And: send_sms_via_hubyo를 호출 해야 한다
         mock_send_sms_via_hubyo.assert_called_once_with(info)
+
+    @pytest.mark.django_db(transaction=True)
+    def test_send_verification_code_via_sms_view_with_not_email_address_but_token_on_invalid_token_error(
+        self, rider_profile
+    ):
+        # Given: DB에 존재하는 phone_number가 주어지고,
+        valid_request_body = {"phone_number": rider_profile.phone_number}
+        # And: 유효하지 않은 토큰이 주어지면서,
+        invalid_token = "invalid_token"
+
+        # When: 인증요청 API를 호출 했을 때,
+        response = self._call_send_verification_code_via_sms_api_with_token(
+            valid_request_body, header={"HTTP_AUTHORIZATION": f"Bearer {invalid_token}"}
+        )
+
+        # Then: 상태 코드 401을 리턴 해야하고,
+        assert response.status_code == HTTPStatus.UNAUTHORIZED
+        # AND: 토큰이 유효하지 않습니다. 메세지를 리턴해야한다.
+        assert json.loads(response.content)["message"] == "토큰이 유효하지 않습니다."
 
     @pytest.mark.django_db(transaction=True)
     def test_send_verification_code_via_sms_view_on_does_not_exist_phone_number(self, rider_profile):

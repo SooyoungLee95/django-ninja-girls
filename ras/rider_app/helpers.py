@@ -42,6 +42,7 @@ from ras.rider_app.queries import (
 from ras.rideryo.enums import DeliveryState, RiderResponse
 from ras.rideryo.enums import RiderState as RiderStateEnum
 
+from ..common.authentication.helpers import extract_jwt_payload
 from ..common.fcm import FCMSender
 from ..rideryo.models import (
     RiderAccount,
@@ -347,3 +348,16 @@ def handle_rider_authorization(data: RiderLoginRequest) -> RiderLoginResponse:
 
 def generate_random_verification_code():
     return "".join(map(str, [random.choice(range(10)) for _ in range(6)]))
+
+
+def get_rider_account_info(request, request_body):
+    try:
+        payload = extract_jwt_payload(request)
+    except KeyError:
+        input_email_address = request_body["email_address"]
+        input_phone_number = request_body["phone_number"]
+    else:
+        rider = RiderAccount.objects.get(pk=payload["sub_id"])
+        input_email_address = rider.email_address
+        input_phone_number = request_body["phone_number"]
+    return input_email_address, input_phone_number
