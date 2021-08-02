@@ -75,11 +75,8 @@ WEBHOOK_MAP: dict[str, Callable] = {
 )
 def update_rider_availability(request, data: RiderAvailabilitySchema):
     is_jungleworks = should_connect_jungleworks(request)
-    status, message = handle_rider_availability_updates(request.auth.rider_id, data, is_jungleworks)
-
-    if status != HTTPStatus.OK:
-        return status, ErrorResponse(message=message)
-    return status, data
+    handle_rider_availability_updates(request.auth.rider_id, data, is_jungleworks)
+    return HTTPStatus.OK, data
 
 
 @rider_router.post(
@@ -90,10 +87,8 @@ def update_rider_availability(request, data: RiderAvailabilitySchema):
 )
 def create_rider_dispatch_response(request, data: RiderDispatchResponseSchema):
     is_jungleworks = should_connect_jungleworks(request)
-    status, message = handle_rider_dispatch_response(data, is_jungleworks)
-    if status != HTTPStatus.OK:
-        return status, ErrorResponse(message=message)
-    return status, data
+    handle_rider_dispatch_response(data, is_jungleworks)
+    return HTTPStatus.OK, data
 
 
 @rider_router.post(
@@ -125,11 +120,9 @@ def mock_webhook_handler(request, webhook_type: WebhookName, data: MockRiderDisp
 )
 def create_rider_delivery_state(request, data: RiderDeliveryState):
     is_jungleworks = should_connect_jungleworks(request)
-    status, message = handle_rider_delivery_state(data, is_jungleworks)
-    if status != HTTPStatus.OK:
-        return status, ErrorResponse(message=message)
+    handle_rider_delivery_state(data, is_jungleworks)
     mock_delivery_state_push_action(delivery_state=data)
-    return status, data
+    return HTTPStatus.OK, data
 
 
 @dispatch_request_router.get(
@@ -142,9 +135,9 @@ def retrieve_dispatch_requests_detail(request, id: str):
     try:
         req_ids = [int(req_id) for req_id in id.split(",")]
     except ValueError:
-        return HTTPStatus.BAD_REQUEST, ErrorResponse()
+        raise HttpError(HTTPStatus.BAD_REQUEST, "")
     else:
-        return handle_dispatch_request_detail(req_ids)
+        return HTTPStatus.OK, handle_dispatch_request_detail(req_ids)
 
 
 @rider_router.put(
@@ -157,11 +150,9 @@ def retrieve_dispatch_requests_detail(request, id: str):
 def update_rider_ban(request, data: RiderBan):
     payload = extract_jwt_payload(request)
     if payload["role"] != RideryoRole.STAFF:
-        return HTTPStatus.FORBIDDEN, ErrorResponse(message="권한이 올바르지 않습니다.")
-    status, message = handle_rider_ban(data)
-    if status != HTTPStatus.OK:
-        return status, ErrorResponse(message=message)
-    return status, data
+        raise HttpError(HTTPStatus.FORBIDDEN, "권한이 올바르지 않습니다.")
+    handle_rider_ban(data)
+    return HTTPStatus.OK, data
 
 
 @rider_router.get(
@@ -171,10 +162,7 @@ def update_rider_ban(request, data: RiderBan):
     response={200: RiderProfileSummary, codes_4xx: ErrorResponse},
 )
 def retrieve_rider_profile_summary(request):
-    status, message = handle_rider_profile_summary(request.auth.rider_id)
-    if status != HTTPStatus.OK:
-        return status, ErrorResponse(message=message)
-    return status, message
+    return HTTPStatus.OK, handle_rider_profile_summary(request.auth.rider_id)
 
 
 @sns_router.post(
@@ -198,7 +186,7 @@ def subscribe_sns_event(request, topic):
     response={200: RiderStatus, codes_4xx: ErrorResponse},
 )
 def retrieve_rider_status(request):
-    return handle_rider_status(rider_id=request.auth.rider_id)
+    return HTTPStatus.OK, handle_rider_status(rider_id=request.auth.rider_id)
 
 
 @auth_router.post(
@@ -219,10 +207,7 @@ def login(request, data: RiderLoginRequest):
     response={200: RiderDispatchAcceptanceRate, codes_4xx: ErrorResponse},
 )
 def retrieve_rider_dispatch_acceptance_rate(request, data: SearchDate = Query(...)):
-    status, acceptance_rate = handle_rider_dispatch_acceptance_rate(data, rider_id=request.auth.rider_id)
-    if status != HTTPStatus.OK:
-        return status, ErrorResponse(message=acceptance_rate)
-    return status, acceptance_rate
+    return HTTPStatus.OK, handle_rider_dispatch_acceptance_rate(data, rider_id=request.auth.rider_id)
 
 
 @rider_router.get(
@@ -232,7 +217,7 @@ def retrieve_rider_dispatch_acceptance_rate(request, data: SearchDate = Query(..
     response={200: RiderServiceAgreement, codes_4xx: ErrorResponse},
 )
 def retrieve_rider_service_agreements(request):
-    return handle_retrieve_rider_service_agreements(rider_id=request.auth.pk)
+    return HTTPStatus.OK, handle_retrieve_rider_service_agreements(rider_id=request.auth.pk)
 
 
 @rider_router.post(
@@ -269,14 +254,8 @@ def mock_api_for_auth(request):
     response={200: RiderMypage, codes_4xx: ErrorResponse},
 )
 def retrieve_rider_mypage(request, data: SearchDate = Query(...)):
-    report: dict = {}
-    for status, result in [
-        handle_rider_profile_summary(rider_id=request.auth.rider.pk),
-        handle_rider_dispatch_acceptance_rate(data, request.auth.rider.pk),
-        handle_rider_working_report(data, request.auth.rider.pk),
-    ]:
-        if status != HTTPStatus.OK:
-            return status, ErrorResponse(message=result)
-        else:
-            report |= result
-    return HTTPStatus.OK, report
+    return HTTPStatus.OK, {
+        **handle_rider_profile_summary(rider_id=request.auth.rider.pk),
+        **handle_rider_dispatch_acceptance_rate(data, request.auth.rider.pk),
+        **handle_rider_working_report(data, request.auth.rider.pk),
+    }
