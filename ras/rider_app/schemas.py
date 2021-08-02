@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from ninja.schema import Field, Schema
 from pydantic import validator
+from pydantic.class_validators import root_validator
 
 from ras.rider_app.constants import (
     CANCEL_REASON_ISSUE_MAP,
@@ -163,6 +164,13 @@ class RiderServiceAgreement(Schema):
 class RiderServiceAgreementPartial(Schema):
     promotion_receivable: Optional[bool]
     night_promotion_receivable: Optional[bool]
+
+    @root_validator
+    def check_requested_agreement(cls, values):
+        agreements = values.get("promotion_receivable"), values.get("night_promotion_receivable")
+        if all(agmt is None for agmt in agreements):
+            raise ValueError("최소 하나의 유효한 이용약관이 포함되어야 합니다.")
+        return values
 
 
 class RiderServiceAgreementOut(Schema):
