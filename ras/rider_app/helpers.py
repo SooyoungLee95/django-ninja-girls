@@ -326,7 +326,7 @@ def handle_rider_login(email_address, password) -> RiderAccount:
 
 def check_rider_agreed_required_agreements(rider_id):
     try:
-        _, agreements = handle_retrieve_rider_service_agreements(rider_id=rider_id)
+        agreements = handle_retrieve_rider_service_agreements(rider_id=rider_id)
     except HttpError:
         return False
     return agreements.agreed_required()
