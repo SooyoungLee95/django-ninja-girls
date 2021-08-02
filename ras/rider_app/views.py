@@ -216,8 +216,15 @@ def login(request, data: RiderLoginRequest):
 )
 def send_verification_code_via_sms(request, data: VerificationCodeRequest):
     request_body = data.dict()
-    input_email_address = request_body["email_address"]
-    input_phone_number = request_body["phone_number"]
+    try:
+        payload = extract_jwt_payload(request)
+    except KeyError:
+        input_email_address = request_body["email_address"]
+        input_phone_number = request_body["phone_number"]
+    else:
+        rider = RiderAccount.objects.get(pk=payload["sub_id"])
+        input_email_address = rider.email_address
+        input_phone_number = request_body["phone_number"]
 
     if not RiderProfile.objects.filter(
         rider__email_address=input_email_address, phone_number=input_phone_number

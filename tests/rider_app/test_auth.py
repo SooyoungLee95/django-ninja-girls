@@ -260,6 +260,14 @@ class TestSendSMSViaHubyoClient:
 
 
 class TestSendVerificationCodeViaSMSView:
+    def _call_send_verification_code_via_sms_api_with_token(self, valid_request_body, header=None):
+        return client.post(
+            reverse("ninja:send_verification_code_via_sms"),
+            data=valid_request_body,
+            content_type="application/json",
+            **header,
+        )
+
     def _call_send_verification_code_via_sms_api(self, valid_request_body):
         return client.post(
             reverse("ninja:send_verification_code_via_sms"),
@@ -292,6 +300,41 @@ class TestSendVerificationCodeViaSMSView:
 
         # When: 인증요청 API를 호출 했을 때,
         response = self._call_send_verification_code_via_sms_api(valid_request_body)
+
+        # Then: 상태 코드 200을 리턴 해야한다.
+        assert response.status_code == HTTPStatus.OK
+        # And: send_sms_via_hubyo를 호출 해야 한다
+        mock_send_sms_via_hubyo.assert_called_once_with(info)
+
+    @patch("ras.rider_app.views.generate_random_verification_code", Mock(return_value="112233"))
+    @patch("ras.rider_app.views.send_sms_via_hubyo")
+    @pytest.mark.django_db(transaction=True)
+    def test_send_verification_code_via_sms_view_on_success_with_not_email_address_but_token(
+        self, mock_send_sms_via_hubyo, rider_profile, mock_jwt_token
+    ):
+        # Given: DB에 존재하는 phone_number가 주어지고,
+        rider_phone_number = rider_profile.phone_number
+        valid_request_body = {"phone_number": rider_phone_number}
+        # And: 유효한 sms message info 정보가 주어지고,
+        info = {
+            "event": "send_sms",
+            "entity": "sms",
+            "tracking_id": rider_phone_number,
+            "msg": {
+                "data": {
+                    "target": rider_phone_number,
+                    "text": "[요기요라이더] 인증번호는 112233 입니다.",
+                    "sender": "1661-5270",
+                    "is_lms": False,
+                    "lms_subject": "",
+                }
+            },
+        }
+
+        # When: 인증요청 API를 호출 했을 때,
+        response = self._call_send_verification_code_via_sms_api_with_token(
+            valid_request_body, header={"HTTP_AUTHORIZATION": f"Bearer {mock_jwt_token}"}
+        )
 
         # Then: 상태 코드 200을 리턴 해야한다.
         assert response.status_code == HTTPStatus.OK
