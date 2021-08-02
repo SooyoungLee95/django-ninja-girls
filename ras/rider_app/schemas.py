@@ -139,6 +139,16 @@ class SearchDate(Schema):
     start_at: date = date.today()
     end_at: date = date.today()
 
+    @root_validator()
+    def check_valid_date(cls, values):
+        start_at = values.get("start_at")
+        end_at = values.get("end_at")
+        if start_at > end_at:
+            raise ValueError("검색 시작일이 종료일보다 큽니다.")
+        if (end_at - start_at).days > 31:
+            raise ValueError("검색 기간은 최대 31일까지 입니다.")
+        return values
+
     def set_start_at_report(self):
         return datetime.combine(self.start_at, time(1, 0, 0))
 
