@@ -215,9 +215,13 @@ def login(request, data: RiderLoginRequest):
     auth=None,
 )
 def send_verification_code_via_sms(request, data: VerificationCodeRequest):
-    input_phone_number = data.dict()["phone_number"]
+    request_body = data.dict()
+    input_email_address = request_body["email_address"]
+    input_phone_number = request_body["phone_number"]
 
-    if not RiderProfile.objects.filter(phone_number=input_phone_number).exists():
+    if not RiderProfile.objects.filter(
+        rider__email_address=input_email_address, phone_number=input_phone_number
+    ).exists():
         return HTTPStatus.BAD_REQUEST, ErrorResponse(message="등록된 휴대폰 번호가 없습니다.")
 
     verification_code = generate_random_verification_code()

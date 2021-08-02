@@ -260,10 +260,10 @@ class TestSendSMSViaHubyoClient:
 
 
 class TestSendVerificationCodeViaSMSView:
-    def _call_send_verification_code_via_sms_api(self, valid_phone_number):
+    def _call_send_verification_code_via_sms_api(self, valid_request_body):
         return client.post(
             reverse("ninja:send_verification_code_via_sms"),
-            data=valid_phone_number,
+            data=valid_request_body,
             content_type="application/json",
         )
 
@@ -272,15 +272,16 @@ class TestSendVerificationCodeViaSMSView:
     @pytest.mark.django_db(transaction=True)
     def test_send_verification_code_via_sms_view_on_success(self, mock_send_sms_via_hubyo, rider_profile):
         # Given: DB에 존재하는 phone_number가 주어지고,
-        valid_phone_number = {"phone_number": rider_profile.phone_number}
+        rider_phone_number = rider_profile.phone_number
+        valid_request_body = {"email_address": rider_profile.rider.email_address, "phone_number": rider_phone_number}
         # And: 유효한 sms message info 정보가 주어지고,
         info = {
             "event": "send_sms",
             "entity": "sms",
-            "tracking_id": rider_profile.phone_number,
+            "tracking_id": rider_phone_number,
             "msg": {
                 "data": {
-                    "target": rider_profile.phone_number,
+                    "target": rider_phone_number,
                     "text": "[요기요라이더] 인증번호는 112233 입니다.",
                     "sender": "1661-5270",
                     "is_lms": False,
@@ -290,7 +291,7 @@ class TestSendVerificationCodeViaSMSView:
         }
 
         # When: 인증요청 API를 호출 했을 때,
-        response = self._call_send_verification_code_via_sms_api(valid_phone_number)
+        response = self._call_send_verification_code_via_sms_api(valid_request_body)
 
         # Then: 상태 코드 200을 리턴 해야한다.
         assert response.status_code == HTTPStatus.OK
@@ -316,12 +317,13 @@ class TestSendVerificationCodeViaSMSView:
         self, mock_send_sms_via_hubyo, rider_profile
     ):
         # Given: DB에 존재하는 phone_number가 주어지고,
-        valid_phone_number = {"phone_number": rider_profile.phone_number}
+        rider_phone_number = rider_profile.phone_number
+        valid_request_body = {"email_address": rider_profile.rider.email_address, "phone_number": rider_phone_number}
         # And: send_sms_via_hubyo 내부에서 SMS 전달이 되지 않고 실패한 상황에서,
         mock_send_sms_via_hubyo.return_value = {}
 
         # When: 인증요청 API를 호출 했을 때,
-        response = self._call_send_verification_code_via_sms_api(valid_phone_number)
+        response = self._call_send_verification_code_via_sms_api(valid_request_body)
 
         # Then: 상태 코드 500을 리턴 해야한다.
         assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR

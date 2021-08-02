@@ -193,6 +193,7 @@ class RiderServiceAgreementOut(Schema):
 
 
 class VerificationCodeRequest(Schema):
+    email_address: Optional[str]
     phone_number: str
 
 
