@@ -1,6 +1,7 @@
 import logging
 import random
 from http import HTTPStatus
+from string import digits
 
 from asgiref.sync import async_to_sync
 from django.db.utils import DatabaseError, IntegrityError, OperationalError
@@ -347,7 +348,7 @@ def handle_rider_authorization(data: RiderLoginRequest) -> RiderLoginResponse:
 
 
 def generate_random_verification_code():
-    return "".join(map(str, [random.choice(range(10)) for _ in range(6)]))
+    return "".join(random.choices(digits, k=6))
 
 
 def get_rider_account_info(request, request_body):
