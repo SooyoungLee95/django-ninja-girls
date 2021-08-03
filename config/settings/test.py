@@ -14,3 +14,6 @@ M4ER4mAIz2cETX7rbQIDAQAB
 -----END PUBLIC KEY-----""",
     ALGORITHM="RS256",
 )
+
+
+HUBYO_AWS_REGION_NAME = "ap-northeast-2"
