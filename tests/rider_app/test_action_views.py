@@ -91,3 +91,49 @@ def test_action_disable_new_dispatch(rider_profile, rider_state, mock_jwt_token)
     assert response.status_code == HTTPStatus.OK
     data = response.json()
     assert data["success"] is True
+
+
+@pytest.mark.django_db(transaction=True)
+def test_action_start_work(rider_profile, rider_state, mock_jwt_token):
+    # Given: 업무 시작에 가능한 상태에 있는 경우
+    rider_state.state = RiderStateEnum.AVAILABLE
+    rider_state.save()
+
+    # When: 라이더 상태 전환액션 API를 호출 하였을 때
+    client = Client()
+    response = client.put(
+        reverse("ninja:trigger_rider_action", kwargs={"action": RiderTransition.START_WORK.value}),
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {mock_jwt_token}",
+    )
+
+    # Then: 200 OK 를 return 해야한다
+    assert response.status_code == HTTPStatus.OK
+    data = response.json()
+    assert data["success"] is True
+
+    rider_state.refresh_from_db()
+    assert rider_state.state == RiderStateEnum.READY
+
+
+@pytest.mark.django_db(transaction=True)
+def test_action_end_work(rider_profile, rider_state, mock_jwt_token):
+    # Given: 업무 종료 가능한 상태에 있는 경우
+    rider_state.state = RiderStateEnum.READY
+    rider_state.save()
+
+    # When: 라이더 상태 전환액션 API를 호출 하였을 때
+    client = Client()
+    response = client.put(
+        reverse("ninja:trigger_rider_action", kwargs={"action": RiderTransition.END_WORK.value}),
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {mock_jwt_token}",
+    )
+
+    # Then: 200 OK 를 return 해야한다
+    assert response.status_code == HTTPStatus.OK
+    data = response.json()
+    assert data["success"] is True
+
+    rider_state.refresh_from_db()
+    assert rider_state.state == RiderStateEnum.ENDING
