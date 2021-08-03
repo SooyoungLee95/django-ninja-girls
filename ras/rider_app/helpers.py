@@ -373,7 +373,7 @@ def get_rider_profile_from_data(data):
     try:
         return RiderProfile.objects.get(rider__email_address=data.email_address, phone_number=data.phone_number)
     except RiderProfile.DoesNotExist as e:
-        logger.error(f"[get_rider_profile_from_token] {e!r}")
+        logger.error(f"[get_rider_profile_from_data] {e!r}")
         raise HttpError(HTTPStatus.NOT_FOUND, MSG_NOT_FOUND_RIDER)
 
 
