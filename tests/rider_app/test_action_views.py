@@ -13,7 +13,11 @@ from ras.rideryo.enums import RiderTransition
 
 @pytest.mark.django_db(transaction=True)
 def test_action_error_when_invalid_action_is_given(rider_profile, rider_state, mock_jwt_token):
-    # Given: 상태머신에 올바르지 않은 함수명을 등록해둔 경우
+    # Given: 라이더 상태가 저장되어있고
+    rider_state.state = RiderStateEnum.APPLYING
+    rider_state.save()
+
+    # And: 상태머신에 올바르지 않은 함수명을 등록해둔 경우
     # - mocking한 상태전환 Enum 생성
     dummy_enum = Enum("DummyEnum", list(RiderTransition.__members__), type=str)  # type: ignore[misc]
     with patch("ras.rideryo.state_machine.rt", dummy_enum):
@@ -30,6 +34,10 @@ def test_action_error_when_invalid_action_is_given(rider_profile, rider_state, m
     assert response.status_code == HTTPStatus.BAD_REQUEST
     data = response.json()
     assert data["message"] == MSG_INVALID_VALUE
+
+    # And: 상태는 그대로 유지된다
+    rider_state.refresh_from_db()
+    assert rider_state.state == RiderStateEnum.APPLYING
 
 
 @pytest.mark.django_db(transaction=True)
@@ -51,9 +59,19 @@ def test_action_error_when_action_is_not_processable(rider_profile, rider_state,
     data = response.json()
     assert data["message"] == MSG_STATE_MACHINE_CANNOT_PROCESS
 
+    # And: 상태는 그대로 유지된다
+    rider_state.refresh_from_db()
+    assert rider_state.state == RiderStateEnum.APPLYING
+
 
 @pytest.mark.django_db(transaction=True)
-@pytest.mark.parametrize("valid_state", (RiderStateEnum.STARTING, RiderStateEnum.BREAK))
+@pytest.mark.parametrize(
+    "valid_state",
+    (
+        RiderStateEnum.STARTING,
+        RiderStateEnum.BREAK,
+    ),
+)
 def test_action_enable_new_dispatch(valid_state, rider_profile, rider_state, mock_jwt_token):
     # Given: 신규 배차 on 가능한 상태에 있는 경우
     rider_state.state = valid_state
@@ -71,6 +89,10 @@ def test_action_enable_new_dispatch(valid_state, rider_profile, rider_state, moc
     assert response.status_code == HTTPStatus.OK
     data = response.json()
     assert data["success"] is True
+
+    # And: 상태는 전환된다
+    rider_state.refresh_from_db()
+    assert rider_state.state == RiderStateEnum.READY
 
 
 @pytest.mark.django_db(transaction=True)
@@ -92,6 +114,10 @@ def test_action_disable_new_dispatch(rider_profile, rider_state, mock_jwt_token)
     data = response.json()
     assert data["success"] is True
 
+    # And: 상태는 전환된다
+    rider_state.refresh_from_db()
+    assert rider_state.state == RiderStateEnum.BREAK
+
 
 @pytest.mark.django_db(transaction=True)
 def test_action_start_work(rider_profile, rider_state, mock_jwt_token):
@@ -112,6 +138,7 @@ def test_action_start_work(rider_profile, rider_state, mock_jwt_token):
     data = response.json()
     assert data["success"] is True
 
+    # And: 상태는 전환된다
     rider_state.refresh_from_db()
     assert rider_state.state == RiderStateEnum.READY
 
@@ -135,5 +162,6 @@ def test_action_end_work(rider_profile, rider_state, mock_jwt_token):
     data = response.json()
     assert data["success"] is True
 
+    # And: 상태는 전환된다
     rider_state.refresh_from_db()
     assert rider_state.state == RiderStateEnum.ENDING
