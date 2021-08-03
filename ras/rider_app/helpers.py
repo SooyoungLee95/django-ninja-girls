@@ -73,6 +73,7 @@ from .schemas import (
     RiderServiceAgreementPartial,
     RiderStatus,
     SearchDate,
+    VerificationCodeRequest,
 )
 
 logger = logging.getLogger(__name__)
@@ -354,7 +355,7 @@ def generate_random_verification_code():
     return "".join(random.choices(digits, k=6))
 
 
-def get_rider_profile_from_token(token):
+def get_rider_profile_from_token(token: str) -> RiderProfile:
     try:
         payload = extract_jwt_payload(token)
         return RiderProfile.objects.get(rider_id=payload["sub_id"])
@@ -366,7 +367,7 @@ def get_rider_profile_from_token(token):
         raise HttpError(HTTPStatus.NOT_FOUND, MSG_NOT_FOUND_RIDER)
 
 
-def get_rider_profile_from_data(data):
+def get_rider_profile_from_data(data: VerificationCodeRequest) -> RiderProfile:
     try:
         return RiderProfile.objects.get(rider__email_address=data.email_address, phone_number=data.phone_number)
     except RiderProfile.DoesNotExist as e:
@@ -374,7 +375,7 @@ def get_rider_profile_from_data(data):
         raise HttpError(HTTPStatus.NOT_FOUND, MSG_NOT_FOUND_RIDER)
 
 
-def check_phone_number_from_input(input_phone_number, phone_number):
+def check_phone_number_from_input(input_phone_number: str, phone_number: str):
     if input_phone_number != phone_number:
         raise HttpError(HTTPStatus.BAD_REQUEST, MSG_NOT_FOUND_PHONE_NUMBER)
 
