@@ -15,5 +15,11 @@ M4ER4mAIz2cETX7rbQIDAQAB
     ALGORITHM="RS256",
 )
 
-
-HUBYO_AWS_REGION_NAME = "ap-northeast-2"
+HUBYO_CONFIG = HubyoConfig(  # noqa: F405
+    SNS_TOPIC_ARN=HubyoConfig.SNSTopicEnv.DEV,  # noqa: F405
+    PLATFORM=HubyoConfig.Platform.YGY_STAGING_G,  # noqa: F405
+    PUBLISHER=HubyoConfig.Publisher.ETC,  # noqa: F405
+    AWS_ACCESS_KEY="",
+    AWS_SECRET_ACCESS_KEY="",
+    AWS_REGION_NAME="ap-northeast-2",
+)
