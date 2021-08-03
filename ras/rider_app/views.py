@@ -13,7 +13,6 @@ from ras.common.messaging.schema import SNSMessageForSubscribe
 from ras.common.messaging.subscribers import handle_sns_notification
 from ras.common.schemas import ErrorResponse
 from ras.rider_app.helpers import (
-    check_phone_number_from_input,
     generate_random_verification_code,
     get_rider_profile_from_data,
     get_rider_profile_from_token,
@@ -41,6 +40,7 @@ from ..common.sms.helpers import send_sms_via_hubyo
 from .constants import (
     MSG_FAIL_SENDING_VERIFICATION_CODE,
     MSG_MUST_AGREE_REQUIRED_AGREEMENTS,
+    MSG_NOT_FOUND_PHONE_NUMBER,
 )
 from .enums import RideryoRole, WebhookName
 from .schemas import DispatchRequestDetail
@@ -227,7 +227,8 @@ def send_verification_code_via_sms(request, data: VerificationCodeRequest):
         rider_profile = get_rider_profile_from_data(data)
 
     input_phone_number = data.phone_number
-    check_phone_number_from_input(input_phone_number, rider_profile.phone_number)
+    if input_phone_number != rider_profile.phone_number:
+        raise HttpError(HTTPStatus.BAD_REQUEST, MSG_NOT_FOUND_PHONE_NUMBER)
 
     verification_code = generate_random_verification_code()
     # TODO: verification_code를 TTL 300으로, redis에 저장 - ex) input_phone_number: verification_code

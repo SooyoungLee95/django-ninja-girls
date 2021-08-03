@@ -23,7 +23,6 @@ from ras.rider_app.constants import (
     MSG_AGREEMENT_ALREADY_SUBMITTED,
     MSG_AGREEMENT_NOT_SUBMITTED,
     MSG_INVALID_TOKEN,
-    MSG_NOT_FOUND_PHONE_NUMBER,
     MSG_NOT_FOUND_RIDER,
     RIDER_APP_INITIAL_PASSWORD,
 )
@@ -373,8 +372,3 @@ def get_rider_profile_from_data(data: VerificationCodeRequest) -> RiderProfile:
     except RiderProfile.DoesNotExist as e:
         logger.error(f"[get_rider_profile_from_data] {e!r}")
         raise HttpError(HTTPStatus.NOT_FOUND, MSG_NOT_FOUND_RIDER)
-
-
-def check_phone_number_from_input(input_phone_number: str, phone_number: str):
-    if input_phone_number != phone_number:
-        raise HttpError(HTTPStatus.BAD_REQUEST, MSG_NOT_FOUND_PHONE_NUMBER)
