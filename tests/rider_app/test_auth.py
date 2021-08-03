@@ -12,7 +12,12 @@ from ninja.errors import HttpError
 from pydantic import ValidationError
 
 from ras.common.sms.helpers import send_sms_via_hubyo
-from ras.rider_app.constants import AUTHYO_LOGIN_URL
+from ras.rider_app.constants import (
+    AUTHYO_LOGIN_URL,
+    MSG_FAIL_SENDING_VERIFICATION_CODE,
+    MSG_INVALID_TOKEN,
+    MSG_NOT_FOUND_RIDER,
+)
 from ras.rider_app.helpers import RIDER_APP_INITIAL_PASSWORD
 from ras.rider_app.schemas import RiderLoginRequest
 from tests.conftest import TEST_JWT_PRIVATE
@@ -284,7 +289,7 @@ class TestSendVerificationCodeViaSMSView:
         # Then: 상태 코드 401을 리턴 해야하고,
         assert response.status_code == HTTPStatus.UNAUTHORIZED
         # AND: 토큰이 유효하지 않습니다. 메세지를 리턴해야한다.
-        assert json.loads(response.content)["message"] == "토큰이 유효하지 않습니다."
+        assert json.loads(response.content)["message"] == MSG_INVALID_TOKEN
 
     @pytest.mark.django_db(transaction=True)
     def test_send_verification_code_via_sms_view_on_does_not_exist_phone_number(self, rider_profile):
@@ -296,8 +301,8 @@ class TestSendVerificationCodeViaSMSView:
 
         # Then: 상태 코드 404을 리턴 해야한다.
         assert response.status_code == HTTPStatus.NOT_FOUND
-        # AND: 등록된 휴대폰 번호가 없습니다. 메세지를 리턴해야한다.
-        assert json.loads(response.content)["message"] == "라이더를 찾을 수 없습니다."
+        # AND: 라이더를 찾을 수 없습니다. 메세지를 리턴해야한다.
+        assert json.loads(response.content)["message"] == MSG_NOT_FOUND_RIDER
 
     @patch("ras.rider_app.views.send_sms_via_hubyo")
     @pytest.mark.django_db(transaction=True)
@@ -308,7 +313,9 @@ class TestSendVerificationCodeViaSMSView:
         rider_phone_number = rider_profile.phone_number
         valid_request_body = {"email_address": rider_profile.rider.email_address, "phone_number": rider_phone_number}
         # And: send_sms_via_hubyo 내부에서 SMS 전달이 되지 않고 실패한 상황에서,
-        mock_send_sms_via_hubyo.side_effect = HttpError(HTTPStatus.INTERNAL_SERVER_ERROR, "인증번호 SMS 전송에 실패 하였습니다.")
+        mock_send_sms_via_hubyo.side_effect = HttpError(
+            HTTPStatus.INTERNAL_SERVER_ERROR, MSG_FAIL_SENDING_VERIFICATION_CODE
+        )
 
         # When: 인증요청 API를 호출 했을 때,
         response = self._call_send_verification_code_via_sms_api(valid_request_body)
@@ -316,4 +323,4 @@ class TestSendVerificationCodeViaSMSView:
         # Then: 상태 코드 500을 리턴 해야한다.
         assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
         # And: 인증번호 SMS 전송에 실패 하였습니다. 메세지를 리턴해야한다
-        assert json.loads(response.content)["message"] == "인증번호 SMS 전송에 실패 하였습니다."
+        assert json.loads(response.content)["message"] == MSG_FAIL_SENDING_VERIFICATION_CODE
