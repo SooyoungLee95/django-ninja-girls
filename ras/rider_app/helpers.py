@@ -5,14 +5,12 @@ from string import digits
 
 import jwt
 from asgiref.sync import async_to_sync
-from django.conf import settings
 from django.db.utils import DatabaseError, IntegrityError, OperationalError
 from django.utils import timezone
-from jwt import DecodeError
 from ninja.errors import HttpError
 from pydantic import ValidationError
 
-from ras.common.authentication.helpers import get_encrypted_payload
+from ras.common.authentication.helpers import extract_jwt_payload, get_encrypted_payload
 from ras.common.integration.services.jungleworks.handlers import (
     on_off_duty,
     retrieve_delivery_task_id,
@@ -358,12 +356,11 @@ def generate_random_verification_code():
 
 def get_rider_profile_from_token(token):
     try:
-        payload = jwt.decode(jwt=token, key=settings.AUTHYO.SECRET_KEY, algorithms=[settings.AUTHYO.ALGORITHM])
-    except DecodeError as e:
+        payload = extract_jwt_payload(token)
+        return RiderProfile.objects.get(rider_id=payload["sub_id"])
+    except jwt.DecodeError as e:
         logger.error(f"[get_rider_profile_from_token] {e!r}")
         raise HttpError(HTTPStatus.UNAUTHORIZED, MSG_INVALID_TOKEN)
-    try:
-        return RiderProfile.objects.get(rider_id=payload["sub_id"])
     except RiderProfile.DoesNotExist as e:
         logger.error(f"[get_rider_profile_from_token] {e!r}")
         raise HttpError(HTTPStatus.NOT_FOUND, MSG_NOT_FOUND_RIDER)

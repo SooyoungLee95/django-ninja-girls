@@ -159,7 +159,8 @@ def retrieve_dispatch_requests_detail(request, id: str):
     auth=None,
 )
 def update_rider_ban(request, data: RiderBan):
-    payload = extract_jwt_payload(request)
+    _, token = request.headers["Authorization"].split()
+    payload = extract_jwt_payload(token)
     if payload["role"] != RideryoRole.STAFF:
         raise HttpError(HTTPStatus.FORBIDDEN, "권한이 올바르지 않습니다.")
     handle_rider_ban(data)
