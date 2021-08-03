@@ -15,8 +15,8 @@ from ras.common.sms.helpers import send_sms_via_hubyo
 from ras.rider_app.constants import (
     AUTHYO_LOGIN_URL,
     MSG_FAIL_SENDING_VERIFICATION_CODE,
-    MSG_INVALID_TOKEN,
     MSG_NOT_FOUND_RIDER,
+    MSG_UNAUTHORIZED,
 )
 from ras.rider_app.helpers import RIDER_APP_INITIAL_PASSWORD
 from ras.rider_app.schemas import RiderLoginRequest
@@ -295,7 +295,7 @@ class TestSendVerificationCodeViaSMSView:
         # Then: 상태 코드 401을 리턴 해야하고,
         assert response.status_code == HTTPStatus.UNAUTHORIZED
         # AND: 토큰이 유효하지 않습니다. 메세지를 리턴해야한다.
-        assert json.loads(response.content)["message"] == MSG_INVALID_TOKEN
+        assert json.loads(response.content)["message"] == MSG_UNAUTHORIZED
 
     @pytest.mark.django_db(transaction=True)
     def test_send_verification_code_via_sms_view_on_does_not_exist_phone_number(self, rider_profile):

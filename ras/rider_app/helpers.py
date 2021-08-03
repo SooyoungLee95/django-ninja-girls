@@ -22,8 +22,8 @@ from ras.rider_app.constants import (
     MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1,
     MSG_AGREEMENT_ALREADY_SUBMITTED,
     MSG_AGREEMENT_NOT_SUBMITTED,
-    MSG_INVALID_TOKEN,
     MSG_NOT_FOUND_RIDER,
+    MSG_UNAUTHORIZED,
     RIDER_APP_INITIAL_PASSWORD,
 )
 from ras.rider_app.enums import PushAction
@@ -360,7 +360,7 @@ def get_rider_profile_from_token(token: str) -> RiderProfile:
         return RiderProfile.objects.get(rider_id=payload["sub_id"])
     except jwt.DecodeError as e:
         logger.error(f"[get_rider_profile_from_token] {e!r}")
-        raise HttpError(HTTPStatus.UNAUTHORIZED, MSG_INVALID_TOKEN)
+        raise HttpError(HTTPStatus.UNAUTHORIZED, MSG_UNAUTHORIZED)
     except RiderProfile.DoesNotExist as e:
         logger.error(f"[get_rider_profile_from_token] {e!r}")
         raise HttpError(HTTPStatus.NOT_FOUND, MSG_NOT_FOUND_RIDER)
