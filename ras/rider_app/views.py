@@ -14,8 +14,7 @@ from ras.common.messaging.subscribers import handle_sns_notification
 from ras.common.schemas import ErrorResponse
 from ras.rider_app.helpers import (
     generate_random_verification_code,
-    get_rider_profile_from_data,
-    get_rider_profile_from_token,
+    get_rider_profile,
     handle_create_rider_service_agreements,
     handle_dispatch_request_detail,
     handle_partial_update_rider_service_agreements,
@@ -41,6 +40,7 @@ from .constants import (
     MSG_FAIL_SENDING_VERIFICATION_CODE,
     MSG_MUST_AGREE_REQUIRED_AGREEMENTS,
     MSG_NOT_FOUND_PHONE_NUMBER,
+    MSG_NOT_FOUND_RIDER,
 )
 from .enums import RideryoRole, WebhookName
 from .schemas import DispatchRequestDetail
@@ -222,9 +222,13 @@ def send_verification_code_via_sms(request, data: VerificationCodeRequest):
     authorization = request.headers.get("Authorization")
     if authorization:
         _, token = authorization.split()
-        rider_profile = get_rider_profile_from_token(token)
+        payload = extract_jwt_payload(token)
+        rider_profile = get_rider_profile(payload["sub_id"])
     else:
-        rider_profile = get_rider_profile_from_data(data)
+        rider_profile = get_rider_profile(data)
+
+    if not rider_profile:
+        raise HttpError(HTTPStatus.NOT_FOUND, MSG_NOT_FOUND_RIDER)
 
     input_phone_number = data.phone_number
     if input_phone_number != rider_profile.phone_number:

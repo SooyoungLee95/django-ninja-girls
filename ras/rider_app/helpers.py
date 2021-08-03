@@ -1,5 +1,6 @@
 import logging
 import random
+from functools import singledispatch
 from http import HTTPStatus
 from string import digits
 
@@ -9,7 +10,7 @@ from django.utils import timezone
 from ninja.errors import HttpError
 from pydantic import ValidationError
 
-from ras.common.authentication.helpers import extract_jwt_payload, get_encrypted_payload
+from ras.common.authentication.helpers import get_encrypted_payload
 from ras.common.integration.services.jungleworks.handlers import (
     on_off_duty,
     retrieve_delivery_task_id,
@@ -21,7 +22,6 @@ from ras.rider_app.constants import (
     MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1,
     MSG_AGREEMENT_ALREADY_SUBMITTED,
     MSG_AGREEMENT_NOT_SUBMITTED,
-    MSG_NOT_FOUND_RIDER,
     RIDER_APP_INITIAL_PASSWORD,
 )
 from ras.rider_app.enums import PushAction
@@ -352,18 +352,16 @@ def generate_random_verification_code():
     return "".join(random.choices(digits, k=6))
 
 
-def get_rider_profile_from_token(token: str) -> RiderProfile:
-    payload = extract_jwt_payload(token)
-    try:
-        return RiderProfile.objects.get(rider_id=payload["sub_id"])
-    except RiderProfile.DoesNotExist as e:
-        logger.error(f"[get_rider_profile_from_token] {e!r}")
-        raise HttpError(HTTPStatus.NOT_FOUND, MSG_NOT_FOUND_RIDER)
+@singledispatch
+def get_rider_profile(data):
+    pass
 
 
-def get_rider_profile_from_data(data: VerificationCodeRequest) -> RiderProfile:
-    try:
-        return RiderProfile.objects.get(rider__email_address=data.email_address, phone_number=data.phone_number)
-    except RiderProfile.DoesNotExist as e:
-        logger.error(f"[get_rider_profile_from_data] {e!r}")
-        raise HttpError(HTTPStatus.NOT_FOUND, MSG_NOT_FOUND_RIDER)
+@get_rider_profile.register
+def get_rider_profile_by_id(data: int):
+    return RiderProfile.objects.filter(rider_id=data).first()
+
+
+@get_rider_profile.register
+def get_rider_profile_by_data(data: VerificationCodeRequest):
+    return RiderProfile.objects.filter(rider__email_address=data.email_address, phone_number=data.phone_number).first()
