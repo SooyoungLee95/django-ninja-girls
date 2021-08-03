@@ -75,6 +75,7 @@ WEBHOOK_MAP: dict[str, Callable] = {
     url_name="rider_app_update_rider_availability",
     summary="업무시작/종료",
     response={200: RiderAvailabilitySchema, codes_4xx: ErrorResponse},
+    deprecated=True,
 )
 def update_rider_availability(request, data: RiderAvailabilitySchema):
     is_jungleworks = should_connect_jungleworks(request)
