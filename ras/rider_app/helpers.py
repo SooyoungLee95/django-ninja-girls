@@ -3,9 +3,12 @@ import random
 from http import HTTPStatus
 from string import digits
 
+import jwt
 from asgiref.sync import async_to_sync
+from django.conf import settings
 from django.db.utils import DatabaseError, IntegrityError, OperationalError
 from django.utils import timezone
+from jwt import DecodeError
 from ninja.errors import HttpError
 from pydantic import ValidationError
 
@@ -43,7 +46,6 @@ from ras.rider_app.queries import (
 from ras.rideryo.enums import DeliveryState, RiderResponse
 from ras.rideryo.enums import RiderState as RiderStateEnum
 
-from ..common.authentication.helpers import extract_jwt_payload
 from ..common.fcm import FCMSender
 from ..rideryo.models import (
     RiderAccount,
@@ -351,14 +353,27 @@ def generate_random_verification_code():
     return "".join(random.choices(digits, k=6))
 
 
-def get_rider_account_info(request, request_body):
+def get_rider_profile_from_token(token):
     try:
-        payload = extract_jwt_payload(request)
-    except KeyError:
-        input_email_address = request_body["email_address"]
-        input_phone_number = request_body["phone_number"]
-    else:
-        rider = RiderAccount.objects.get(pk=payload["sub_id"])
-        input_email_address = rider.email_address
-        input_phone_number = request_body["phone_number"]
-    return input_email_address, input_phone_number
+        payload = jwt.decode(jwt=token, key=settings.AUTHYO.SECRET_KEY, algorithms=[settings.AUTHYO.ALGORITHM])
+    except DecodeError as e:
+        logger.error(f"[get_rider_profile_from_token] {e!r}")
+        raise HttpError(HTTPStatus.UNAUTHORIZED, "토큰이 유효하지 않습니다.")
+    try:
+        return RiderProfile.objects.get(rider_id=payload["sub_id"])
+    except RiderProfile.DoesNotExist as e:
+        logger.error(f"[get_rider_profile_from_token] {e!r}")
+        raise HttpError(HTTPStatus.NOT_FOUND, "라이더를 찾을 수 없습니다.")
+
+
+def get_rider_profile_from_data(data):
+    try:
+        return RiderProfile.objects.get(rider__email_address=data.email_address, phone_number=data.phone_number)
+    except RiderProfile.DoesNotExist as e:
+        logger.error(f"[get_rider_profile_from_token] {e!r}")
+        raise HttpError(HTTPStatus.NOT_FOUND, "라이더를 찾을 수 없습니다.")
+
+
+def check_phone_number_from_input(input_phone_number, phone_number):
+    if input_phone_number != phone_number:
+        raise HttpError(HTTPStatus.BAD_REQUEST, "등록된 휴대폰 번호가 없습니다.")

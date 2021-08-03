@@ -1,7 +1,6 @@
 from http import HTTPStatus
 from typing import Callable
 
-from jwt import InvalidTokenError
 from ninja import Query
 from ninja.errors import HttpError
 from ninja.responses import codes_4xx
@@ -14,8 +13,10 @@ from ras.common.messaging.schema import SNSMessageForSubscribe
 from ras.common.messaging.subscribers import handle_sns_notification
 from ras.common.schemas import ErrorResponse
 from ras.rider_app.helpers import (
+    check_phone_number_from_input,
     generate_random_verification_code,
-    get_rider_account_info,
+    get_rider_profile_from_data,
+    get_rider_profile_from_token,
     handle_create_rider_service_agreements,
     handle_dispatch_request_detail,
     handle_partial_update_rider_service_agreements,
@@ -37,7 +38,6 @@ from ras.rider_app.helpers import (
 
 from ..common.authentication.helpers import extract_jwt_payload
 from ..common.sms.helpers import send_sms_via_hubyo
-from ..rideryo.models import RiderProfile
 from .constants import MSG_MUST_AGREE_REQUIRED_AGREEMENTS
 from .enums import RideryoRole, WebhookName
 from .schemas import DispatchRequestDetail
@@ -217,15 +217,15 @@ def login(request, data: RiderLoginRequest):
     auth=None,
 )
 def send_verification_code_via_sms(request, data: VerificationCodeRequest):
-    try:
-        input_email_address, input_phone_number = get_rider_account_info(request, data.dict())
-    except InvalidTokenError:
-        return HTTPStatus.UNAUTHORIZED, ErrorResponse(message="토큰이 유효하지 않습니다.")
+    authorization = request.headers.get("Authorization")
+    if authorization:
+        _, token = authorization.split()
+        rider_profile = get_rider_profile_from_token(token)
+    else:
+        rider_profile = get_rider_profile_from_data(data)
 
-    if not RiderProfile.objects.filter(
-        rider__email_address=input_email_address, phone_number=input_phone_number
-    ).exists():
-        return HTTPStatus.BAD_REQUEST, ErrorResponse(message="등록된 휴대폰 번호가 없습니다.")
+    input_phone_number = data.phone_number
+    check_phone_number_from_input(input_phone_number, rider_profile.phone_number)
 
     verification_code = generate_random_verification_code()
     # TODO: verification_code를 TTL 300으로, rdis에 저장 - ex) input_phone_number: verification_code
