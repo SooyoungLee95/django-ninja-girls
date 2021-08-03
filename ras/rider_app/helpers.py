@@ -378,8 +378,3 @@ def get_rider_profile_from_data(data: VerificationCodeRequest) -> RiderProfile:
 def check_phone_number_from_input(input_phone_number: str, phone_number: str):
     if input_phone_number != phone_number:
         raise HttpError(HTTPStatus.BAD_REQUEST, MSG_NOT_FOUND_PHONE_NUMBER)
-
-
-def set_verification_code_in_redis(phone_number, verification_code):
-    # TODO: verification_code를 TTL 300으로, redis에 저장 - ex) input_phone_number: verification_code
-    return phone_number, verification_code

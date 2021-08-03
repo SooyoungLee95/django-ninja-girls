@@ -34,7 +34,6 @@ from ras.rider_app.helpers import (
     handle_sns_notification_push_action,
     mock_delivery_state_push_action,
     mock_handle_rider_dispatch_request_creates,
-    set_verification_code_in_redis,
 )
 
 from ..common.authentication.helpers import extract_jwt_payload
@@ -231,7 +230,7 @@ def send_verification_code_via_sms(request, data: VerificationCodeRequest):
     check_phone_number_from_input(input_phone_number, rider_profile.phone_number)
 
     verification_code = generate_random_verification_code()
-    set_verification_code_in_redis(input_phone_number, verification_code)
+    # TODO: verification_code를 TTL 300으로, redis에 저장 - ex) input_phone_number: verification_code
     if not send_sms_via_hubyo(input_phone_number, verification_code):
         return HttpError(HTTPStatus.INTERNAL_SERVER_ERROR, MSG_FAIL_SENDING_VERIFICATION_CODE)
 
