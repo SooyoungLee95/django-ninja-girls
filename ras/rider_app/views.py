@@ -39,7 +39,10 @@ from ras.rider_app.helpers import (
 
 from ..common.authentication.helpers import extract_jwt_payload
 from ..common.sms.helpers import send_sms_via_hubyo
-from .constants import MSG_MUST_AGREE_REQUIRED_AGREEMENTS
+from .constants import (
+    MSG_FAIL_SENDING_VERIFICATION_CODE,
+    MSG_MUST_AGREE_REQUIRED_AGREEMENTS,
+)
 from .enums import RideryoRole, WebhookName
 from .schemas import DispatchRequestDetail
 from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
@@ -225,9 +228,11 @@ def send_verification_code_via_sms(request, data: VerificationCodeRequest):
 
     input_phone_number = data.phone_number
     check_phone_number_from_input(input_phone_number, rider_profile.phone_number)
+
     verification_code = generate_random_verification_code()
     set_verification_code_in_redis(input_phone_number, verification_code)
-    send_sms_via_hubyo(input_phone_number, verification_code)
+    if not send_sms_via_hubyo(input_phone_number, verification_code):
+        return HttpError(HTTPStatus.INTERNAL_SERVER_ERROR, MSG_FAIL_SENDING_VERIFICATION_CODE)
 
     return HTTPStatus.OK, {}
 

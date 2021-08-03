@@ -192,29 +192,35 @@ class TestSendSMSViaHubyoClient:
         # Given: SMS를 보내기 위한 유효한 정보가 주어지고,
         input_phone_number = "01073314120"
         verification_code = "112233"
+        # And: 정상적인 응답으로 주는 것을 세팅하고
+        mock_send.return_value = {
+            "MessageId": "2772c9a1-8f60-567d-af8a-90daa21f7134",
+            "ResponseMetadata": {
+                "HTTPStatusCode": 200,
+            },
+        }
 
-        # When: SMS 전달 요청을 정상적으로 호출 하면,
-        try:
-            response = send_sms_via_hubyo(phone_number=input_phone_number, verification_code=verification_code)
-        except HttpError:
-            pytest.fail("Unexpected Error")
+        # When: SMS 전달 요청을 호출 하면,
+        response = send_sms_via_hubyo(phone_number=input_phone_number, verification_code=verification_code)
 
-        # Then: HttpError가 발생하지 않아야 하고, response 는 None이어야 한다
-        assert response is None
+        # Then: 응답의 상태 값으로 200을 받아야 한다
+        assert response["ResponseMetadata"]["HTTPStatusCode"] == HTTPStatus.OK
 
     @patch("ras.common.sms.helpers.hubyo_client.send", Mock(side_effect=HubyoClientError))
     def test_verification_code_via_sms_with_hubyo_client_error(self):
-        # When: HubyoClientError가 발생하면,
-        with pytest.raises(HttpError):
-            # Then: HTTPError 를 발생 시켜야 한다
-            send_sms_via_hubyo(phone_number="01073314120", verification_code="112233")
+        # When: SMS 전달 요청을 호출 할 때, HubyoClientError가 발생하면,
+        response = send_sms_via_hubyo(phone_number="01073314120", verification_code="112233")
+
+        # Then: 응답의 상태 값으로 빈 값 받아야 한다.
+        assert response == {}
 
     @patch("ras.common.sms.helpers.hubyo_client.send", Mock(side_effect=Exception))
     def test_verification_code_via_sms_with_unexpected_error(self):
-        # When: 예상치 못한 에러가 발생하면,
-        with pytest.raises(HttpError):
-            # Then: Exception 인해서, HTTPError 를 발생 시켜야 한다
-            send_sms_via_hubyo(phone_number="01073314120", verification_code="112233")
+        # When: SMS 전달 요청을 호출 할 때, Internal Server Error 가 발생하면,
+        response = send_sms_via_hubyo(phone_number="01073314120", verification_code="112233")
+
+        # Then: 응답의 상태 값으로 빈 값 받아야 한다.
+        assert response == {}
 
 
 class TestSendVerificationCodeViaSMSView:

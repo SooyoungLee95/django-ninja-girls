@@ -1,11 +1,8 @@
 import logging
-from http import HTTPStatus
 
 from hubyo_client.client import HubyoClientError
-from ninja.errors import HttpError
 
 from ras.common.sms.connections import hubyo_client
-from ras.rider_app.constants import MSG_FAIL_SENDING_VERIFICATION_CODE
 from ras.rider_app.schemas import SMSMessageData, SMSMessageInfo
 
 logger = logging.getLogger(__name__)
@@ -25,5 +22,5 @@ def send_sms_via_hubyo(phone_number, verification_code):
         logger.critical(f"[SMS] unexpected error {e!r}")
     else:
         logger.info(f"[SMS] hubyo client sent SMS - {response}")
-        return
-    raise HttpError(HTTPStatus.INTERNAL_SERVER_ERROR, MSG_FAIL_SENDING_VERIFICATION_CODE)
+        return response
+    return {}
