@@ -24,6 +24,11 @@ jobs:
         poetry config virtualenvs.in-project false
         poetry config virtualenvs.path ~/.virtualenvs
         echo "~/.poetry/bin" >> $GITHUB_PATH
+    - name: Install SSH
+      uses: shimataro/ssh-key-action@v2
+      with:
+        key: ${{ secrets.HUBYO_CLIENT_ACCESS }}
+        known_hosts: github.com
     - name: Cache Poetry virtualenv
       uses: actions/cache@v1
       id: cache
