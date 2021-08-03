@@ -14,9 +14,9 @@ from ras.common.messaging.schema import SNSMessageForSubscribe
 from ras.common.messaging.subscribers import handle_sns_notification
 from ras.common.schemas import ErrorResponse
 from ras.rider_app.helpers import (
-    handle_create_rider_service_agreements,
     generate_random_verification_code,
     get_rider_account_info,
+    handle_create_rider_service_agreements,
     handle_dispatch_request_detail,
     handle_partial_update_rider_service_agreements,
     handle_retrieve_rider_service_agreements,
@@ -35,10 +35,10 @@ from ras.rider_app.helpers import (
     mock_handle_rider_dispatch_request_creates,
 )
 
-from ..common.authentication.helpers import extract_jwt_payload, get_encrypted_payload
+from ..common.authentication.helpers import extract_jwt_payload
 from ..common.sms.helpers import send_sms_via_hubyo
-from ..rideryo.models import RiderAccount, RiderProfile
-from .constants import MSG_MUST_AGREE_REQUIRED_AGREEMENTS, AUTHYO_LOGIN_URL, RIDER_APP_INITIAL_PASSWORD
+from ..rideryo.models import RiderProfile
+from .constants import MSG_MUST_AGREE_REQUIRED_AGREEMENTS
 from .enums import RideryoRole, WebhookName
 from .schemas import DispatchRequestDetail
 from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
