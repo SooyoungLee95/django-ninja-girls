@@ -24,6 +24,9 @@ from ras.rider_app.constants import (
     MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1,
     MSG_AGREEMENT_ALREADY_SUBMITTED,
     MSG_AGREEMENT_NOT_SUBMITTED,
+    MSG_INVALID_TOKEN,
+    MSG_NOT_FOUND_PHONE_NUMBER,
+    MSG_NOT_FOUND_RIDER,
     RIDER_APP_INITIAL_PASSWORD,
 )
 from ras.rider_app.enums import PushAction
@@ -358,12 +361,12 @@ def get_rider_profile_from_token(token):
         payload = jwt.decode(jwt=token, key=settings.AUTHYO.SECRET_KEY, algorithms=[settings.AUTHYO.ALGORITHM])
     except DecodeError as e:
         logger.error(f"[get_rider_profile_from_token] {e!r}")
-        raise HttpError(HTTPStatus.UNAUTHORIZED, "토큰이 유효하지 않습니다.")
+        raise HttpError(HTTPStatus.UNAUTHORIZED, MSG_INVALID_TOKEN)
     try:
         return RiderProfile.objects.get(rider_id=payload["sub_id"])
     except RiderProfile.DoesNotExist as e:
         logger.error(f"[get_rider_profile_from_token] {e!r}")
-        raise HttpError(HTTPStatus.NOT_FOUND, "라이더를 찾을 수 없습니다.")
+        raise HttpError(HTTPStatus.NOT_FOUND, MSG_NOT_FOUND_RIDER)
 
 
 def get_rider_profile_from_data(data):
@@ -371,12 +374,12 @@ def get_rider_profile_from_data(data):
         return RiderProfile.objects.get(rider__email_address=data.email_address, phone_number=data.phone_number)
     except RiderProfile.DoesNotExist as e:
         logger.error(f"[get_rider_profile_from_token] {e!r}")
-        raise HttpError(HTTPStatus.NOT_FOUND, "라이더를 찾을 수 없습니다.")
+        raise HttpError(HTTPStatus.NOT_FOUND, MSG_NOT_FOUND_RIDER)
 
 
 def check_phone_number_from_input(input_phone_number, phone_number):
     if input_phone_number != phone_number:
-        raise HttpError(HTTPStatus.BAD_REQUEST, "등록된 휴대폰 번호가 없습니다.")
+        raise HttpError(HTTPStatus.BAD_REQUEST, MSG_NOT_FOUND_PHONE_NUMBER)
 
 
 def set_verification_code_in_redis(phone_number, verification_code):
