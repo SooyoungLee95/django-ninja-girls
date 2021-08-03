@@ -17,6 +17,7 @@ from ras.rider_app.helpers import (
     handle_dispatch_request_detail,
     handle_partial_update_rider_service_agreements,
     handle_retrieve_rider_service_agreements,
+    handle_rider_action,
     handle_rider_authorization,
     handle_rider_availability_updates,
     handle_rider_ban,
@@ -31,6 +32,7 @@ from ras.rider_app.helpers import (
     mock_delivery_state_push_action,
     mock_handle_rider_dispatch_request_creates,
 )
+from ras.rideryo.enums import RiderTransition
 
 from ..common.authentication.helpers import extract_jwt_payload
 from .constants import MSG_MUST_AGREE_REQUIRED_AGREEMENTS
@@ -59,6 +61,7 @@ auth_router = Router()
 mock_authyo_router = Router()
 dispatch_request_router = Router()
 sns_router = Router()
+action_router = Router()
 
 
 WEBHOOK_MAP: dict[str, Callable] = {
@@ -259,3 +262,12 @@ def retrieve_rider_mypage(request, data: SearchDate = Query(...)):
         **handle_rider_dispatch_acceptance_rate(data, request.auth.rider.pk),
         **handle_rider_working_report(data, request.auth.rider.pk),
     }
+
+
+@rider_router.put(
+    "actions/{action}",
+    url_name="trigger_rider_action",
+    summary="라이더 상태 전환 액션",
+)
+def trigger_rider_action(request, action: RiderTransition):
+    return {"success": handle_rider_action(rider=request.auth, action=action)}

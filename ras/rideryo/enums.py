@@ -91,6 +91,11 @@ class RiderState(TextChoices):
     PENDING = "PENDING"
 
 
+class RiderTransition(str, Enum):
+    ENABLE_NEW_DISPATCH = "enable_new_dispatch"
+    DISABLE_NEW_DISPATCH = "disable_new_dispatch"
+
+
 class ServiceAgreementType(TextChoices):
     PERSONAL_INFORMATION = "PERSONAL", "personal_information"
     LOCATION_BASED_SERVICE = "LOCATION", "location_based_service"

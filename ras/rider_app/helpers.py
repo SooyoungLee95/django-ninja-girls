@@ -1,6 +1,7 @@
 import logging
 from http import HTTPStatus
 
+import transitions
 from asgiref.sync import async_to_sync
 from django.db.utils import DatabaseError, IntegrityError, OperationalError
 from django.utils import timezone
@@ -19,6 +20,8 @@ from ras.rider_app.constants import (
     MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1,
     MSG_AGREEMENT_ALREADY_SUBMITTED,
     MSG_AGREEMENT_NOT_SUBMITTED,
+    MSG_INVALID_VALUE,
+    MSG_STATE_MACHINE_CANNOT_PROCESS,
     RIDER_APP_INITIAL_PASSWORD,
 )
 from ras.rider_app.enums import PushAction
@@ -342,3 +345,14 @@ def handle_rider_authorization(data: RiderLoginRequest) -> RiderLoginResponse:
         password_change_required=data.password == RIDER_APP_INITIAL_PASSWORD,
         checked_service_agreements=agreed,
     )
+
+
+def handle_rider_action(rider: RiderProfile, action: str) -> bool:
+    try:
+        return getattr(rider.riderstate, action)()
+    except AttributeError as e:
+        logger.error(f"[RiderActions] {rider.pk} {e!r}")
+        raise HttpError(HTTPStatus.BAD_REQUEST, MSG_INVALID_VALUE)
+    except transitions.MachineError as e:
+        logger.error(f"[RiderActions] {rider.pk} {e!r}")
+        raise HttpError(HTTPStatus.CONFLICT, MSG_STATE_MACHINE_CANNOT_PROCESS)
