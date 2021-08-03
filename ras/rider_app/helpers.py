@@ -3,7 +3,6 @@ import random
 from http import HTTPStatus
 from string import digits
 
-import jwt
 from asgiref.sync import async_to_sync
 from django.db.utils import DatabaseError, IntegrityError, OperationalError
 from django.utils import timezone
@@ -23,7 +22,6 @@ from ras.rider_app.constants import (
     MSG_AGREEMENT_ALREADY_SUBMITTED,
     MSG_AGREEMENT_NOT_SUBMITTED,
     MSG_NOT_FOUND_RIDER,
-    MSG_UNAUTHORIZED,
     RIDER_APP_INITIAL_PASSWORD,
 )
 from ras.rider_app.enums import PushAction
@@ -355,12 +353,9 @@ def generate_random_verification_code():
 
 
 def get_rider_profile_from_token(token: str) -> RiderProfile:
+    payload = extract_jwt_payload(token)
     try:
-        payload = extract_jwt_payload(token)
         return RiderProfile.objects.get(rider_id=payload["sub_id"])
-    except jwt.DecodeError as e:
-        logger.error(f"[get_rider_profile_from_token] {e!r}")
-        raise HttpError(HTTPStatus.UNAUTHORIZED, MSG_UNAUTHORIZED)
     except RiderProfile.DoesNotExist as e:
         logger.error(f"[get_rider_profile_from_token] {e!r}")
         raise HttpError(HTTPStatus.NOT_FOUND, MSG_NOT_FOUND_RIDER)

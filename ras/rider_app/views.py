@@ -35,7 +35,7 @@ from ras.rider_app.helpers import (
     mock_handle_rider_dispatch_request_creates,
 )
 
-from ..common.authentication.helpers import extract_jwt_payload
+from ..common.authentication.helpers import extract_jwt_payload, parse_token
 from ..common.sms.helpers import send_sms_via_hubyo
 from .constants import (
     MSG_FAIL_SENDING_VERIFICATION_CODE,
@@ -158,7 +158,7 @@ def retrieve_dispatch_requests_detail(request, id: str):
     auth=None,
 )
 def update_rider_ban(request, data: RiderBan):
-    _, token = request.headers["Authorization"].split()
+    token = parse_token(request)
     payload = extract_jwt_payload(token)
     if payload["role"] != RideryoRole.STAFF:
         raise HttpError(HTTPStatus.FORBIDDEN, "권한이 올바르지 않습니다.")
