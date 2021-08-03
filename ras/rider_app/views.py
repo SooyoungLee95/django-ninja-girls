@@ -34,6 +34,7 @@ from ras.rider_app.helpers import (
     handle_sns_notification_push_action,
     mock_delivery_state_push_action,
     mock_handle_rider_dispatch_request_creates,
+    set_verification_code_in_redis,
 )
 
 from ..common.authentication.helpers import extract_jwt_payload
@@ -57,8 +58,6 @@ from .schemas import (
     RiderServiceAgreementPartial,
     RiderStatus,
     SearchDate,
-    SMSMessageData,
-    SMSMessageInfo,
     VerificationCodeRequest,
 )
 
@@ -226,16 +225,9 @@ def send_verification_code_via_sms(request, data: VerificationCodeRequest):
 
     input_phone_number = data.phone_number
     check_phone_number_from_input(input_phone_number, rider_profile.phone_number)
-
     verification_code = generate_random_verification_code()
-    # TODO: verification_code를 TTL 300으로, rdis에 저장 - ex) input_phone_number: verification_code
-    sms_message_info = SMSMessageInfo(
-        tracking_id=input_phone_number,
-        msg={"data": SMSMessageData(target=input_phone_number, text=f"[요기요라이더] 인증번호는 {verification_code} 입니다.")},
-    ).dict()
-
-    if not send_sms_via_hubyo(sms_message_info):
-        return HTTPStatus.INTERNAL_SERVER_ERROR, ErrorResponse(message="인증번호 SMS 전송에 실패 하였습니다.")
+    set_verification_code_in_redis(input_phone_number, verification_code)
+    send_sms_via_hubyo(input_phone_number, verification_code)
 
     return HTTPStatus.OK, {}
 

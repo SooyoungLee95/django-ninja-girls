@@ -377,3 +377,8 @@ def get_rider_profile_from_data(data):
 def check_phone_number_from_input(input_phone_number, phone_number):
     if input_phone_number != phone_number:
         raise HttpError(HTTPStatus.BAD_REQUEST, "등록된 휴대폰 번호가 없습니다.")
+
+
+def set_verification_code_in_redis(phone_number, verification_code):
+    # TODO: verification_code를 TTL 300으로, redis에 저장 - ex) input_phone_number: verification_code
+    return phone_number, verification_code
