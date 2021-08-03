@@ -5,6 +5,7 @@ from transitions import Machine
 from ras.common.messaging.consts import RIDER_WORKING_STATE
 from ras.common.messaging.publishers import publish_rider_working_state
 from ras.rideryo.enums import RiderState as rs
+from ras.rideryo.enums import RiderTransition as rt
 
 logger = logging.getLogger(__name__)
 event_type_publish_func = {RIDER_WORKING_STATE: publish_rider_working_state}
@@ -35,10 +36,10 @@ class RiderStateMachine(Machine):
         self.add_transition("start_work_schedule", rs.AVAILABLE, rs.STARTING)
 
         # 신규배차 대기중
-        self.add_transition("start_dispatch", [rs.STARTING, rs.BREAK], rs.READY)
+        self.add_transition(rt.ENABLE_NEW_DISPATCH, [rs.STARTING, rs.BREAK], rs.READY)
 
         # 신규배차 중지
-        self.add_transition("end_dispatch", rs.READY, rs.BREAK)
+        self.add_transition(rt.DISABLE_NEW_DISPATCH, rs.READY, rs.BREAK)
 
         # 근무종료
         self.add_transition("end_work", [rs.READY, rs.BREAK], rs.ENDING)
@@ -68,7 +69,7 @@ class RiderStateMachine(Machine):
             f"[{event_data.transition.source} -> {event_data.transition.dest}]"
         )
         if event_data.event.name == "start_work_ondemand":
-            self.model.start_dispatch()
+            getattr(self.model, rt.ENABLE_NEW_DISPATCH.value)()
 
     def handle_READY(self, event_data, *args, **kwargs):
         publish_rider_working_state(event_data.model)
