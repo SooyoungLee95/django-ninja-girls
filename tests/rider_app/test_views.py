@@ -773,6 +773,26 @@ def test_retrieve_rider_mypage(
 
 
 @pytest.mark.django_db(transaction=True)
+def test_rider_mypage_return_when_search_data_does_not_exist(dummy_rider_profile, mock_jwt_token):
+    # Given: 라이더 근무 내역이 없고,
+    # When: 라이더 마이페이지 정보 조회 API를 호출 하였을 때
+    client = Client()
+    response = client.get(
+        reverse("ninja:retrieve_rider_mypage"),
+        **{"HTTP_AUTHORIZATION": f"Bearer {mock_jwt_token}"},
+    )
+
+    # Then: 200 OK를 return 해야하고,
+    assert response.status_code == HTTPStatus.OK
+    # And: 라이더 프로필 정보와 오늘의 내역 기본 설정 값을 제공해야한다.
+    assert response.json() == dummy_rider_profile | {
+        "total_delivery_count": 0,
+        "total_commission": 0,
+        "acceptance_rate": 0,
+    }
+
+
+@pytest.mark.django_db(transaction=True)
 def test_retrieve_rider_service_agreements(rider_profile, rider_service_agreements, mock_jwt_token):
     # Given: 라이더가 서비스 이용약관에 동의한 경우
     # When: 서비스 이용약관 조회 API를 호출 하였을 때
