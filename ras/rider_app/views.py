@@ -256,7 +256,9 @@ def send_verification_code_via_sms(request, data: VerificationCodeRequest):
     auth=None,
 )
 def check_verification_code(request, data: CheckVerificationCodeRequest):
-    if not cache.get(data.phone_number):
+    if (verification_code := cache.get(data.phone_number)) is None:
+        raise HttpError(HTTPStatus.BAD_REQUEST, "인증번호가 유효하지 않습니다.")
+    if data.verification_code != verification_code:
         raise HttpError(HTTPStatus.BAD_REQUEST, "인증번호가 유효하지 않습니다.")
 
 
