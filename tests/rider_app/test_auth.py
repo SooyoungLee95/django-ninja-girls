@@ -269,10 +269,9 @@ class TestSendVerificationCodeViaSMSView:
         assert response.status_code == HTTPStatus.OK
         # And: send_sms_via_hubyo를 호출 해야 한다
         mock_send_sms_via_hubyo.assert_called_once_with(rider_phone_number, message)
-        # And: redis에 휴대폰 번호: 인증코드로 timeout 300 sec 로 저장되어야 한다
-        mock_cache_set.assert_called_once_with(
-            rider_phone_number, verification_code, timeout=VERIFICATION_CODE_TIMEOUT_SECONDS
-        )
+        # And: redis에 휴대폰 번호:인증코드를 key, rider_id를 value로 timeout 300 sec 로 저장되어야 한다
+        key = f"{rider_phone_number}:{verification_code}"
+        mock_cache_set.assert_called_once_with(key, rider_profile.rider_id, timeout=VERIFICATION_CODE_TIMEOUT_SECONDS)
 
     @patch("ras.rider_app.views.cache.set")
     @patch("ras.rider_app.views.generate_random_verification_code", Mock(return_value="112233"))
@@ -297,10 +296,9 @@ class TestSendVerificationCodeViaSMSView:
         assert response.status_code == HTTPStatus.OK
         # And: send_sms_via_hubyo를 호출 해야 한다
         mock_send_sms_via_hubyo.assert_called_once_with(rider_phone_number, message)
-        # And: redis에 휴대폰 번호: 인증코드로 timeout 300 sec 로 저장되어야 한다
-        mock_cache_set.assert_called_once_with(
-            rider_phone_number, verification_code, timeout=VERIFICATION_CODE_TIMEOUT_SECONDS
-        )
+        # And: redis에 휴대폰 번호:인증코드를 key, rider_id를 value로 timeout 300 sec 로 저장되어야 한다
+        key = f"{rider_phone_number}:{verification_code}"
+        mock_cache_set.assert_called_once_with(key, rider_profile.rider_id, timeout=VERIFICATION_CODE_TIMEOUT_SECONDS)
 
     @patch("ras.rider_app.views.cache.set")
     @pytest.mark.django_db(transaction=True)
@@ -361,10 +359,9 @@ class TestSendVerificationCodeViaSMSView:
 
         # Then: 상태 코드 500을 리턴 해야한다.
         assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
-        # And: redis에 휴대폰 번호: 인증코드로 timeout 300 sec 로 저장되어야 한다
-        mock_cache_set.assert_called_once_with(
-            rider_phone_number, verification_code, timeout=VERIFICATION_CODE_TIMEOUT_SECONDS
-        )
+        # And: redis에 휴대폰 번호:인증코드를 key, rider_id를 value로 timeout 300 sec 로 저장되어야 한다
+        key = f"{rider_phone_number}:{verification_code}"
+        mock_cache_set.assert_called_once_with(key, rider_profile.rider_id, timeout=VERIFICATION_CODE_TIMEOUT_SECONDS)
         # And: 인증번호 SMS 전송에 실패 하였습니다. 메세지를 리턴해야한다
         assert json.loads(response.content)["message"] == MSG_FAIL_SENDING_VERIFICATION_CODE
 

@@ -240,8 +240,8 @@ def send_verification_code_via_sms(request, data: VerificationCodeRequest):
         raise HttpError(HTTPStatus.BAD_REQUEST, MSG_NOT_FOUND_PHONE_NUMBER)
 
     verification_code = generate_random_verification_code()
+    cache.set(f"{input_phone_number}:{verification_code}", rider_profile.rider_id, timeout=VERIFICATION_CODE_TIMEOUT_SECONDS)
     message = f"[요기요라이더] 인증번호는 {verification_code} 입니다."
-    cache.set(input_phone_number, verification_code, timeout=VERIFICATION_CODE_TIMEOUT_SECONDS)
     if not send_sms_via_hubyo(input_phone_number, message):
         return HttpError(HTTPStatus.INTERNAL_SERVER_ERROR, MSG_FAIL_SENDING_VERIFICATION_CODE)
 
