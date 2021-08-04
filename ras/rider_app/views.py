@@ -260,6 +260,7 @@ def check_verification_code(request, data: CheckVerificationCodeRequest):
         raise HttpError(HTTPStatus.BAD_REQUEST, "인증번호가 유효하지 않습니다.")
     if data.verification_code != verification_code:
         raise HttpError(HTTPStatus.BAD_REQUEST, "인증번호가 유효하지 않습니다.")
+    return HTTPStatus.OK, {}
 
 
 @rider_router.get(
