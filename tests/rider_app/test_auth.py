@@ -17,6 +17,7 @@ from ras.rider_app.constants import (
     MSG_FAIL_SENDING_VERIFICATION_CODE,
     MSG_NOT_FOUND_RIDER,
     MSG_UNAUTHORIZED,
+    VERIFICATION_CODE_TIMEOUT_SECONDS,
 )
 from ras.rider_app.helpers import RIDER_APP_INITIAL_PASSWORD
 from ras.rider_app.schemas import RiderLoginRequest
@@ -247,10 +248,13 @@ class TestSendVerificationCodeViaSMSView:
             content_type="application/json",
         )
 
+    @patch("ras.rider_app.views.cache.set")
     @patch("ras.rider_app.views.generate_random_verification_code", Mock(return_value="112233"))
     @patch("ras.rider_app.views.send_sms_via_hubyo")
     @pytest.mark.django_db(transaction=True)
-    def test_send_verification_code_via_sms_view_on_success(self, mock_send_sms_via_hubyo, rider_profile):
+    def test_send_verification_code_via_sms_view_on_success(
+        self, mock_send_sms_via_hubyo, mock_cache_set, rider_profile
+    ):
         # Given: DB에 존재하는 phone_number가 주어지고,
         rider_phone_number = rider_profile.phone_number
         valid_request_body = {"email_address": rider_profile.rider.email_address, "phone_number": rider_phone_number}
@@ -264,12 +268,17 @@ class TestSendVerificationCodeViaSMSView:
         assert response.status_code == HTTPStatus.OK
         # And: send_sms_via_hubyo를 호출 해야 한다
         mock_send_sms_via_hubyo.assert_called_once_with(rider_phone_number, message)
+        # And: redis에 휴대폰 번호: 인증코드로 timeout 300 sec 로 저장되어야 한다
+        mock_cache_set.assert_called_once_with(
+            rider_phone_number, verification_code, timeout=VERIFICATION_CODE_TIMEOUT_SECONDS
+        )
 
+    @patch("ras.rider_app.views.cache.set")
     @patch("ras.rider_app.views.generate_random_verification_code", Mock(return_value="112233"))
     @patch("ras.rider_app.views.send_sms_via_hubyo")
     @pytest.mark.django_db(transaction=True)
     def test_send_verification_code_via_sms_view_on_success_with_not_email_address_but_token(
-        self, mock_send_sms_via_hubyo, rider_profile, mock_jwt_token
+        self, mock_send_sms_via_hubyo, mock_cache_set, rider_profile, mock_jwt_token
     ):
         # Given: DB에 존재하는 phone_number가 주어지고,
         rider_phone_number = rider_profile.phone_number
@@ -287,10 +296,15 @@ class TestSendVerificationCodeViaSMSView:
         assert response.status_code == HTTPStatus.OK
         # And: send_sms_via_hubyo를 호출 해야 한다
         mock_send_sms_via_hubyo.assert_called_once_with(rider_phone_number, message)
+        # And: redis에 휴대폰 번호: 인증코드로 timeout 300 sec 로 저장되어야 한다
+        mock_cache_set.assert_called_once_with(
+            rider_phone_number, verification_code, timeout=VERIFICATION_CODE_TIMEOUT_SECONDS
+        )
 
+    @patch("ras.rider_app.views.cache.set")
     @pytest.mark.django_db(transaction=True)
     def test_send_verification_code_via_sms_view_with_not_email_address_but_token_on_invalid_token_error(
-        self, rider_profile
+        self, mock_cache_set, rider_profile
     ):
         # Given: DB에 존재하는 phone_number가 주어지고,
         valid_request_body = {"phone_number": rider_profile.phone_number}
@@ -306,9 +320,12 @@ class TestSendVerificationCodeViaSMSView:
         assert response.status_code == HTTPStatus.UNAUTHORIZED
         # AND: 토큰이 유효하지 않습니다. 메세지를 리턴해야한다.
         assert json.loads(response.content)["message"] == MSG_UNAUTHORIZED
+        # And: redis에 휴대폰 번호: 인증코드가 저장되지 않아야 한다
+        mock_cache_set.assert_not_called()
 
+    @patch("ras.rider_app.views.cache.set")
     @pytest.mark.django_db(transaction=True)
-    def test_send_verification_code_via_sms_view_on_does_not_exist_phone_number(self, rider_profile):
+    def test_send_verification_code_via_sms_view_on_does_not_exist_phone_number(self, mock_cache_set, rider_profile):
         # Given: DB에 존재하는 phone_number가 주어지고,
         not_exist_phone_number = {"phone_number": "not_exist_phone_number"}
 
@@ -319,15 +336,20 @@ class TestSendVerificationCodeViaSMSView:
         assert response.status_code == HTTPStatus.NOT_FOUND
         # AND: 라이더를 찾을 수 없습니다. 메세지를 리턴해야한다.
         assert json.loads(response.content)["message"] == MSG_NOT_FOUND_RIDER
+        # And: redis에 휴대폰 번호: 인증코드가 저장되지 않아야 한다
+        mock_cache_set.assert_not_called()
 
+    @patch("ras.rider_app.views.cache.set")
     @patch("ras.rider_app.views.send_sms_via_hubyo")
+    @patch("ras.rider_app.views.generate_random_verification_code", Mock(return_value="112233"))
     @pytest.mark.django_db(transaction=True)
     def test_send_verification_code_via_sms_view_on_unexpected_internal_server_error(
-        self, mock_send_sms_via_hubyo, rider_profile
+        self, mock_send_sms_via_hubyo, mock_cache_set, rider_profile
     ):
         # Given: DB에 존재하는 phone_number가 주어지고,
         rider_phone_number = rider_profile.phone_number
         valid_request_body = {"email_address": rider_profile.rider.email_address, "phone_number": rider_phone_number}
+        verification_code = "112233"
         # And: send_sms_via_hubyo 내부에서 SMS 전달이 되지 않고 실패한 상황에서,
         mock_send_sms_via_hubyo.side_effect = HttpError(
             HTTPStatus.INTERNAL_SERVER_ERROR, MSG_FAIL_SENDING_VERIFICATION_CODE
@@ -338,6 +360,10 @@ class TestSendVerificationCodeViaSMSView:
 
         # Then: 상태 코드 500을 리턴 해야한다.
         assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
+        # And: redis에 휴대폰 번호: 인증코드로 timeout 300 sec 로 저장되어야 한다
+        mock_cache_set.assert_called_once_with(
+            rider_phone_number, verification_code, timeout=VERIFICATION_CODE_TIMEOUT_SECONDS
+        )
         # And: 인증번호 SMS 전송에 실패 하였습니다. 메세지를 리턴해야한다
         assert json.loads(response.content)["message"] == MSG_FAIL_SENDING_VERIFICATION_CODE
 

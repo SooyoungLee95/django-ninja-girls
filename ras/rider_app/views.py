@@ -1,6 +1,7 @@
 from http import HTTPStatus
 from typing import Callable
 
+from django.core.cache import cache
 from ninja import Query
 from ninja.errors import HttpError
 from ninja.responses import codes_4xx
@@ -44,6 +45,7 @@ from .constants import (
     MSG_NOT_FOUND_PHONE_NUMBER,
     MSG_NOT_FOUND_RIDER,
     MSG_UNAUTHORIZED,
+    VERIFICATION_CODE_TIMEOUT_SECONDS,
 )
 from .enums import RideryoRole, WebhookName
 from .schemas import DispatchRequestDetail
@@ -239,7 +241,7 @@ def send_verification_code_via_sms(request, data: VerificationCodeRequest):
 
     verification_code = generate_random_verification_code()
     message = f"[요기요라이더] 인증번호는 {verification_code} 입니다."
-    # TODO: verification_code를 TTL 300으로, redis에 저장 - ex) input_phone_number: verification_code
+    cache.set(input_phone_number, verification_code, timeout=VERIFICATION_CODE_TIMEOUT_SECONDS)
     if not send_sms_via_hubyo(input_phone_number, message):
         return HttpError(HTTPStatus.INTERNAL_SERVER_ERROR, MSG_FAIL_SENDING_VERIFICATION_CODE)
 
