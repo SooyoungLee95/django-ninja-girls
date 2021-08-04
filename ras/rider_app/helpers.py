@@ -3,14 +3,16 @@ import random
 from functools import singledispatch
 from http import HTTPStatus
 from string import digits
+from typing import Optional, Union
 
+import jwt
 from asgiref.sync import async_to_sync
 from django.db.utils import DatabaseError, IntegrityError, OperationalError
 from django.utils import timezone
 from ninja.errors import HttpError
 from pydantic import ValidationError
 
-from ras.common.authentication.helpers import get_encrypted_payload
+from ras.common.authentication.helpers import extract_jwt_payload, get_encrypted_payload
 from ras.common.integration.services.jungleworks.handlers import (
     on_off_duty,
     retrieve_delivery_task_id,
@@ -22,6 +24,7 @@ from ras.rider_app.constants import (
     MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1,
     MSG_AGREEMENT_ALREADY_SUBMITTED,
     MSG_AGREEMENT_NOT_SUBMITTED,
+    MSG_UNAUTHORIZED,
     RIDER_APP_INITIAL_PASSWORD,
 )
 from ras.rider_app.enums import PushAction
@@ -365,3 +368,14 @@ def get_rider_profile_by_id(data: int):
 @get_rider_profile.register
 def get_rider_profile_by_data(data: VerificationCodeRequest):
     return RiderProfile.objects.filter(rider__email_address=data.email_address, phone_number=data.phone_number).first()
+
+
+def handle_jwt_payload(authorization: str) -> Optional[dict[str, Union[str, int]]]:
+    if not authorization:
+        return None
+
+    _, token = authorization.split()
+    try:
+        return extract_jwt_payload(token)
+    except jwt.DecodeError:
+        raise HttpError(HTTPStatus.UNAUTHORIZED, MSG_UNAUTHORIZED)

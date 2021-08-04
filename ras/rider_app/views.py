@@ -1,7 +1,6 @@
 from http import HTTPStatus
 from typing import Callable
 
-import jwt
 from ninja import Query
 from ninja.errors import HttpError
 from ninja.responses import codes_4xx
@@ -18,6 +17,7 @@ from ras.rider_app.helpers import (
     get_rider_profile,
     handle_create_rider_service_agreements,
     handle_dispatch_request_detail,
+    handle_jwt_payload,
     handle_partial_update_rider_service_agreements,
     handle_retrieve_rider_service_agreements,
     handle_rider_authorization,
@@ -35,7 +35,6 @@ from ras.rider_app.helpers import (
     mock_handle_rider_dispatch_request_creates,
 )
 
-from ..common.authentication.helpers import extract_jwt_payload, parse_token
 from ..common.sms.helpers import send_sms_via_hubyo
 from .constants import (
     MSG_FAIL_SENDING_VERIFICATION_CODE,
@@ -160,8 +159,8 @@ def retrieve_dispatch_requests_detail(request, id: str):
     auth=None,
 )
 def update_rider_ban(request, data: RiderBan):
-    token = parse_token(request)
-    payload = extract_jwt_payload(token)
+    if (payload := handle_jwt_payload(request.headers.get("Authorization"))) is None:
+        raise HttpError(HTTPStatus.UNAUTHORIZED, MSG_UNAUTHORIZED)
     if payload["role"] != RideryoRole.STAFF:
         raise HttpError(HTTPStatus.FORBIDDEN, "권한이 올바르지 않습니다.")
     handle_rider_ban(data)
@@ -222,12 +221,7 @@ def login(request, data: RiderLoginRequest):
 )
 def send_verification_code_via_sms(request, data: VerificationCodeRequest):
     authorization = request.headers.get("Authorization")
-    if authorization:
-        _, token = authorization.split()
-        try:
-            payload = extract_jwt_payload(token)
-        except jwt.DecodeError:
-            raise HttpError(HTTPStatus.UNAUTHORIZED, MSG_UNAUTHORIZED)
+    if payload := handle_jwt_payload(authorization):
         rider_profile = get_rider_profile(payload["sub_id"])
     else:
         rider_profile = get_rider_profile(data)
