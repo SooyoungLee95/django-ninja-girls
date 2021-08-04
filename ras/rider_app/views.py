@@ -259,8 +259,8 @@ def mock_api_for_auth(request):
 def retrieve_rider_mypage(request, data: SearchDate = Query(...)):
     return HTTPStatus.OK, {
         **handle_rider_profile_summary(rider_id=request.auth.rider.pk),
-        **handle_rider_dispatch_acceptance_rate(data, request.auth.rider.pk),
-        **handle_rider_working_report(data, request.auth.rider.pk),
+        **handle_rider_dispatch_acceptance_rate(data, request.auth.rider.pk).dict(),
+        **handle_rider_working_report(data, request.auth.rider.pk).dict(),
     }
 
 

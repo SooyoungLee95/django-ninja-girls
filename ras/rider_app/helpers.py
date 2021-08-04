@@ -62,6 +62,7 @@ from .schemas import (
     RiderBan,
     RiderDeliveryState,
     RiderDispatch,
+    RiderDispatchAcceptanceRate,
     RiderDispatchResponse,
     RiderLoginRequest,
     RiderLoginResponse,
@@ -69,6 +70,7 @@ from .schemas import (
     RiderServiceAgreementOut,
     RiderServiceAgreementPartial,
     RiderStatus,
+    RiderWorkingReport,
     SearchDate,
 )
 
@@ -271,19 +273,12 @@ def handle_rider_dispatch_acceptance_rate(data: SearchDate, rider_id):
         logger.error(f"[RiderDispatchAcceptanceRate] {e!r} {data}")
         raise HttpError(HTTPStatus.BAD_REQUEST, "유효한 검색 날짜가 아닙니다.")
     else:
-        if not rider_dispatch_acceptance_rate:
-            rider_dispatch_acceptance_rate = {"acceptance_rate": 0}
-        return rider_dispatch_acceptance_rate
+        return RiderDispatchAcceptanceRate.parse_obj(rider_dispatch_acceptance_rate or {})
 
 
 def handle_rider_working_report(data: SearchDate, rider_id):
     rider_working_report = query_get_rider_working_report(data, rider_id)
-    if not rider_working_report:
-        rider_working_report = {
-            "total_delivery_count": 0,
-            "total_commission": 0,
-        }
-    return rider_working_report
+    return RiderWorkingReport.parse_obj(rider_working_report or {})
 
 
 def handle_retrieve_rider_service_agreements(rider_id):
