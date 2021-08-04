@@ -18,7 +18,7 @@ class RiderStateMachine(Machine):
             model=model,
             states=states,
             send_event=True,
-            after_state_change=self._save_model,
+            after_state_change=self._post_process,
             *args,
             **kwargs,
         )
@@ -29,11 +29,8 @@ class RiderStateMachine(Machine):
         # 입직승인
         self.add_transition("approve", rs.APPLYING, rs.AVAILABLE)
 
-        # 근무시작 (온디멘드)
-        self.add_transition("start_work_ondemand", rs.AVAILABLE, rs.STARTING)
-
-        # 근무시작 (스케줄)
-        self.add_transition("start_work_schedule", rs.AVAILABLE, rs.STARTING)
+        # 근무시작
+        self.add_transition(rt.START_WORK, rs.AVAILABLE, rs.STARTING)
 
         # 신규배차 대기중
         self.add_transition(rt.ENABLE_NEW_DISPATCH, [rs.STARTING, rs.BREAK], rs.READY)
@@ -42,7 +39,7 @@ class RiderStateMachine(Machine):
         self.add_transition(rt.DISABLE_NEW_DISPATCH, rs.READY, rs.BREAK)
 
         # 근무종료
-        self.add_transition("end_work", [rs.READY, rs.BREAK], rs.ENDING)
+        self.add_transition(rt.END_WORK, [rs.READY, rs.BREAK], rs.ENDING)
 
         # 근무 대기
         self.add_transition("reset", rs.ENDING, rs.AVAILABLE)
@@ -61,14 +58,17 @@ class RiderStateMachine(Machine):
         self.on_enter_READY(self.handle_READY)
         self.on_exit_READY(self.handle_READY)
 
-    def _save_model(self, *args, **kwargs):
+    def _post_process(self, *args, **kwargs):
+        # 상태 저장
         self.model.save()
         event_data = args[0]
         logger.info(
             f"Rider:{self.model.rider.pk} {event_data.event.name} "
             f"[{event_data.transition.source} -> {event_data.transition.dest}]"
         )
-        if event_data.event.name == "start_work_ondemand":
+
+        # 자동 상태 전환
+        if event_data.event.name == rt.START_WORK:  # TODO: 스케줄 도입 시 조건 수정
             getattr(self.model, rt.ENABLE_NEW_DISPATCH.value)()
 
     def handle_READY(self, event_data, *args, **kwargs):

@@ -98,7 +98,7 @@ def handle_rider_availability_updates(rider_id, data: RiderAvailabilitySchema, i
         rider_state = query_rider_state(rider_id)
 
         if data.is_available:
-            rider_state.start_work_ondemand()
+            rider_state.start_work()
         else:
             rider_state.end_work()
         return message
