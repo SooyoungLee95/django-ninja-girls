@@ -125,8 +125,8 @@ class DispatchRequestDetail(Schema):
         return reason
 
 
-class RiderStatus(Schema):
-    status: str
+class RiderStateOut(Schema):
+    state: str
     current_deliveries: str
 
 

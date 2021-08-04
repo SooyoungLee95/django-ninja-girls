@@ -26,7 +26,7 @@ from ras.rider_app.helpers import (
     handle_rider_dispatch_request_creates,
     handle_rider_dispatch_response,
     handle_rider_profile_summary,
-    handle_rider_status,
+    handle_rider_state,
     handle_rider_working_report,
     handle_sns_notification_push_action,
     mock_delivery_state_push_action,
@@ -52,7 +52,7 @@ from .schemas import (
     RiderServiceAgreement,
     RiderServiceAgreementOut,
     RiderServiceAgreementPartial,
-    RiderStatus,
+    RiderStateOut,
     SearchDate,
 )
 
@@ -183,13 +183,13 @@ def subscribe_sns_event(request, topic):
 
 
 @rider_router.get(
-    "/status",
-    url_name="rider_app_rider_status",
+    "/state",
+    url_name="rider_app_rider_state",
     summary="라이더 상태 조회",
-    response={200: RiderStatus, codes_4xx: ErrorResponse},
+    response={200: RiderStateOut, codes_4xx: ErrorResponse},
 )
-def retrieve_rider_status(request):
-    return HTTPStatus.OK, handle_rider_status(rider_id=request.auth.rider_id)
+def retrieve_rider_state(request):
+    return HTTPStatus.OK, handle_rider_state(rider_id=request.auth.rider_id)
 
 
 @auth_router.post(

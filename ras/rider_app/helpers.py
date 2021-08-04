@@ -42,7 +42,6 @@ from ras.rider_app.queries import (
     query_rider_state,
 )
 from ras.rideryo.enums import DeliveryState, RiderResponse
-from ras.rideryo.enums import RiderState as RiderStateEnum
 
 from ..common.fcm import FCMSender
 from ..rideryo.models import (
@@ -68,7 +67,7 @@ from .schemas import (
     RiderServiceAgreement,
     RiderServiceAgreementOut,
     RiderServiceAgreementPartial,
-    RiderStatus,
+    RiderStateOut,
     SearchDate,
 )
 
@@ -254,14 +253,16 @@ def handle_dispatch_request_detail(dispatch_request_ids: list[int]):
     return states
 
 
-def handle_rider_status(rider_id):
+def handle_rider_state(rider_id):
     try:
         rider_state = query_rider_state(rider_id)
-        status = "working" if rider_state.state == RiderStateEnum.READY else "not_working"
     except RiderState.DoesNotExist:
         raise HttpError(HTTPStatus.NOT_FOUND, "")
     current_deliveries = query_rider_current_deliveries(rider_id)
-    return RiderStatus(status=status, current_deliveries=",".join(str(delivery.pk) for delivery in current_deliveries))
+    return RiderStateOut(
+        state=rider_state.state,
+        current_deliveries=",".join(str(pk) for pk in current_deliveries.values_list("pk", flat=True)),
+    )
 
 
 def handle_rider_dispatch_acceptance_rate(data: SearchDate, rider_id):
