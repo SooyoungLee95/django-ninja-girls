@@ -278,10 +278,12 @@ def handle_rider_dispatch_acceptance_rate(data: SearchDate, rider_id):
 
 def handle_rider_working_report(data: SearchDate, rider_id):
     rider_working_report = query_get_rider_working_report(data, rider_id)
-    if rider_working_report:
-        return rider_working_report
-    else:
-        raise HttpError(HTTPStatus.NOT_FOUND, "검색 결과가 존재하지 않습니다.")
+    if not rider_working_report:
+        rider_working_report = {
+            "total_delivery_count": 0,
+            "total_commission": 0,
+        }
+    return rider_working_report
 
 
 def handle_retrieve_rider_service_agreements(rider_id):
