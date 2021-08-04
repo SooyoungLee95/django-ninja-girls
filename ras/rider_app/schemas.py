@@ -174,6 +174,15 @@ class RiderServiceAgreement(Schema):
         return self.personal_information and self.location_based_service
 
 
+class RiderServiceAgreementOut(RiderServiceAgreement):
+    agreement_saved_time: str
+
+    @validator("agreement_saved_time", pre=True)
+    def validate_agreement_saved_time(cls, value):
+        if datetime.strptime(value, "%Y-%m-%d %H:%M:%S"):
+            return value
+
+
 class RiderServiceAgreementPartial(Schema):
     promotion_receivable: Optional[bool]
     night_promotion_receivable: Optional[bool]
@@ -186,7 +195,7 @@ class RiderServiceAgreementPartial(Schema):
         return values
 
 
-class RiderServiceAgreementOut(Schema):
+class RiderServiceAgreementPartialOut(RiderServiceAgreementPartial):
     agreement_saved_time: str
 
     @validator("agreement_saved_time", pre=True)

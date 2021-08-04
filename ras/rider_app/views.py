@@ -52,6 +52,7 @@ from .schemas import (
     RiderServiceAgreement,
     RiderServiceAgreementOut,
     RiderServiceAgreementPartial,
+    RiderServiceAgreementPartialOut,
     RiderStateOut,
     SearchDate,
 )
@@ -240,7 +241,8 @@ def create_rider_service_agreements(request, data: RiderServiceAgreement):
     "/service-agreements",
     url_name="rider_service_agreements",
     summary="라이더 서비스 이용약관 동의여부 개별저장",
-    response={200: RiderServiceAgreementOut, codes_4xx: ErrorResponse},
+    response={200: RiderServiceAgreementPartialOut, codes_4xx: ErrorResponse},
+    exclude_none=True,
 )
 def partial_update_rider_service_agreements(request, data: RiderServiceAgreementPartial):
     return HTTPStatus.OK, handle_partial_update_rider_service_agreements(rider_id=request.auth.pk, data=data)

@@ -68,6 +68,7 @@ from .schemas import (
     RiderServiceAgreement,
     RiderServiceAgreementOut,
     RiderServiceAgreementPartial,
+    RiderServiceAgreementPartialOut,
     RiderStateOut,
     RiderWorkingReport,
     SearchDate,
@@ -300,16 +301,16 @@ def handle_create_rider_service_agreements(rider_id, data: RiderServiceAgreement
     except IntegrityError:
         raise HttpError(HTTPStatus.BAD_REQUEST, MSG_AGREEMENT_ALREADY_SUBMITTED)
     return RiderServiceAgreementOut(
-        agreement_saved_time=timezone.localtime(agreements[-1].modified_at).strftime(SAVED_TIME_FORMAT)
+        **data.dict(), agreement_saved_time=timezone.localtime(agreements[-1].modified_at).strftime(SAVED_TIME_FORMAT)
     )
 
 
 def handle_partial_update_rider_service_agreements(
     rider_id, data: RiderServiceAgreementPartial
-) -> RiderServiceAgreementOut:
+) -> RiderServiceAgreementPartialOut:
     agreements = query_partial_update_rider_service_agreements(rider_id, data)
-    return RiderServiceAgreementOut(
-        agreement_saved_time=timezone.localtime(agreements[-1].modified_at).strftime(SAVED_TIME_FORMAT)
+    return RiderServiceAgreementPartialOut(
+        **data.dict(), agreement_saved_time=timezone.localtime(agreements[-1].modified_at).strftime(SAVED_TIME_FORMAT)
     )
 
 
