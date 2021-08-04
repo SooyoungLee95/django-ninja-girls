@@ -22,11 +22,7 @@ def get_encrypted_payload(payload: AuthyoPayload):
 
 
 def extract_jwt_payload(token) -> dict[str, Union[str, int]]:
-    try:
-        return jwt.decode(jwt=token, key=settings.AUTHYO.SECRET_KEY, algorithms=[settings.AUTHYO.ALGORITHM])
-    except jwt.DecodeError as e:
-        logger.error(f"[extract_jwt_payload] {e!r}")
-        raise HttpError(HTTPStatus.UNAUTHORIZED, MSG_UNAUTHORIZED)
+    return jwt.decode(jwt=token, key=settings.AUTHYO.SECRET_KEY, algorithms=[settings.AUTHYO.ALGORITHM])
 
 
 def parse_token(request: WSGIRequest):

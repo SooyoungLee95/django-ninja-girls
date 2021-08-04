@@ -1,6 +1,7 @@
 from http import HTTPStatus
 from typing import Callable
 
+import jwt
 from ninja import Query
 from ninja.errors import HttpError
 from ninja.responses import codes_4xx
@@ -41,6 +42,7 @@ from .constants import (
     MSG_MUST_AGREE_REQUIRED_AGREEMENTS,
     MSG_NOT_FOUND_PHONE_NUMBER,
     MSG_NOT_FOUND_RIDER,
+    MSG_UNAUTHORIZED,
 )
 from .enums import RideryoRole, WebhookName
 from .schemas import DispatchRequestDetail
@@ -222,7 +224,10 @@ def send_verification_code_via_sms(request, data: VerificationCodeRequest):
     authorization = request.headers.get("Authorization")
     if authorization:
         _, token = authorization.split()
-        payload = extract_jwt_payload(token)
+        try:
+            payload = extract_jwt_payload(token)
+        except jwt.DecodeError:
+            raise HttpError(HTTPStatus.UNAUTHORIZED, MSG_UNAUTHORIZED)
         rider_profile = get_rider_profile(payload["sub_id"])
     else:
         rider_profile = get_rider_profile(data)
