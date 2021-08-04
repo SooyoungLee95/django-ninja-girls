@@ -1,7 +1,6 @@
 from http import HTTPStatus
 from typing import Callable
 
-from django.core import signing
 from django.core.cache import cache
 from ninja import Query
 from ninja.errors import HttpError
@@ -17,6 +16,7 @@ from ras.common.schemas import ErrorResponse
 from ras.rider_app.helpers import (
     generate_random_verification_code,
     get_rider_profile,
+    handle_check_verification_code,
     handle_create_rider_service_agreements,
     handle_dispatch_request_detail,
     handle_jwt_payload,
@@ -254,10 +254,6 @@ def send_verification_code_via_sms(request, data: VerificationCodeRequest):
     return HTTPStatus.OK, {}
 
 
-def generate_jwt_for_resetting_password(rider_id):
-    return signing.dumps({"rider_id": rider_id}, compress=True)
-
-
 @auth_router.post(
     "/verification-code/check",
     url_name="check_verification_code",
@@ -268,7 +264,7 @@ def generate_jwt_for_resetting_password(rider_id):
 def check_verification_code(request, data: CheckVerificationCodeRequest):
     if (rider_id := cache.get(f"{data.phone_number}:{data.verification_code}")) is None:
         raise HttpError(HTTPStatus.BAD_REQUEST, MSG_INVALID_VERIFICATION_CODE)
-    return HTTPStatus.OK, CheckVerificationCodeResponse(token=generate_jwt_for_resetting_password(rider_id))
+    return HTTPStatus.OK, handle_check_verification_code(rider_id)
 
 
 @rider_router.get(

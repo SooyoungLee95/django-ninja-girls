@@ -8,6 +8,7 @@ from typing import Optional, Union
 import jwt
 import transitions
 from asgiref.sync import async_to_sync
+from django.core import signing
 from django.db.utils import DatabaseError, IntegrityError, OperationalError
 from django.utils import timezone
 from ninja.errors import HttpError
@@ -58,6 +59,7 @@ from ..rideryo.models import (
 )
 from .schemas import (
     AuthyoPayload,
+    CheckVerificationCodeResponse,
     DispatchRequestDetail,
     FcmPushPayload,
     MockRiderDispatch,
@@ -391,3 +393,11 @@ def get_rider_profile_by_id(data: int):
 @get_rider_profile.register
 def get_rider_profile_by_data(data: VerificationCodeRequest):
     return RiderProfile.objects.filter(rider__email_address=data.email_address, phone_number=data.phone_number).first()
+
+
+def generate_jwt_for_resetting_password(rider_id):
+    return signing.dumps({"rider_id": rider_id}, compress=True)
+
+
+def handle_check_verification_code(rider_id):
+    return CheckVerificationCodeResponse(token=generate_jwt_for_resetting_password(rider_id))
