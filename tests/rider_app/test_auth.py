@@ -215,8 +215,8 @@ class TestSendSMSViaHubyoClient:
         # When: SMS 전달 요청을 호출 할 때, HubyoClientError가 발생하면,
         response = send_sms_via_hubyo(phone_number="01073314120", message=message)
 
-        # Then: 응답의 상태 값으로 빈 값 받아야 한다.
-        assert response == {}
+        # Then: 응답의 상태 값은 None 이어야 한다
+        assert response is None
 
     @patch("ras.common.sms.helpers.hubyo_client.send", Mock(side_effect=Exception))
     def test_verification_code_via_sms_with_unexpected_error(self):
@@ -227,8 +227,8 @@ class TestSendSMSViaHubyoClient:
         # When: SMS 전달 요청을 호출 할 때, Internal Server Error 가 발생하면,
         response = send_sms_via_hubyo(phone_number="01073314120", message=message)
 
-        # Then: 응답의 상태 값으로 빈 값 받아야 한다.
-        assert response == {}
+        # Then: 응답의 상태 값은 None 이어야 한다
+        assert response is None
 
 
 class TestSendVerificationCodeViaSMSView:

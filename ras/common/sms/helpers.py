@@ -23,4 +23,3 @@ def send_sms_via_hubyo(phone_number, message):
     else:
         logger.info(f"[SMS] hubyo client sent SMS - {response}")
         return response
-    return {}
