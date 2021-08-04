@@ -131,7 +131,7 @@ class RiderStatus(Schema):
 
 
 class RiderDispatchAcceptanceRate(Schema):
-    acceptance_rate: int
+    acceptance_rate: int = 0
 
 
 class SearchDate(Schema):
@@ -155,9 +155,13 @@ class SearchDate(Schema):
         return datetime.combine(self.end_at, time(0, 59, 59)) + timedelta(days=1)
 
 
-class RiderMypage(RiderProfileSummary, RiderDispatchAcceptanceRate, Schema):
-    total_delivery_count: int
-    total_commission: int
+class RiderWorkingReport(Schema):
+    total_delivery_count: int = 0
+    total_commission: int = 0
+
+
+class RiderMypage(RiderProfileSummary, RiderDispatchAcceptanceRate, RiderWorkingReport):
+    pass
 
 
 class RiderServiceAgreement(Schema):
