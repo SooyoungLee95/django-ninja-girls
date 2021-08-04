@@ -40,7 +40,7 @@ def test_end_work_ondemand_should_auto_update_to_available_state(rider_state):
     rider_state.state = RiderState.READY
     # TODO: And: 온디멘드 조건일 때,
 
-    # When: 근무 시작 시,
+    # When: 업무 종료 시,
     rider_state.end_work()
 
     # Then: READY 상태로 전환된다
@@ -54,7 +54,7 @@ def test_end_work_ondemand_should_call_reset(rider_state):
     rider_state.state = RiderState.READY
     # TODO: And: 온디멘드 조건일 때,
 
-    # When: 근무 시작 시,
+    # When: 업무 종료 시,
     mock_reset = Mock()
 
     # Then: reset 트리거가 실행된다
