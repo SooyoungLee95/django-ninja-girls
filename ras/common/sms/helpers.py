@@ -8,10 +8,10 @@ from ras.rider_app.schemas import SMSMessageData, SMSMessageInfo
 logger = logging.getLogger(__name__)
 
 
-def send_sms_via_hubyo(phone_number, verification_code):
+def send_sms_via_hubyo(phone_number, message):
     sms_message_info = SMSMessageInfo(
         tracking_id=phone_number,
-        msg={"data": SMSMessageData(target=phone_number, text=f"[요기요라이더] 인증번호는 {verification_code} 입니다.")},
+        msg={"data": SMSMessageData(target=phone_number, text=message)},
     ).dict()
 
     try:

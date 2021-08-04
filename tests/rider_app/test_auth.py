@@ -192,6 +192,7 @@ class TestSendSMSViaHubyoClient:
         # Given: SMS를 보내기 위한 유효한 정보가 주어지고,
         input_phone_number = "01073314120"
         verification_code = "112233"
+        message = f"[요기요라이더] 인증번호는 {verification_code} 입니다."
         # And: 정상적인 응답으로 주는 것을 세팅하고
         mock_send.return_value = {
             "MessageId": "2772c9a1-8f60-567d-af8a-90daa21f7134",
@@ -201,23 +202,30 @@ class TestSendSMSViaHubyoClient:
         }
 
         # When: SMS 전달 요청을 호출 하면,
-        response = send_sms_via_hubyo(phone_number=input_phone_number, verification_code=verification_code)
+        response = send_sms_via_hubyo(phone_number=input_phone_number, message=message)
 
         # Then: 응답의 상태 값으로 200을 받아야 한다
         assert response["ResponseMetadata"]["HTTPStatusCode"] == HTTPStatus.OK
 
     @patch("ras.common.sms.helpers.hubyo_client.send", Mock(side_effect=HubyoClientError))
     def test_verification_code_via_sms_with_hubyo_client_error(self):
+        # Given: 유효한 인증코드와 message 가 주어질 떄,
+        verification_code = "112233"
+        message = f"[요기요라이더] 인증번호는 {verification_code} 입니다."
         # When: SMS 전달 요청을 호출 할 때, HubyoClientError가 발생하면,
-        response = send_sms_via_hubyo(phone_number="01073314120", verification_code="112233")
+        response = send_sms_via_hubyo(phone_number="01073314120", message=message)
 
         # Then: 응답의 상태 값으로 빈 값 받아야 한다.
         assert response == {}
 
     @patch("ras.common.sms.helpers.hubyo_client.send", Mock(side_effect=Exception))
     def test_verification_code_via_sms_with_unexpected_error(self):
+        # Given: 유효한 인증코드와 message 가 주어질 떄,
+        verification_code = "112233"
+        message = f"[요기요라이더] 인증번호는 {verification_code} 입니다."
+
         # When: SMS 전달 요청을 호출 할 때, Internal Server Error 가 발생하면,
-        response = send_sms_via_hubyo(phone_number="01073314120", verification_code="112233")
+        response = send_sms_via_hubyo(phone_number="01073314120", message=message)
 
         # Then: 응답의 상태 값으로 빈 값 받아야 한다.
         assert response == {}
@@ -247,6 +255,7 @@ class TestSendVerificationCodeViaSMSView:
         rider_phone_number = rider_profile.phone_number
         valid_request_body = {"email_address": rider_profile.rider.email_address, "phone_number": rider_phone_number}
         verification_code = "112233"
+        message = f"[요기요라이더] 인증번호는 {verification_code} 입니다."
 
         # When: 인증요청 API를 호출 했을 때,
         response = self._call_send_verification_code_via_sms_api(valid_request_body)
@@ -254,7 +263,7 @@ class TestSendVerificationCodeViaSMSView:
         # Then: 상태 코드 200을 리턴 해야한다.
         assert response.status_code == HTTPStatus.OK
         # And: send_sms_via_hubyo를 호출 해야 한다
-        mock_send_sms_via_hubyo.assert_called_once_with(rider_phone_number, verification_code)
+        mock_send_sms_via_hubyo.assert_called_once_with(rider_phone_number, message)
 
     @patch("ras.rider_app.views.generate_random_verification_code", Mock(return_value="112233"))
     @patch("ras.rider_app.views.send_sms_via_hubyo")
@@ -267,6 +276,7 @@ class TestSendVerificationCodeViaSMSView:
         # And: 유효한 request body 정보가 주어지고, - email을 제외하고 phone_number가 보내짐
         valid_request_body = {"phone_number": rider_phone_number}
         verification_code = "112233"
+        message = f"[요기요라이더] 인증번호는 {verification_code} 입니다."
 
         # When: 인증요청 API를 호출 했을 때,
         response = self._call_send_verification_code_via_sms_api_with_token(
@@ -276,7 +286,7 @@ class TestSendVerificationCodeViaSMSView:
         # Then: 상태 코드 200을 리턴 해야한다.
         assert response.status_code == HTTPStatus.OK
         # And: send_sms_via_hubyo를 호출 해야 한다
-        mock_send_sms_via_hubyo.assert_called_once_with(rider_phone_number, verification_code)
+        mock_send_sms_via_hubyo.assert_called_once_with(rider_phone_number, message)
 
     @pytest.mark.django_db(transaction=True)
     def test_send_verification_code_via_sms_view_with_not_email_address_but_token_on_invalid_token_error(

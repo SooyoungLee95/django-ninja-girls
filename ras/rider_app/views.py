@@ -234,8 +234,9 @@ def send_verification_code_via_sms(request, data: VerificationCodeRequest):
         raise HttpError(HTTPStatus.BAD_REQUEST, MSG_NOT_FOUND_PHONE_NUMBER)
 
     verification_code = generate_random_verification_code()
+    message = f"[요기요라이더] 인증번호는 {verification_code} 입니다."
     # TODO: verification_code를 TTL 300으로, redis에 저장 - ex) input_phone_number: verification_code
-    if not send_sms_via_hubyo(input_phone_number, verification_code):
+    if not send_sms_via_hubyo(input_phone_number, message):
         return HttpError(HTTPStatus.INTERNAL_SERVER_ERROR, MSG_FAIL_SENDING_VERIFICATION_CODE)
 
     return HTTPStatus.OK, {}
