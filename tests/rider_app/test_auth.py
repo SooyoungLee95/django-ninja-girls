@@ -393,9 +393,14 @@ class TestCheckVerificationCode:
             content_type="application/json",
         )
 
-    def test_check_verification_code_should_return_400_bad_request_when_phone_number_redis_key_does_not_exist(self):
+    @patch("ras.rider_app.views.cache.get")
+    def test_check_verification_code_should_return_400_bad_request_when_phone_number_redis_key_does_not_exist(
+        self, mock_cache_get
+    ):
         # Given: 유효하지 않은 request_body가 주어지고,
         invalid_request_body = {"phone_number": "invalid_phone_number", "verification_code": "valid_verification_code"}
+        # And: cache.get 했을 때, 리턴 값이 None으로 세팅해주고,
+        mock_cache_get.return_value = None
 
         # When: 휴대폰 번호 인증 요청 확인 API를 호출 했을 때,
         response = self._call_check_verification_code(invalid_request_body)
