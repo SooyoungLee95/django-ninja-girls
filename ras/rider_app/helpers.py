@@ -355,7 +355,7 @@ def handle_jwt_payload(authorization: str) -> Optional[dict[str, Union[str, int]
     if not authorization:
         return None
 
-    _, token = authorization.split()
+    _, token = authorization.split(maxsplit=1)
     try:
         return decode_token(token)
     except jwt.DecodeError:

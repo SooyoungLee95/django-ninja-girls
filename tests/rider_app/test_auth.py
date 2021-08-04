@@ -330,3 +330,21 @@ class TestSendVerificationCodeViaSMSView:
         assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
         # And: 인증번호 SMS 전송에 실패 하였습니다. 메세지를 리턴해야한다
         assert json.loads(response.content)["message"] == MSG_FAIL_SENDING_VERIFICATION_CODE
+
+    @pytest.mark.django_db(transaction=True)
+    def test_send_verification_code_via_sms_view_should_return_401_unauthorized_not_raising_value_error(
+        self, rider_profile, mock_jwt_token
+    ):
+        # Given: DB에 존재하는 phone_number가 주어지고,
+        rider_phone_number = rider_profile.phone_number
+        valid_request_body = {"email_address": rider_profile.rider.email_address, "phone_number": rider_phone_number}
+        # And: 띄어쓰기가 포함된 유효하지 않은 jwt token이 주어지고,
+        invalid_jwt_tokwn = "in valid jw t token"
+
+        # When: 인증요청 API를 호출 했을 때,
+        response = self._call_send_verification_code_via_sms_api_with_token(
+            valid_request_body, header={"HTTP_AUTHORIZATION": f"Bearer {invalid_jwt_tokwn}"}
+        )
+
+        # Then: 상태 코드 401을 리턴 해야한다.
+        assert response.status_code == HTTPStatus.UNAUTHORIZED
