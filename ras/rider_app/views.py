@@ -48,7 +48,7 @@ from .constants import (
     VERIFICATION_CODE_TIMEOUT_SECONDS,
 )
 from .enums import RideryoRole, WebhookName
-from .schemas import DispatchRequestDetail
+from .schemas import CheckVerificationCodeRequest, DispatchRequestDetail
 from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import RiderBan, RiderDeliveryState
@@ -246,6 +246,18 @@ def send_verification_code_via_sms(request, data: VerificationCodeRequest):
         return HttpError(HTTPStatus.INTERNAL_SERVER_ERROR, MSG_FAIL_SENDING_VERIFICATION_CODE)
 
     return HTTPStatus.OK, {}
+
+
+@auth_router.post(
+    "/verification-code/check",
+    url_name="check_verification_code",
+    summary="휴대폰 번호 인증 요청 확인 API",
+    response={200: None, codes_4xx: ErrorResponse, 500: ErrorResponse},
+    auth=None,
+)
+def check_verification_code(request, data: CheckVerificationCodeRequest):
+    if not cache.get(data.phone_number):
+        raise HttpError(HTTPStatus.BAD_REQUEST, "인증번호가 유효하지 않습니다.")
 
 
 @rider_router.get(

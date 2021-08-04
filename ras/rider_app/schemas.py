@@ -214,3 +214,8 @@ class SMSMessageInfo(Schema):
     entity: str = "sms"
     tracking_id: str
     msg: dict[str, SMSMessageData]
+
+
+class CheckVerificationCodeRequest(Schema):
+    phone_number: str
+    verification_code: str

@@ -15,6 +15,7 @@ from ras.common.sms.helpers import send_sms_via_hubyo
 from ras.rider_app.constants import (
     AUTHYO_LOGIN_URL,
     MSG_FAIL_SENDING_VERIFICATION_CODE,
+    MSG_INVALID_VERIFICATION_CODE,
     MSG_NOT_FOUND_RIDER,
     MSG_UNAUTHORIZED,
     VERIFICATION_CODE_TIMEOUT_SECONDS,
@@ -384,3 +385,24 @@ class TestSendVerificationCodeViaSMSView:
 
         # Then: 상태 코드 401을 리턴 해야한다.
         assert response.status_code == HTTPStatus.UNAUTHORIZED
+
+
+class TestCheckVerificationCode:
+    def _call_check_verification_code(self, request_body):
+        return client.post(
+            reverse("ninja:check_verification_code"),
+            data=request_body,
+            content_type="application/json",
+        )
+
+    def test_check_verification_code_should_return_400_bad_request_when_phone_number_redis_key_does_not_exist(self):
+        # Given: 유효하지 않은 request_body가 주어지고,
+        invalid_request_body = {"phone_number": "invalid_phone_number", "verification_code": "valid_verification_code"}
+
+        # When: 휴대폰 번호 인증 요청 확인 API를 호출 했을 때,
+        response = self._call_check_verification_code(invalid_request_body)
+
+        # Then: 400 Bad Request 상태코드이어야 한다
+        assert response.status_code == HTTPStatus.BAD_REQUEST
+        # And: 인증번호가 유효하지 않습니다. 메세지를 리턴해야한다
+        assert json.loads(response.content)["message"] == MSG_INVALID_VERIFICATION_CODE
