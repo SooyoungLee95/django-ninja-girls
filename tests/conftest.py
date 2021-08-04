@@ -1,6 +1,7 @@
 import jwt
 import pytest
 from django.conf import settings
+from django.core import signing
 from django.db.models import Count, Sum
 
 from ras.rideryo.enums import ContractType, DeliveryState, RiderResponse
@@ -220,10 +221,10 @@ def unsubscription_data():
     }
 
 
-def _generate_payload(role, rider_id):
+def _generate_payload(role, rider_id, iat=1625703402, exp=2247783524):
     return {
-        "iat": 1625703402,
-        "exp": 2247783524,
+        "iat": iat,
+        "exp": exp,
         "sub_id": rider_id,
         "platform": settings.RIDERYO_BASE_URL,
         "base_url": settings.RIDERYO_ENV,
@@ -247,6 +248,11 @@ def mock_jwt_token_with_staff(rider_profile):
         TEST_JWT_PRIVATE,
         algorithm="RS256",
     )
+
+
+@pytest.fixture
+def mock_token_for_resetting_password(rider_profile):
+    return signing.dumps({"rider_id": rider_profile.rider_id}, compress=True)
 
 
 @pytest.fixture

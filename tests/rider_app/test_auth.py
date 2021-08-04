@@ -17,6 +17,7 @@ from ras.rider_app.constants import (
     MSG_FAIL_SENDING_VERIFICATION_CODE,
     MSG_INVALID_VERIFICATION_CODE,
     MSG_NOT_FOUND_RIDER,
+    MSG_SUCCESS_CHECKING_VERIFICATION_CODE,
     MSG_UNAUTHORIZED,
     VERIFICATION_CODE_TIMEOUT_SECONDS,
 )
@@ -401,38 +402,26 @@ class TestCheckVerificationCode:
 
         # Then: 400 Bad Request 상태코드이어야 한다
         assert response.status_code == HTTPStatus.BAD_REQUEST
-        # And: 인증번호가 유효하지 않습니다. 메세지를 리턴해야한다
+        # And: 인증번호가 일치하지 않습니다. 메세지를 리턴해야한다
         assert json.loads(response.content)["message"] == MSG_INVALID_VERIFICATION_CODE
 
     @patch("ras.rider_app.views.cache.get")
-    def test_check_verification_code_should_return_400_bad_request_when_verification_code_does_not_matched(
-        self, mock_cache_get
+    @pytest.mark.django_db(transaction=True)
+    def test_check_verification_code_should_return_200_ok_on_success(
+        self, mock_cache_get, mock_token_for_resetting_password, rider_profile
     ):
-        # Given: 유효한 request_body가 주어졌으나,
-        valid_input_verification_code = "112233"
-        valid_request_body = {"phone_number": "01011112222", "verification_code": valid_input_verification_code}
-        # And: redis에서 리턴된 값이 request_body에 일치 하지 않도록 세팅되고,
-        not_matched_verification_code = "778899"
-        mock_cache_get.return_value = not_matched_verification_code
-
-        # When: 휴대폰 번호 인증 요청 확인 API를 호출 했을 때,
-        response = self._call_check_verification_code(valid_request_body)
-
-        # Then: 400 Bad Request 상태코드이어야 한다
-        assert response.status_code == HTTPStatus.BAD_REQUEST
-        # And: 인증번호가 유효하지 않습니다. 메세지를 리턴해야한다
-        assert json.loads(response.content)["message"] == MSG_INVALID_VERIFICATION_CODE
-
-    @patch("ras.rider_app.views.cache.get")
-    def test_check_verification_code_should_return_200_ok_on_success(self, mock_cache_get):
         # Given: 유효한 request_body가 주어지고,
         valid_input_verification_code = "112233"
         valid_request_body = {"phone_number": "01011112222", "verification_code": valid_input_verification_code}
         # And: redis에서 리턴된 값이 request_body에 일치 하도록 세팅한 다음
-        mock_cache_get.return_value = valid_input_verification_code
+        mock_cache_get.return_value = rider_profile.rider_id
 
         # When: 휴대폰 번호 인증 요청 확인 API를 호출 했을 때,
         response = self._call_check_verification_code(valid_request_body)
 
         # Then: 200 OK 상태코드이어야 한다
         assert response.status_code == HTTPStatus.OK
+        # And: token과 인증이 완료되었습니다 메세지를 리턴해야한다.
+        response = json.loads(response.content)
+        assert response["message"] == MSG_SUCCESS_CHECKING_VERIFICATION_CODE
+        assert response["token"] == mock_token_for_resetting_password

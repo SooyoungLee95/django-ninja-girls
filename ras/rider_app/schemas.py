@@ -10,6 +10,7 @@ from pydantic import root_validator, validator
 from ras.rider_app.constants import (
     CANCEL_REASON_ISSUE_MAP,
     CUSTOMER_ISSUE,
+    MSG_SUCCESS_CHECKING_VERIFICATION_CODE,
     RESTAURANT_ISSUE,
     SYSTEM_ISSUE,
     YOGIYO_CUSTOMER_CENTER_PHONE_NUMBER,
@@ -219,3 +220,8 @@ class SMSMessageInfo(Schema):
 class CheckVerificationCodeRequest(Schema):
     phone_number: str
     verification_code: str
+
+
+class CheckVerificationCodeResponse(Schema):
+    message: str = MSG_SUCCESS_CHECKING_VERIFICATION_CODE
+    token: str

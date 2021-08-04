@@ -1,6 +1,7 @@
 from http import HTTPStatus
 from typing import Callable
 
+from django.core import signing
 from django.core.cache import cache
 from ninja import Query
 from ninja.errors import HttpError
@@ -41,6 +42,7 @@ from ras.rideryo.enums import RiderTransition
 from ..common.sms.helpers import send_sms_via_hubyo
 from .constants import (
     MSG_FAIL_SENDING_VERIFICATION_CODE,
+    MSG_INVALID_VERIFICATION_CODE,
     MSG_MUST_AGREE_REQUIRED_AGREEMENTS,
     MSG_NOT_FOUND_PHONE_NUMBER,
     MSG_NOT_FOUND_RIDER,
@@ -48,7 +50,11 @@ from .constants import (
     VERIFICATION_CODE_TIMEOUT_SECONDS,
 )
 from .enums import RideryoRole, WebhookName
-from .schemas import CheckVerificationCodeRequest, DispatchRequestDetail
+from .schemas import (
+    CheckVerificationCodeRequest,
+    CheckVerificationCodeResponse,
+    DispatchRequestDetail,
+)
 from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import RiderBan, RiderDeliveryState
@@ -248,19 +254,21 @@ def send_verification_code_via_sms(request, data: VerificationCodeRequest):
     return HTTPStatus.OK, {}
 
 
+def generate_jwt_for_resetting_password(rider_id):
+    return signing.dumps({"rider_id": rider_id}, compress=True)
+
+
 @auth_router.post(
     "/verification-code/check",
     url_name="check_verification_code",
     summary="휴대폰 번호 인증 요청 확인 API",
-    response={200: None, codes_4xx: ErrorResponse, 500: ErrorResponse},
+    response={200: CheckVerificationCodeResponse, codes_4xx: ErrorResponse, 500: ErrorResponse},
     auth=None,
 )
 def check_verification_code(request, data: CheckVerificationCodeRequest):
-    if (verification_code := cache.get(data.phone_number)) is None:
-        raise HttpError(HTTPStatus.BAD_REQUEST, "인증번호가 유효하지 않습니다.")
-    if data.verification_code != verification_code:
-        raise HttpError(HTTPStatus.BAD_REQUEST, "인증번호가 유효하지 않습니다.")
-    return HTTPStatus.OK, {}
+    if (rider_id := cache.get(f"{data.phone_number}:{data.verification_code}")) is None:
+        raise HttpError(HTTPStatus.BAD_REQUEST, MSG_INVALID_VERIFICATION_CODE)
+    return HTTPStatus.OK, CheckVerificationCodeResponse(token=generate_jwt_for_resetting_password(rider_id))
 
 
 @rider_router.get(
