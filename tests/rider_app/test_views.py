@@ -390,9 +390,12 @@ class TestRiderDeliveryState:
         assert response.json() == input_body.dict()
 
         # And: 상태 변경에 대한 이력이 기록되는지 확인합니다.
-        histories = RiderDeliveryStateHistory.objects.filter(dispatch_request=rider_dispatch_request)
-        assert len(histories) == 1
-        assert histories[0].delivery_state == state
+        history = (
+            RiderDeliveryStateHistory.objects.filter(dispatch_request=rider_dispatch_request)
+            .order_by("-created_at")
+            .first()
+        )
+        assert history.delivery_state == state
 
     @pytest.mark.parametrize(
         "state",
@@ -422,9 +425,12 @@ class TestRiderDeliveryState:
         assert response.json() == input_body.dict()
 
         # And: 상태 변경에 대한 이력이 기록되는지 확인합니다.
-        histories = RiderDeliveryStateHistory.objects.filter(dispatch_request=rider_dispatch_request)
-        assert len(histories) == 1
-        assert histories[0].delivery_state == state
+        history = (
+            RiderDeliveryStateHistory.objects.filter(dispatch_request=rider_dispatch_request)
+            .order_by("-created_at")
+            .first()
+        )
+        assert history.delivery_state == state
 
     @pytest.mark.parametrize(
         "state, should_send_push, push_action",
@@ -999,3 +1005,76 @@ def test_partial_update_rider_service_agreements_return_when_invalid_request(
         assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
         data = response.json()
         assert data["message"] == "요청을 처리할 수 없습니다."
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize(
+    "dispatch_delivery_state",
+    (
+        DeliveryState.DISPATCHED,
+        DeliveryState.NOTIFIED,
+        DeliveryState.ACCEPTED,
+        DeliveryState.NEAR_PICKUP,
+        DeliveryState.PICK_UP,
+        DeliveryState.LEFT_PICKUP,
+        DeliveryState.NEAR_DROPOFF,
+    ),
+)
+def test_retreive_rider_state_must_include_in_progress_deliveries(
+    rider_profile, rider_dispatch_request, rider_state, mock_jwt_token, dispatch_delivery_state
+):
+    # Given: 라이더가 진행 중인 배차가 있는 경우
+    delivery_state_history = rider_dispatch_request.riderdeliverystatehistory_set.order_by("-created_at").first()
+    delivery_state_history.state = dispatch_delivery_state
+    delivery_state_history.save()
+
+    # When: 라이더 상태 조회 API 호출 시
+    client = Client()
+    response = client.get(
+        reverse("ninja:rider_app_rider_state"),
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {mock_jwt_token}",
+    )
+
+    # Then: 200 OK 를 return 해야한다
+    assert response.status_code == HTTPStatus.OK
+    data = response.json()
+    # And: 현재 상태를 반환하고
+    assert data["state"] == rider_state.state
+    # And: 현재 배달 중이 배차번호를 반환한다
+    assert data["current_deliveries"] == str(rider_dispatch_request.pk)
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize(
+    "dispatch_delivery_state",
+    (
+        DeliveryState.DECLINED,
+        DeliveryState.IGNORED,
+        DeliveryState.COMPLETED,
+        DeliveryState.CANCELLED,
+    ),
+)
+def test_retreive_rider_state_must_not_include_not_in_progress_deliveries(
+    rider_profile, rider_dispatch_request, rider_state, mock_jwt_token, dispatch_delivery_state
+):
+    # Given: 라이더가 진행 중인 배차가 없는 경우
+    delivery_state_history = rider_dispatch_request.riderdeliverystatehistory_set.order_by("-created_at").first()
+    delivery_state_history.delivery_state = dispatch_delivery_state
+    delivery_state_history.save()
+
+    # When: 라이더 상태 조회 API 호출 시
+    client = Client()
+    response = client.get(
+        reverse("ninja:rider_app_rider_state"),
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {mock_jwt_token}",
+    )
+
+    # Then: 200 OK 를 return 해야한다
+    assert response.status_code == HTTPStatus.OK
+    data = response.json()
+    # And: 현재 상태를 반환하고
+    assert data["state"] == rider_state.state
+    # And: 현재 배달 중이 배차번호를 반환한다
+    assert data["current_deliveries"] == ""

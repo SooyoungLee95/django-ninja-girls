@@ -79,6 +79,9 @@ def rider_dispatch_request(rider_profile):
         rider=rider_profile,
         order_id="Test_Order",
     )
+    RiderDeliveryStateHistory.objects.create(
+        dispatch_request=rider_dispatch_request, delivery_state=DeliveryState.DISPATCHED
+    )
     return rider_dispatch_request
 
 
