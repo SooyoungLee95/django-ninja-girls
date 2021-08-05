@@ -15,8 +15,8 @@ from pydantic import ValidationError
 
 from ras.common.authentication.helpers import (
     decode_token,
-    generate_jwt_for_password_reset,
-    generate_jwt_for_verification_code_check,
+    generate_token_for_password_reset,
+    generate_token_for_verification_code_check,
     get_encrypted_payload,
 )
 from ras.common.integration.services.jungleworks.handlers import (
@@ -402,8 +402,8 @@ def get_rider_profile_by_data(data: VerificationCodeRequest):
 
 
 def handle_check_verification_code(rider_id):
-    return CheckVerificationCodeResponse(token=generate_jwt_for_verification_code_check(rider_id))
+    return CheckVerificationCodeResponse(token=generate_token_for_verification_code_check(rider_id))
 
 
 def handle_send_verification_code_via_sms(rider_id, data: VerificationInfo):
-    return VerificationCodeResponse(token=generate_jwt_for_password_reset(rider_id, data))
+    return VerificationCodeResponse(token=generate_token_for_password_reset(rider_id, data))

@@ -25,14 +25,14 @@ def decode_token(token) -> dict[str, Union[str, int]]:
     return jwt.decode(jwt=token, key=settings.AUTHYO.SECRET_KEY, algorithms=[settings.AUTHYO.ALGORITHM])
 
 
-def generate_jwt_for_password_reset(rider_id, data: VerificationInfo):
+def generate_token_for_password_reset(rider_id, data: VerificationInfo):
     return signing.dumps(
         {"rider_id": rider_id, "phone_number": data.phone_number, "verification_code": data.verification_code},
         compress=True,
     )
 
 
-def generate_jwt_for_verification_code_check(rider_id):
+def generate_token_for_verification_code_check(rider_id):
     return signing.dumps({"rider_id": rider_id}, compress=True)
 
 
