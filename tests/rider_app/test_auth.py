@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 import jwt
 import pytest
 from django.conf import settings
+from django.core import signing
 from django.test import Client
 from django.urls import reverse
 from hubyo_client.client import HubyoClientError
@@ -477,6 +478,24 @@ class TestResetPassword:
 
         # When: 비밀번호 재설정 API를 호출 했을 때,
         response = self._call_reset_password(invalid_request_body)
+
+        # Then: 400 BAD_REQUEST 상태코드이어야 한다
+        assert response.status_code == HTTPStatus.BAD_REQUEST
+
+    @patch("ras.common.authentication.helpers.signing.loads")
+    @pytest.mark.django_db(transaction=True)
+    def test_reset_password_should_return_400_bad_request_when_token_is_already_expired(
+        self, mock_signing_loads, mock_token_for_password_reset, rider_profile
+    ):
+        # Given: signing.SignatureExpired 에러가 발생 했을 때,
+        mock_signing_loads.side_effect = signing.SignatureExpired
+
+        # When: 비밀번호 재설정 API를 호출 했을 때,
+        valid_request_body = {
+            "new_password": "1!aAabcd",  # 8자리 이상, 최소 1개의 영 소,대 문자, 숫자, 특수문자
+            "token": mock_token_for_password_reset,
+        }
+        response = self._call_reset_password(valid_request_body)
 
         # Then: 400 BAD_REQUEST 상태코드이어야 한다
         assert response.status_code == HTTPStatus.BAD_REQUEST
