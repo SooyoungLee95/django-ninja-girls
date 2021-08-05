@@ -15,7 +15,7 @@ from ras.common.schemas import ErrorResponse
 from ras.rider_app.helpers import (
     generate_random_verification_code,
     get_rider_profile,
-    handle_create_rider_service_agreements,
+    handle_create_or_replace_rider_service_agreements,
     handle_dispatch_request_detail,
     handle_jwt_payload,
     handle_partial_update_rider_service_agreements,
@@ -267,16 +267,16 @@ def retrieve_rider_service_agreements(request):
     return HTTPStatus.OK, handle_retrieve_rider_service_agreements(rider_id=request.auth.pk)
 
 
-@rider_router.post(
+@rider_router.put(
     "/service-agreements",
     url_name="rider_service_agreements",
-    summary="라이더 서비스 이용약관 동의여부 저장",
+    summary="라이더 서비스 이용약관 동의여부 저장 및 업데이트",
     response={200: RiderServiceAgreementOut, codes_4xx: ErrorResponse},
 )
-def create_rider_service_agreements(request, data: RiderServiceAgreement):
+def update_rider_service_agreements(request, data: RiderServiceAgreement):
     if not data.agreed_required():
         raise HttpError(HTTPStatus.BAD_REQUEST, MSG_MUST_AGREE_REQUIRED_AGREEMENTS)
-    return HTTPStatus.OK, handle_create_rider_service_agreements(rider_id=request.auth.pk, data=data)
+    return HTTPStatus.OK, handle_create_or_replace_rider_service_agreements(rider_id=request.auth.pk, data=data)
 
 
 @rider_router.patch(

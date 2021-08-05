@@ -15,7 +15,6 @@ from freezegun import freeze_time
 from ras.common.integration.services.jungleworks.schemas import JungleworksResponseBody
 from ras.rider_app.constants import (
     CUSTOMER_ISSUE,
-    MSG_AGREEMENT_ALREADY_SUBMITTED,
     MSG_AGREEMENT_NOT_SUBMITTED,
     MSG_MUST_AGREE_REQUIRED_AGREEMENTS,
 )
@@ -698,7 +697,7 @@ def test_retrieve_rider_service_agreements_return_not_found_when_missing_require
 
 
 @pytest.mark.django_db(transaction=True)
-def test_create_rider_service_agreements(rider_profile, mock_jwt_token):
+def test_update_rider_service_agreements(rider_profile, mock_jwt_token):
     # Given: 라이더의 서비스 이용약관 정보가 없고
     assert not RiderServiceAgreement.objects.filter(rider_id=rider_profile.pk)
 
@@ -713,7 +712,7 @@ def test_create_rider_service_agreements(rider_profile, mock_jwt_token):
     client = Client()
     current_time = timezone.localtime()
     with freeze_time(current_time):
-        response = client.post(
+        response = client.put(
             reverse("ninja:rider_service_agreements"),
             data=input_body,
             content_type="application/json",
@@ -733,7 +732,7 @@ def test_create_rider_service_agreements(rider_profile, mock_jwt_token):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_create_rider_service_agreements_return_error_when_required_is_false(rider_profile, mock_jwt_token):
+def test_update_rider_service_agreements_return_error_when_required_is_false(rider_profile, mock_jwt_token):
     # Given: 라이더의 서비스 이용약관 정보가 없고
     assert not RiderServiceAgreement.objects.filter(rider_id=rider_profile.pk)
 
@@ -748,7 +747,7 @@ def test_create_rider_service_agreements_return_error_when_required_is_false(rid
     client = Client()
     current_time = timezone.localtime()
     with freeze_time(current_time):
-        response = client.post(
+        response = client.put(
             reverse("ninja:rider_service_agreements"),
             data=input_body,
             content_type="application/json",
@@ -764,7 +763,7 @@ def test_create_rider_service_agreements_return_error_when_required_is_false(rid
 
 
 @pytest.mark.django_db(transaction=True)
-def test_create_rider_service_agreements_return_error_when_exist(
+def test_update_rider_service_agreements_should_replace_when_exist(
     rider_profile, rider_service_agreements, mock_jwt_token
 ):
     # Given: 라이더의 서비스 이용약관 정보가 있는 경우
@@ -781,19 +780,23 @@ def test_create_rider_service_agreements_return_error_when_exist(
     client = Client()
     current_time = timezone.localtime()
     with freeze_time(current_time):
-        response = client.post(
+        response = client.put(
             reverse("ninja:rider_service_agreements"),
             data=input_body,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {mock_jwt_token}",
         )
 
-        # Then: 400를 return 해야하고,
-        assert response.status_code == HTTPStatus.BAD_REQUEST
+        # Then: 200를 return 해야하고,
+        assert response.status_code == HTTPStatus.OK
 
-        # And: 에러메시지가 반환된다.
+        # And: 이용약관, 저장 시간이 반환된다.
         data = response.json()
-        assert data["message"] == MSG_AGREEMENT_ALREADY_SUBMITTED
+        assert data["personal_information"] is True
+        assert data["location_based_service"] is True
+        assert data["promotion_receivable"] is False
+        assert data["night_promotion_receivable"] is False
+        assert data["agreement_saved_time"] == current_time.strftime("%Y-%m-%d %H:%M:%S")
 
 
 @pytest.mark.django_db(transaction=True)

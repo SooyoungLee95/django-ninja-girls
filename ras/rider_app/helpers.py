@@ -23,7 +23,6 @@ from ras.common.integration.services.jungleworks.handlers import (
 from ras.rider_app.constants import (
     AUTHYO_LOGIN_URL,
     MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1,
-    MSG_AGREEMENT_ALREADY_SUBMITTED,
     MSG_AGREEMENT_NOT_SUBMITTED,
     MSG_INVALID_VALUE,
     MSG_STATE_MACHINE_CANNOT_PROCESS,
@@ -34,9 +33,9 @@ from ras.rider_app.enums import PushAction
 from ras.rider_app.queries import (
     mock_query_create_dispatch_request_with_task,
     query_create_dispatch_request_with_task,
+    query_create_or_replace_rider_service_agreements,
     query_create_rider_delivery_state,
     query_create_rider_dispatch_response,
-    query_create_rider_service_agreements,
     query_fcm_token,
     query_get_dispatch_request_states,
     query_get_rider_dispatch_acceptance_rate,
@@ -300,11 +299,10 @@ def handle_retrieve_rider_service_agreements(rider_id):
         return rider_agreements
 
 
-def handle_create_rider_service_agreements(rider_id, data: RiderServiceAgreement) -> RiderServiceAgreementOut:
-    try:
-        agreements = query_create_rider_service_agreements(rider_id, data)
-    except IntegrityError:
-        raise HttpError(HTTPStatus.BAD_REQUEST, MSG_AGREEMENT_ALREADY_SUBMITTED)
+def handle_create_or_replace_rider_service_agreements(
+    rider_id, data: RiderServiceAgreement
+) -> RiderServiceAgreementOut:
+    agreements = query_create_or_replace_rider_service_agreements(rider_id, data)
     return RiderServiceAgreementOut(**data.dict(), agreement_saved_time=timezone.localtime(agreements[-1].modified_at))
 
 
