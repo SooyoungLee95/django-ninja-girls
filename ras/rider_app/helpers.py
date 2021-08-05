@@ -61,6 +61,7 @@ from .schemas import (
     DispatchRequestDetail,
     FcmPushPayload,
     MockRiderDispatch,
+    ResetPasswordResponse,
 )
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import (
@@ -391,3 +392,14 @@ def get_rider_profile_by_id(data: int):
 @get_rider_profile.register
 def get_rider_profile_by_data(data: VerificationCodeRequest):
     return RiderProfile.objects.filter(rider__email_address=data.email_address, phone_number=data.phone_number).first()
+
+
+def handle_reset_password(rider_id, new_password) -> ResetPasswordResponse:
+    try:
+        rider = RiderAccount.objects.get(pk=rider_id)
+    except RiderAccount.DoesNotExist:
+        pass
+    else:
+        rider.password = new_password
+        rider.save()
+    return ResetPasswordResponse()

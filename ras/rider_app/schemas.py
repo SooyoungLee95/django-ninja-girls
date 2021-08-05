@@ -241,8 +241,8 @@ class VerificationCodeResponse(Schema):
 
 class VerificationInfo(Schema):
     rider_id: int
-    phone_number: str
-    verification_code: str
+    phone_number: Optional[str]
+    verification_code: Optional[str]
 
 
 class ResetPasswordRequest(Schema):

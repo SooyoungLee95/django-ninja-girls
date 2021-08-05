@@ -19,6 +19,7 @@ from ras.rider_app.helpers import (
     handle_dispatch_request_detail,
     handle_jwt_payload,
     handle_partial_update_rider_service_agreements,
+    handle_reset_password,
     handle_retrieve_rider_service_agreements,
     handle_rider_action,
     handle_rider_authorization,
@@ -286,7 +287,8 @@ def check_verification_code(request, data: CheckVerificationCodeRequest):
     auth=None,
 )
 def reset_password(request, data: ResetPasswordRequest):
-    decode_token_for_password_reset(token=data.token)
+    payload: VerificationInfo = decode_token_for_password_reset(token=data.token)
+    return HTTPStatus.OK, handle_reset_password(payload.rider_id, data.new_password)
 
 
 @rider_router.get(
