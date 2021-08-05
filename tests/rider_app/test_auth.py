@@ -413,3 +413,25 @@ class TestCheckVerificationCode:
         response = json.loads(response.content)
         assert response["message"] == MSG_SUCCESS_CHECKING_VERIFICATION_CODE
         assert response["token"] == mock_token_for_password_reset
+
+
+class TestResetPassword:
+    def _call_reset_password(self, request_body):
+        return client.post(
+            reverse("ninja:reset_password"),
+            data=request_body,
+            content_type="application/json",
+        )
+
+    def test_reset_password_should_return_400_bad_request_when_token_is_invalid(self):
+        # Given: 유효하지 않은 token이 포함된 request body가 주어질 때,
+        valid_request_body = {
+            "new_password": "my_new_password!@#$",
+            "token": "invalid_token",
+        }
+
+        # When: 비밀번호 재설정 API를 호출 했을 때,
+        response = self._call_reset_password(valid_request_body)
+
+        # Then: 400 BAD_REQUEST 상태코드이어야 한다
+        assert response.status_code == HTTPStatus.BAD_REQUEST

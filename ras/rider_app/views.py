@@ -58,6 +58,7 @@ from .schemas import (
     DispatchRequestDetail,
 )
 from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
+from .schemas import ResetPasswordRequest, ResetPasswordResponse
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import RiderBan, RiderDeliveryState
 from .schemas import RiderDispatch as RiderDispatchResultSchema
@@ -275,6 +276,17 @@ def check_verification_code(request, data: CheckVerificationCodeRequest):
     if payload.phone_number != data.phone_number or payload.verification_code != data.verification_code:
         raise HttpError(HTTPStatus.BAD_REQUEST, MSG_INVALID_VERIFICATION_CODE)
     return HTTPStatus.OK, CheckVerificationCodeResponse(token=generate_token_for_password_reset(payload.rider_id))
+
+
+@rider_router.post(
+    "/reset-password",
+    url_name="reset_password",
+    summary="비밀번호 재설정 API",
+    response={200: ResetPasswordResponse, codes_4xx: ErrorResponse, 500: ErrorResponse},
+    auth=None,
+)
+def reset_password(request, data: ResetPasswordRequest):
+    return HTTPStatus.BAD_REQUEST, ""
 
 
 @rider_router.get(
