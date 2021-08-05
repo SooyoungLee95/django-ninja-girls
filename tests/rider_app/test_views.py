@@ -790,8 +790,12 @@ def test_update_rider_service_agreements_should_replace_when_exist(
         # Then: 200를 return 해야하고,
         assert response.status_code == HTTPStatus.OK
 
-        # And: 에러메시지가 반환된다.
+        # And: 이용약관, 저장 시간이 반환된다.
         data = response.json()
+        assert data["personal_information"] is True
+        assert data["location_based_service"] is True
+        assert data["promotion_receivable"] is False
+        assert data["night_promotion_receivable"] is False
         assert data["agreement_saved_time"] == current_time.strftime("%Y-%m-%d %H:%M:%S")
 
 
