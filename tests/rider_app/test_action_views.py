@@ -1,6 +1,6 @@
 from enum import Enum
 from http import HTTPStatus
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 from django.test import Client
@@ -72,6 +72,7 @@ def test_action_error_when_action_is_not_processable(rider_profile, rider_state,
         RiderStateEnum.BREAK,
     ),
 )
+@patch("ras.common.messaging.publishers.sns_client.publish", Mock(return_value=None))
 def test_action_enable_new_dispatch(valid_state, rider_profile, rider_state, mock_jwt_token):
     # Given: 신규 배차 on 가능한 상태에 있는 경우
     rider_state.state = valid_state
@@ -96,6 +97,7 @@ def test_action_enable_new_dispatch(valid_state, rider_profile, rider_state, moc
 
 
 @pytest.mark.django_db(transaction=True)
+@patch("ras.common.messaging.publishers.sns_client.publish", Mock(return_value=None))
 def test_action_disable_new_dispatch(rider_profile, rider_state, mock_jwt_token):
     # Given: 신규 배차 off 가능한 상태에 있는 경우
     rider_state.state = RiderStateEnum.READY
@@ -120,6 +122,7 @@ def test_action_disable_new_dispatch(rider_profile, rider_state, mock_jwt_token)
 
 
 @pytest.mark.django_db(transaction=True)
+@patch("ras.common.messaging.publishers.sns_client.publish", Mock(return_value=None))
 def test_action_start_work(rider_profile, rider_state, mock_jwt_token):
     # Given: 업무 시작에 가능한 상태에 있는 경우
     rider_state.state = RiderStateEnum.AVAILABLE
@@ -144,6 +147,7 @@ def test_action_start_work(rider_profile, rider_state, mock_jwt_token):
 
 
 @pytest.mark.django_db(transaction=True)
+@patch("ras.common.messaging.publishers.sns_client.publish", Mock(return_value=None))
 def test_action_end_work(rider_profile, rider_state, mock_jwt_token):
     # Given: 업무 종료 가능한 상태에 있는 경우
     rider_state.state = RiderStateEnum.READY
