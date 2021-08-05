@@ -221,10 +221,10 @@ def unsubscription_data():
     }
 
 
-def _generate_payload(role, rider_id, iat=1625703402, exp=2247783524):
+def _generate_payload(role, rider_id):
     return {
-        "iat": iat,
-        "exp": exp,
+        "iat": 1625703402,
+        "exp": 2247783524,
         "sub_id": rider_id,
         "platform": settings.RIDERYO_BASE_URL,
         "base_url": settings.RIDERYO_ENV,
