@@ -161,3 +161,10 @@ MSG_AGREEMENT_NOT_SUBMITTED = "서비스 이용약관에 먼저 동의해주세�
 MSG_MUST_AGREE_REQUIRED_AGREEMENTS = "필수 이용약관에 동의해주세요."
 MSG_INVALID_VALUE = "유효하지 않은 값입니다."
 MSG_STATE_MACHINE_CANNOT_PROCESS = "해당 작업을 수행할 수 없습니다."
+
+MSG_UNAUTHORIZED = "인증이 유효하지 않습니다."
+MSG_NOT_FOUND_RIDER = "라이더를 찾을 수 없습니다."
+MSG_NOT_FOUND_PHONE_NUMBER = "등록된 휴대폰 번호가 없습니다."
+MSG_FAIL_SENDING_VERIFICATION_CODE = "인증번호 SMS 전송에 실패 하였습니다."
+
+YOGIYO_CUSTOMER_CENTER_PHONE_NUMBER = "1661-5270"

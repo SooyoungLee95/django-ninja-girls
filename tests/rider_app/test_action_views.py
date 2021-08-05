@@ -164,4 +164,4 @@ def test_action_end_work(rider_profile, rider_state, mock_jwt_token):
 
     # And: 상태는 전환된다
     rider_state.refresh_from_db()
-    assert rider_state.state == RiderStateEnum.ENDING
+    assert rider_state.state == RiderStateEnum.AVAILABLE

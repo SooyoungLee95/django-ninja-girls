@@ -70,6 +70,8 @@ class RiderStateMachine(Machine):
         # 자동 상태 전환
         if event_data.event.name == rt.START_WORK:  # TODO: 스케줄 도입 시 조건 수정
             getattr(self.model, rt.ENABLE_NEW_DISPATCH.value)()
+        elif event_data.event.name == rt.END_WORK:  # TODO: 스케줄 도입 시 조건 수정
+            self.model.reset()
 
     def handle_READY(self, event_data, *args, **kwargs):
         publish_rider_working_state(event_data.model)

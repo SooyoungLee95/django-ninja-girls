@@ -1,6 +1,11 @@
 import logging
+import random
+from functools import singledispatch
 from http import HTTPStatus
+from string import digits
+from typing import Optional, Union
 
+import jwt
 import transitions
 from asgiref.sync import async_to_sync
 from django.db.utils import DatabaseError, IntegrityError, OperationalError
@@ -8,7 +13,7 @@ from django.utils import timezone
 from ninja.errors import HttpError
 from pydantic import ValidationError
 
-from ras.common.authentication.helpers import get_encrypted_payload
+from ras.common.authentication.helpers import decode_token, get_encrypted_payload
 from ras.common.integration.services.jungleworks.handlers import (
     on_off_duty,
     retrieve_delivery_task_id,
@@ -21,6 +26,7 @@ from ras.rider_app.constants import (
     MSG_AGREEMENT_NOT_SUBMITTED,
     MSG_INVALID_VALUE,
     MSG_STATE_MACHINE_CANNOT_PROCESS,
+    MSG_UNAUTHORIZED,
     RIDER_APP_INITIAL_PASSWORD,
 )
 from ras.rider_app.enums import PushAction
@@ -67,9 +73,11 @@ from .schemas import (
     RiderServiceAgreement,
     RiderServiceAgreementOut,
     RiderServiceAgreementPartial,
+    RiderServiceAgreementPartialOut,
     RiderStateOut,
     RiderWorkingReport,
     SearchDate,
+    VerificationCodeRequest,
 )
 
 logger = logging.getLogger(__name__)
@@ -79,8 +87,6 @@ delivery_state_push_action_map = {
     DeliveryState.NEAR_PICKUP: PushAction.NEAR_PICKUP,
     DeliveryState.NEAR_DROPOFF: PushAction.NEAR_DROPOFF,
 }
-
-SAVED_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 def handle_rider_availability_updates(rider_id, data: RiderAvailabilitySchema, is_jungleworks: bool):
@@ -297,17 +303,15 @@ def handle_create_or_replace_rider_service_agreements(
     rider_id, data: RiderServiceAgreement
 ) -> RiderServiceAgreementOut:
     agreements = query_create_or_replace_rider_service_agreements(rider_id, data)
-    return RiderServiceAgreementOut(
-        agreement_saved_time=timezone.localtime(agreements[-1].modified_at).strftime(SAVED_TIME_FORMAT)
-    )
+    return RiderServiceAgreementOut(**data.dict(), agreement_saved_time=timezone.localtime(agreements[-1].modified_at))
 
 
 def handle_partial_update_rider_service_agreements(
     rider_id, data: RiderServiceAgreementPartial
-) -> RiderServiceAgreementOut:
+) -> RiderServiceAgreementPartialOut:
     agreements = query_partial_update_rider_service_agreements(rider_id, data)
-    return RiderServiceAgreementOut(
-        agreement_saved_time=timezone.localtime(agreements[-1].modified_at).strftime(SAVED_TIME_FORMAT)
+    return RiderServiceAgreementPartialOut(
+        **data.dict(), agreement_saved_time=timezone.localtime(agreements[-1].modified_at)
     )
 
 
@@ -352,3 +356,33 @@ def handle_rider_action(rider: RiderProfile, action: str) -> bool:
     except transitions.MachineError as e:
         logger.error(f"[RiderActions] {rider.pk} {e!r}")
         raise HttpError(HTTPStatus.CONFLICT, MSG_STATE_MACHINE_CANNOT_PROCESS)
+
+
+def handle_jwt_payload(authorization: str) -> Optional[dict[str, Union[str, int]]]:
+    if not authorization:
+        return None
+
+    _, token = authorization.split(maxsplit=1)
+    try:
+        return decode_token(token)
+    except jwt.DecodeError:
+        raise HttpError(HTTPStatus.UNAUTHORIZED, MSG_UNAUTHORIZED)
+
+
+def generate_random_verification_code():
+    return "".join(random.choices(digits, k=6))
+
+
+@singledispatch
+def get_rider_profile(data):
+    raise NotImplementedError("get_rider_profile must be implemented.")
+
+
+@get_rider_profile.register
+def get_rider_profile_by_id(data: int):
+    return RiderProfile.objects.filter(rider_id=data).first()
+
+
+@get_rider_profile.register
+def get_rider_profile_by_data(data: VerificationCodeRequest):
+    return RiderProfile.objects.filter(rider__email_address=data.email_address, phone_number=data.phone_number).first()
