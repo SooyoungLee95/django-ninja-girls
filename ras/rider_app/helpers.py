@@ -8,13 +8,17 @@ from typing import Optional, Union
 import jwt
 import transitions
 from asgiref.sync import async_to_sync
-from django.core import signing
 from django.db.utils import DatabaseError, IntegrityError, OperationalError
 from django.utils import timezone
 from ninja.errors import HttpError
 from pydantic import ValidationError
 
-from ras.common.authentication.helpers import decode_token, get_encrypted_payload
+from ras.common.authentication.helpers import (
+    decode_token,
+    generate_jwt_for_password_reset,
+    generate_jwt_for_verification_code_check,
+    get_encrypted_payload,
+)
 from ras.common.integration.services.jungleworks.handlers import (
     on_off_duty,
     retrieve_delivery_task_id,
@@ -80,6 +84,8 @@ from .schemas import (
     RiderWorkingReport,
     SearchDate,
     VerificationCodeRequest,
+    VerificationCodeResponse,
+    VerificationInfo,
 )
 
 logger = logging.getLogger(__name__)
@@ -395,9 +401,9 @@ def get_rider_profile_by_data(data: VerificationCodeRequest):
     return RiderProfile.objects.filter(rider__email_address=data.email_address, phone_number=data.phone_number).first()
 
 
-def generate_jwt_for_resetting_password(rider_id):
-    return signing.dumps({"rider_id": rider_id}, compress=True)
-
-
 def handle_check_verification_code(rider_id):
-    return CheckVerificationCodeResponse(token=generate_jwt_for_resetting_password(rider_id))
+    return CheckVerificationCodeResponse(token=generate_jwt_for_verification_code_check(rider_id))
+
+
+def handle_send_verification_code_via_sms(rider_id, data: VerificationInfo):
+    return VerificationCodeResponse(token=generate_jwt_for_password_reset(rider_id, data))

@@ -220,8 +220,18 @@ class SMSMessageInfo(Schema):
 class CheckVerificationCodeRequest(Schema):
     phone_number: str
     verification_code: str
+    token: str
 
 
 class CheckVerificationCodeResponse(Schema):
     message: str = MSG_SUCCESS_CHECKING_VERIFICATION_CODE
     token: str
+
+
+class VerificationCodeResponse(Schema):
+    token: str
+
+
+class VerificationInfo(Schema):
+    phone_number: str
+    verification_code: str

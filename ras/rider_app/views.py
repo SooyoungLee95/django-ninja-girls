@@ -1,7 +1,6 @@
 from http import HTTPStatus
 from typing import Callable
 
-from django.core.cache import cache
 from ninja import Query
 from ninja.errors import HttpError
 from ninja.responses import codes_4xx
@@ -33,12 +32,14 @@ from ras.rider_app.helpers import (
     handle_rider_profile_summary,
     handle_rider_state,
     handle_rider_working_report,
+    handle_send_verification_code_via_sms,
     handle_sns_notification_push_action,
     mock_delivery_state_push_action,
     mock_handle_rider_dispatch_request_creates,
 )
 from ras.rideryo.enums import RiderTransition
 
+from ..common.authentication.helpers import decode_token_for_password_reset
 from ..common.sms.helpers import send_sms_via_hubyo
 from .constants import (
     MSG_FAIL_SENDING_VERIFICATION_CODE,
@@ -47,7 +48,6 @@ from .constants import (
     MSG_NOT_FOUND_PHONE_NUMBER,
     MSG_NOT_FOUND_RIDER,
     MSG_UNAUTHORIZED,
-    VERIFICATION_CODE_TIMEOUT_SECONDS,
 )
 from .enums import RideryoRole, WebhookName
 from .schemas import (
@@ -72,6 +72,8 @@ from .schemas import (
     RiderStateOut,
     SearchDate,
     VerificationCodeRequest,
+    VerificationCodeResponse,
+    VerificationInfo,
 )
 
 rider_router = Router()
@@ -228,7 +230,7 @@ def login(request, data: RiderLoginRequest):
     "/verification-code",
     url_name="send_verification_code_via_sms",
     summary="라이더 앱 SMS를 이용한 인증번호 전송 API",
-    response={200: None, codes_4xx: ErrorResponse, 500: ErrorResponse},
+    response={200: VerificationCodeResponse, codes_4xx: ErrorResponse, 500: ErrorResponse},
     auth=None,
 )
 def send_verification_code_via_sms(request, data: VerificationCodeRequest):
@@ -246,13 +248,14 @@ def send_verification_code_via_sms(request, data: VerificationCodeRequest):
         raise HttpError(HTTPStatus.BAD_REQUEST, MSG_NOT_FOUND_PHONE_NUMBER)
 
     verification_code = generate_random_verification_code()
-    key = f"{input_phone_number}:{verification_code}"
-    cache.set(key, rider_profile.rider_id, timeout=VERIFICATION_CODE_TIMEOUT_SECONDS)
     message = f"[요기요라이더] 인증번호는 {verification_code} 입니다."
     if not send_sms_via_hubyo(input_phone_number, message):
         return HttpError(HTTPStatus.INTERNAL_SERVER_ERROR, MSG_FAIL_SENDING_VERIFICATION_CODE)
 
-    return HTTPStatus.OK, {}
+    return HTTPStatus.OK, handle_send_verification_code_via_sms(
+        rider_profile.rider_id,
+        VerificationInfo(phone_number=input_phone_number, verification_code=verification_code),
+    )
 
 
 @auth_router.post(
@@ -263,10 +266,10 @@ def send_verification_code_via_sms(request, data: VerificationCodeRequest):
     auth=None,
 )
 def check_verification_code(request, data: CheckVerificationCodeRequest):
-    key = f"{data.phone_number}:{data.verification_code}"
-    if (rider_id := cache.get(key)) is None:
+    payload = decode_token_for_password_reset(token=data.token)
+    if payload["phone_number"] != data.phone_number or payload["verification_code"] != data.verification_code:
         raise HttpError(HTTPStatus.BAD_REQUEST, MSG_INVALID_VERIFICATION_CODE)
-    return HTTPStatus.OK, handle_check_verification_code(rider_id)
+    return HTTPStatus.OK, handle_check_verification_code(payload["rider_id"])
 
 
 @rider_router.get(
