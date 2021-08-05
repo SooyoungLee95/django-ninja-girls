@@ -176,3 +176,8 @@ YOGIYO_CUSTOMER_CENTER_PHONE_NUMBER = "1661-5270"
 
 VERIFICATION_CODE_TIMEOUT_SECONDS = 300
 VERIFY_TOKEN_MAX_AGE = 600
+
+# 최소 8자, 최소 1개의 영 소문자, 대문자,최소 1개의 특수문자, 최소 1개의 숫자
+# https://stackoverflow.com/a/21456918
+REGEX_PASSWORD_CONDITION = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+MAX_PASSWORD_LENGTH = 8

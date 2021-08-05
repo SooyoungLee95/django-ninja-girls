@@ -425,13 +425,39 @@ class TestResetPassword:
 
     def test_reset_password_should_return_400_bad_request_when_token_is_invalid(self):
         # Given: 유효하지 않은 token이 포함된 request body가 주어질 때,
-        valid_request_body = {
+        invalid_request_body = {
             "new_password": "my_new_password!@#$",
             "token": "invalid_token",
         }
 
         # When: 비밀번호 재설정 API를 호출 했을 때,
-        response = self._call_reset_password(valid_request_body)
+        response = self._call_reset_password(invalid_request_body)
+
+        # Then: 400 BAD_REQUEST 상태코드이어야 한다
+        assert response.status_code == HTTPStatus.BAD_REQUEST
+
+    @pytest.mark.parametrize(
+        "invalid_new_password_case",
+        [
+            "",  # 8자리 미만
+            "Abcdab11",  # 특수문자 미포함
+            "Abcdaba!",  # 숫자 미포함
+            "abcdab1!",  # 대문자 미포함
+            "ABCABC1!",  # 소문자 미포함
+        ],
+    )
+    @pytest.mark.django_db(transaction=True)
+    def test_reset_password_should_return_400_bad_request_when_token_is_valid_but_new_password_format_is_invalid(
+        self, mock_token_for_password_reset, invalid_new_password_case
+    ):
+        # Given: 유효하지 않은 형태의 new_password가 포함된 request body가 주어질 때, (유효조건: 8자리 이상의 대소문자와 특수문자를 포함)
+        invalid_request_body = {
+            "new_password": invalid_new_password_case,
+            "token": mock_token_for_password_reset,
+        }
+
+        # When: 비밀번호 재설정 API를 호출 했을 때,
+        response = self._call_reset_password(invalid_request_body)
 
         # Then: 400 BAD_REQUEST 상태코드이어야 한다
         assert response.status_code == HTTPStatus.BAD_REQUEST

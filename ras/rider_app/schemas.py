@@ -1,9 +1,12 @@
+import re
 from datetime import date, datetime, time, timedelta
+from http import HTTPStatus
 from typing import Any, Optional
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
+from ninja.errors import HttpError
 from ninja.schema import Field, Schema
 from pydantic import root_validator, validator
 
@@ -12,6 +15,7 @@ from ras.rider_app.constants import (
     CUSTOMER_ISSUE,
     MSG_SUCCESS_CHECKING_VERIFICATION_CODE,
     MSG_SUCCESS_RESET_PASSWORD,
+    REGEX_PASSWORD_CONDITION,
     RESTAURANT_ISSUE,
     SYSTEM_ISSUE,
     YOGIYO_CUSTOMER_CENTER_PHONE_NUMBER,
@@ -19,6 +23,8 @@ from ras.rider_app.constants import (
 from ras.rider_app.enums import PushAction, RideryoRole
 from ras.rideryo.enums import DeliveryState
 from ras.rideryo.enums import RiderResponse as RiderResponseEnum
+
+MAX_PASSWORD_LENGTH = 8
 
 
 class RiderAvailability(Schema):
@@ -242,6 +248,12 @@ class VerificationInfo(Schema):
 class ResetPasswordRequest(Schema):
     new_password: str
     token: str
+
+    @validator("new_password")
+    def check_new_password(cls, v):
+        if not re.match(REGEX_PASSWORD_CONDITION, v):
+            raise HttpError(HTTPStatus.BAD_REQUEST, "패스워드 형식이 일치하지 않습니다.")
+        return v
 
 
 class ResetPasswordResponse(Schema):
