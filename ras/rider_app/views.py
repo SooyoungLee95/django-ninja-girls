@@ -286,7 +286,7 @@ def check_verification_code(request, data: CheckVerificationCodeRequest):
     auth=None,
 )
 def reset_password(request, data: ResetPasswordRequest):
-    return HTTPStatus.BAD_REQUEST, ""
+    decode_token_for_password_reset(token=data.token)
 
 
 @rider_router.get(
