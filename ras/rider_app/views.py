@@ -13,8 +13,11 @@ from ras.common.messaging.schema import SNSMessageForSubscribe
 from ras.common.messaging.subscribers import handle_sns_notification
 from ras.common.schemas import ErrorResponse
 from ras.rider_app.helpers import (
+    generate_random_verification_code,
+    get_rider_profile,
     handle_create_rider_service_agreements,
     handle_dispatch_request_detail,
+    handle_jwt_payload,
     handle_partial_update_rider_service_agreements,
     handle_retrieve_rider_service_agreements,
     handle_rider_action,
@@ -34,8 +37,14 @@ from ras.rider_app.helpers import (
 )
 from ras.rideryo.enums import RiderTransition
 
-from ..common.authentication.helpers import extract_jwt_payload
-from .constants import MSG_MUST_AGREE_REQUIRED_AGREEMENTS
+from ..common.sms.helpers import send_sms_via_hubyo
+from .constants import (
+    MSG_FAIL_SENDING_VERIFICATION_CODE,
+    MSG_MUST_AGREE_REQUIRED_AGREEMENTS,
+    MSG_NOT_FOUND_PHONE_NUMBER,
+    MSG_NOT_FOUND_RIDER,
+    MSG_UNAUTHORIZED,
+)
 from .enums import RideryoRole, WebhookName
 from .schemas import DispatchRequestDetail
 from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
@@ -54,6 +63,7 @@ from .schemas import (
     RiderServiceAgreementPartial,
     RiderStateOut,
     SearchDate,
+    VerificationCodeRequest,
 )
 
 rider_router = Router()
@@ -62,6 +72,7 @@ mock_authyo_router = Router()
 dispatch_request_router = Router()
 sns_router = Router()
 action_router = Router()
+sms_router = Router()
 
 
 WEBHOOK_MAP: dict[str, Callable] = {
@@ -152,7 +163,8 @@ def retrieve_dispatch_requests_detail(request, id: str):
     auth=None,
 )
 def update_rider_ban(request, data: RiderBan):
-    payload = extract_jwt_payload(request)
+    if (payload := handle_jwt_payload(request.headers.get("Authorization"))) is None:
+        raise HttpError(HTTPStatus.UNAUTHORIZED, MSG_UNAUTHORIZED)
     if payload["role"] != RideryoRole.STAFF:
         raise HttpError(HTTPStatus.FORBIDDEN, "권한이 올바르지 않습니다.")
     handle_rider_ban(data)
@@ -202,6 +214,36 @@ def retrieve_rider_state(request):
 )
 def login(request, data: RiderLoginRequest):
     return HTTPStatus.OK, handle_rider_authorization(data)
+
+
+@auth_router.post(
+    "/verification-code",
+    url_name="send_verification_code_via_sms",
+    summary="라이더 앱 SMS를 이용한 인증번호 전송 API",
+    response={200: None, codes_4xx: ErrorResponse, 500: ErrorResponse},
+    auth=None,
+)
+def send_verification_code_via_sms(request, data: VerificationCodeRequest):
+    authorization = request.headers.get("Authorization")
+    if payload := handle_jwt_payload(authorization):
+        rider_profile = get_rider_profile(payload["sub_id"])
+    else:
+        rider_profile = get_rider_profile(data)
+
+    if not rider_profile:
+        raise HttpError(HTTPStatus.NOT_FOUND, MSG_NOT_FOUND_RIDER)
+
+    input_phone_number = data.phone_number
+    if input_phone_number != rider_profile.phone_number:
+        raise HttpError(HTTPStatus.BAD_REQUEST, MSG_NOT_FOUND_PHONE_NUMBER)
+
+    verification_code = generate_random_verification_code()
+    message = f"[요기요라이더] 인증번호는 {verification_code} 입니다."
+    # TODO: verification_code를 TTL 300으로, redis에 저장 - ex) input_phone_number: verification_code
+    if not send_sms_via_hubyo(input_phone_number, message):
+        return HttpError(HTTPStatus.INTERNAL_SERVER_ERROR, MSG_FAIL_SENDING_VERIFICATION_CODE)
+
+    return HTTPStatus.OK, {}
 
 
 @rider_router.get(

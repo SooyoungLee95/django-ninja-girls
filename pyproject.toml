@@ -22,6 +22,7 @@ cryptography = "^3.4.7"
 PyJWT = "^2.1.0"
 transitions = "^0.8.8"
 freezegun = "^1.1.0"
+hubyo-client = {git = "ssh://git@github.com/yogiyo/hubyo-client.git", rev = "0.0.11"}
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.11.1"

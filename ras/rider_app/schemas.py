@@ -12,6 +12,7 @@ from ras.rider_app.constants import (
     CUSTOMER_ISSUE,
     RESTAURANT_ISSUE,
     SYSTEM_ISSUE,
+    YOGIYO_CUSTOMER_CENTER_PHONE_NUMBER,
 )
 from ras.rider_app.enums import PushAction, RideryoRole
 from ras.rideryo.enums import DeliveryState
@@ -193,3 +194,23 @@ class RiderServiceAgreementOut(Schema):
     def validate_agreement_saved_time(cls, value):
         if datetime.strptime(value, "%Y-%m-%d %H:%M:%S"):
             return value
+
+
+class VerificationCodeRequest(Schema):
+    email_address: Optional[str]
+    phone_number: str
+
+
+class SMSMessageData(Schema):
+    target: str
+    text: str
+    sender: str = YOGIYO_CUSTOMER_CENTER_PHONE_NUMBER
+    is_lms: bool = False
+    lms_subject: str = ""
+
+
+class SMSMessageInfo(Schema):
+    event: str = "send_sms"
+    entity: str = "sms"
+    tracking_id: str
+    msg: dict[str, SMSMessageData]
