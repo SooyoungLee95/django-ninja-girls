@@ -397,8 +397,9 @@ def get_rider_profile_by_data(data: VerificationCodeRequest):
 def handle_reset_password(rider_id, new_password) -> ResetPasswordResponse:
     try:
         rider = RiderAccount.objects.get(pk=rider_id)
-    except RiderAccount.DoesNotExist:
-        pass
+    except RiderAccount.DoesNotExist as e:
+        logger.error(f"[Rider Account Reset Password] {rider_id} {e!r}")
+        raise HttpError(HTTPStatus.BAD_REQUEST, MSG_INVALID_VALUE)
     else:
         rider.password = new_password
         rider.save()

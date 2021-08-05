@@ -11,6 +11,7 @@ from hubyo_client.client import HubyoClientError
 from ninja.errors import HttpError
 from pydantic import ValidationError
 
+from ras.common.authentication.helpers import generate_token_for_password_reset
 from ras.common.sms.helpers import send_sms_via_hubyo
 from ras.rider_app.constants import (
     AUTHYO_LOGIN_URL,
@@ -456,6 +457,22 @@ class TestResetPassword:
         invalid_request_body = {
             "new_password": invalid_new_password_case,
             "token": mock_token_for_password_reset,
+        }
+
+        # When: 비밀번호 재설정 API를 호출 했을 때,
+        response = self._call_reset_password(invalid_request_body)
+
+        # Then: 400 BAD_REQUEST 상태코드이어야 한다
+        assert response.status_code == HTTPStatus.BAD_REQUEST
+
+    @pytest.mark.django_db(transaction=True)
+    def test_reset_password_should_return_400_bad_request_when_rider_id_does_not_exist(self, rider_profile):
+        # Given: 유효하지 않은 token이 포함된 request body가 주어 지고,
+        not_exist_rider_id = 123456
+        invalid_token = generate_token_for_password_reset(rider_id=not_exist_rider_id)
+        invalid_request_body = {
+            "new_password": "1!aAabcd",  # 8자리 이상, 최소 1개의 영 소,대 문자, 숫자, 특수문자
+            "token": invalid_token,
         }
 
         # When: 비밀번호 재설정 API를 호출 했을 때,
