@@ -545,6 +545,36 @@ def test_subscribe_sns_event_order_cancelled(
 
 
 @pytest.mark.django_db(transaction=True)
+def test_dispatch_requests_detail_must_have_required_fields(
+    rider_dispatch_request, rider_dispatch_request_state_near_pickup, mock_jwt_token
+):
+    # Given: 배차정보 및 상태기록이 있고
+
+    # When: 배차 정보 조회 시,
+    client = Client()
+    response = client.get(
+        reverse("ninja:mock_rider_app_dispatch_requests_detail") + f"?id={rider_dispatch_request.pk}",
+        content_type="application/json",
+        **{"HTTP_AUTHORIZATION": f"Bearer {mock_jwt_token}"},
+    )
+
+    # Then: 200 성공 응답, 배열이 반환되고
+    assert response.status_code == HTTPStatus.OK
+    data = response.json()
+    assert isinstance(data, list)
+
+    # Then: 올바른 값이 포함되어 있고, 배차정보 및 상태가 반환된다
+    detail = data[0]
+
+    # TODO: RPS 연동시 필드 확인 필요
+    assert "dispatch_request_id" in detail
+    assert "state" in detail
+    assert "cancel_reason" in detail
+    assert "restaurant" in detail
+    assert "restaurant_extra_image" in detail["restaurant"]
+
+
+@pytest.mark.django_db(transaction=True)
 def test_dispatch_requests_detail_not_cancelled(
     rider_dispatch_request, rider_dispatch_request_state_near_pickup, mock_jwt_token
 ):
