@@ -190,13 +190,15 @@ def query_get_rider_service_agreements(rider_id):
     return RiderServiceAgreement.objects.filter(rider_id=rider_id)
 
 
-def query_create_rider_service_agreements(rider_id, data: RiderServiceAgreementSchema):
+def query_create_or_replace_rider_service_agreements(rider_id, data: RiderServiceAgreementSchema):
     models = []
-
-    for agreement_type, agreement_label in ServiceAgreementType._value2label_map_.items():
-        agreed = getattr(data, agreement_label)
-        models.append(RiderServiceAgreement(rider_id=rider_id, agreement_type=agreement_type, agreed=agreed))
-    return RiderServiceAgreement.objects.bulk_create(models)
+    with transaction.atomic():
+        for agreement_type, agreement_label in ServiceAgreementType._value2label_map_.items():
+            agreement, _ = RiderServiceAgreement.objects.get_or_create(rider_id=rider_id, agreement_type=agreement_type)
+            agreement.agreed = getattr(data, agreement_label, False)
+            agreement.save()
+            models.append(agreement)
+    return models
 
 
 def query_partial_update_rider_service_agreements(rider_id, data: RiderServiceAgreementPartial):
