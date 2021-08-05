@@ -29,6 +29,7 @@ MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1 = {
         "lat": 37.4850935,
         "lng": 126.981459,
         "picture_urls": ["http://sample_picture/sample_pickupre/test.jpg"],
+        "restaurant_extra_image": "https://www.yogiyo.co.kr/restaurant/extra-detail/479137/",
     },
     "order": {
         "id": "21052016225297",  # 주문번호(YGY)
@@ -65,6 +66,7 @@ MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_2 = {
         "lat": 37.4850935,
         "lng": 126.981459,
         "picture_urls": ["http://sample_picture/sample_pickupre/test.jpg"],
+        "restaurant_extra_image": "https://www.yogiyo.co.kr/restaurant/extra-detail/479137/",
     },
     "order": {
         "id": "21052016225298",  # 주문번호(YGY)
@@ -100,6 +102,7 @@ MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_3 = {
         "lat": 37.4850935,
         "lng": 126.981459,
         "picture_urls": ["http://sample_picture/sample_pickupre/test.jpg"],
+        "restaurant_extra_image": "https://www.yogiyo.co.kr/restaurant/extra-detail/479137/",
     },
     "order": {
         "id": "21052016225299",  # 주문번호(YGY)
