@@ -274,7 +274,8 @@ def send_verification_code_via_sms(request, data: VerificationCodeRequest):
 )
 def check_verification_code(request, data: CheckVerificationCodeRequest):
     payload: VerificationInfo = decode_token_for_password_reset(token=data.token)
-    if payload.phone_number != data.phone_number or payload.verification_code != data.verification_code:
+    is_valid = payload.phone_number == data.phone_number and payload.verification_code == data.verification_code
+    if not is_valid:
         raise HttpError(HTTPStatus.BAD_REQUEST, MSG_INVALID_VERIFICATION_CODE)
     return HTTPStatus.OK, CheckVerificationCodeResponse(token=generate_token_for_password_reset(payload.rider_id))
 
