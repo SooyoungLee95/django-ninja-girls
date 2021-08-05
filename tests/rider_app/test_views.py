@@ -725,6 +725,10 @@ def test_create_rider_service_agreements(rider_profile, mock_jwt_token):
 
         # And: 이용약관 저장 시간이 반환된다.
         data = response.json()
+        assert data["personal_information"] is True
+        assert data["location_based_service"] is True
+        assert data["promotion_receivable"] is False
+        assert data["night_promotion_receivable"] is False
         assert data["agreement_saved_time"] == current_time.strftime("%Y-%m-%d %H:%M:%S")
 
 
@@ -819,6 +823,7 @@ def test_partial_update_rider_service_agreements(rider_profile, rider_service_ag
 
         # And: 이용약관 저장 시간이 반환된다.
         data = response.json()
+        assert data["promotion_receivable"] is True
         assert data["agreement_saved_time"] == current_time.strftime("%Y-%m-%d %H:%M:%S")
 
     agreement.refresh_from_db()

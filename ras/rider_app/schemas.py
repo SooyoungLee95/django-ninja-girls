@@ -18,6 +18,8 @@ from ras.rider_app.enums import PushAction, RideryoRole
 from ras.rideryo.enums import DeliveryState
 from ras.rideryo.enums import RiderResponse as RiderResponseEnum
 
+SAVED_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+
 
 class RiderAvailability(Schema):
     is_available: bool
@@ -175,6 +177,18 @@ class RiderServiceAgreement(Schema):
         return self.personal_information and self.location_based_service
 
 
+class AgreementSavedTime(Schema):
+    agreement_saved_time: str
+
+    @validator("agreement_saved_time", pre=True)
+    def validate_agreement_saved_time(cls, value: datetime):
+        return datetime.strftime(value, SAVED_TIME_FORMAT)
+
+
+class RiderServiceAgreementOut(RiderServiceAgreement, AgreementSavedTime):
+    pass
+
+
 class RiderServiceAgreementPartial(Schema):
     promotion_receivable: Optional[bool]
     night_promotion_receivable: Optional[bool]
@@ -187,13 +201,8 @@ class RiderServiceAgreementPartial(Schema):
         return values
 
 
-class RiderServiceAgreementOut(Schema):
-    agreement_saved_time: str
-
-    @validator("agreement_saved_time", pre=True)
-    def validate_agreement_saved_time(cls, value):
-        if datetime.strptime(value, "%Y-%m-%d %H:%M:%S"):
-            return value
+class RiderServiceAgreementPartialOut(RiderServiceAgreementPartial, AgreementSavedTime):
+    pass
 
 
 class VerificationCodeRequest(Schema):
