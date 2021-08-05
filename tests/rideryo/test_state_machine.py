@@ -6,6 +6,7 @@ from ras.rideryo.enums import RiderState, RiderTransition
 
 
 @pytest.mark.django_db(transaction=True)
+@patch("ras.common.messaging.publishers.sns_client.publish", Mock(return_value=None))
 def test_start_work_ondemand_should_auto_update_to_ready_state(rider_state):
     # Given: AVAILABLE 상태일 때,
     rider_state.state = RiderState.AVAILABLE
@@ -35,6 +36,7 @@ def test_start_work_ondemand_should_call_start_dispatch(rider_state):
 
 
 @pytest.mark.django_db(transaction=True)
+@patch("ras.common.messaging.publishers.sns_client.publish", Mock(return_value=None))
 def test_end_work_ondemand_should_auto_update_to_available_state(rider_state):
     # Given: READY 상태일 때,
     rider_state.state = RiderState.READY
@@ -49,6 +51,7 @@ def test_end_work_ondemand_should_auto_update_to_available_state(rider_state):
 
 
 @pytest.mark.django_db(transaction=True)
+@patch("ras.common.messaging.publishers.sns_client.publish", Mock(return_value=None))
 def test_end_work_ondemand_should_call_reset(rider_state):
     # Given: READY 상태일 때,
     rider_state.state = RiderState.READY
