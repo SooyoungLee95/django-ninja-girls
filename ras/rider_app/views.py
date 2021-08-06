@@ -232,7 +232,7 @@ def send_verification_code_via_sms(request, data: VerificationCodeRequest):
         rider_profile = get_rider_profile(data)
 
     if not rider_profile:
-        raise HttpError(HTTPStatus.NOT_FOUND, MSG_NOT_FOUND_RIDER)
+        raise HttpError(HTTPStatus.BAD_REQUEST, MSG_NOT_FOUND_RIDER)
 
     input_phone_number = data.phone_number
     if input_phone_number != rider_profile.phone_number:
