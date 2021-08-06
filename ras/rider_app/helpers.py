@@ -234,7 +234,7 @@ def handle_rider_profile_summary(rider_id):
     if rider_profile_summary:
         return rider_profile_summary
     else:
-        raise HttpError(HTTPStatus.NOT_FOUND, "라이더가 존재하지 않습니다.")
+        raise HttpError(HTTPStatus.BAD_REQUEST, "라이더가 존재하지 않습니다.")
 
 
 def handle_sns_notification_push_action(topic, message, instance):

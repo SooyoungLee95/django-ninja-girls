@@ -501,8 +501,8 @@ def test_retrieve_rider_profile_summary_when_rider_profile_does_not_exist(rider_
         reverse("ninja:retrieve_rider_profile_summary"),
         **{"HTTP_AUTHORIZATION": f"Bearer {mock_jwt_token}"},
     )
-    # Then: 404 NOT_FOUND를 return 해야하고,
-    assert response.status_code == HTTPStatus.NOT_FOUND
+    # Then: 400 BAD REQUEST를 return 해야하고,
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     # And: message는 라이더가 존재하지 않습니다. 이어야 한다
     assert json.loads(response.content)["message"] == "라이더가 존재하지 않습니다."
 
