@@ -30,7 +30,7 @@ def test_start_work_ondemand_should_call_start_dispatch(rider_state):
     mock_start_dispatch = Mock()
 
     # Then: enable_new_dispatch 트리거가 실행된다
-    with patch.object(rider_state, RiderTransition.ENABLE_NEW_DISPATCH.value, mock_start_dispatch):
+    with patch.object(rider_state, RiderTransition.ENABLE_NEW_DISPATCH.label, mock_start_dispatch):
         rider_state.start_work()
         mock_start_dispatch.assert_called_once()
 

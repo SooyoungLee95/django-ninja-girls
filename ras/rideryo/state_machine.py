@@ -30,16 +30,16 @@ class RiderStateMachine(Machine):
         self.add_transition("approve", rs.APPLYING, rs.AVAILABLE)
 
         # 근무시작
-        self.add_transition(rt.START_WORK, rs.AVAILABLE, rs.STARTING)
+        self.add_transition(rt.START_WORK.label, rs.AVAILABLE, rs.STARTING)
 
         # 신규배차 대기중
-        self.add_transition(rt.ENABLE_NEW_DISPATCH, [rs.STARTING, rs.BREAK], rs.READY)
+        self.add_transition(rt.ENABLE_NEW_DISPATCH.label, [rs.STARTING, rs.BREAK], rs.READY)
 
         # 신규배차 중지
-        self.add_transition(rt.DISABLE_NEW_DISPATCH, rs.READY, rs.BREAK)
+        self.add_transition(rt.DISABLE_NEW_DISPATCH.label, rs.READY, rs.BREAK)
 
         # 근무종료
-        self.add_transition(rt.END_WORK, [rs.READY, rs.BREAK], rs.ENDING)
+        self.add_transition(rt.END_WORK.label, [rs.READY, rs.BREAK], rs.ENDING)
 
         # 근무 대기
         self.add_transition("reset", rs.ENDING, rs.AVAILABLE)
@@ -68,9 +68,9 @@ class RiderStateMachine(Machine):
         )
 
         # 자동 상태 전환
-        if event_data.event.name == rt.START_WORK:  # TODO: 스케줄 도입 시 조건 수정
-            getattr(self.model, rt.ENABLE_NEW_DISPATCH.value)()
-        elif event_data.event.name == rt.END_WORK:  # TODO: 스케줄 도입 시 조건 수정
+        if event_data.event.name == rt.START_WORK.label:  # TODO: 스케줄 도입 시 조건 수정
+            getattr(self.model, rt.ENABLE_NEW_DISPATCH.label)()
+        elif event_data.event.name == rt.END_WORK.label:  # TODO: 스케줄 도입 시 조건 수정
             self.model.reset()
 
     def handle_READY(self, event_data, *args, **kwargs):

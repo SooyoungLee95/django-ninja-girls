@@ -46,7 +46,7 @@ from ras.rider_app.queries import (
     query_rider_current_deliveries,
     query_rider_state,
 )
-from ras.rideryo.enums import DeliveryState, RiderResponse
+from ras.rideryo.enums import DeliveryState, RiderResponse, RiderTransition
 
 from ..common.fcm import FCMSender
 from ..rideryo.models import (
@@ -347,9 +347,9 @@ def handle_rider_authorization(data: RiderLoginRequest) -> RiderLoginResponse:
     )
 
 
-def handle_rider_action(rider: RiderProfile, action: str) -> bool:
+def handle_rider_action(rider: RiderProfile, action: RiderTransition) -> bool:
     try:
-        return getattr(rider.riderstate, action)()
+        return getattr(rider.riderstate, action.label)()
     except AttributeError as e:
         logger.error(f"[RiderActions] {rider.pk} {e!r}")
         raise HttpError(HTTPStatus.BAD_REQUEST, MSG_INVALID_VALUE)

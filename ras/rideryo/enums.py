@@ -92,10 +92,14 @@ class RiderState(TextChoices):
 
 
 class RiderTransition(str, Enum):
-    START_WORK = "start_work"
-    END_WORK = "end_work"
-    ENABLE_NEW_DISPATCH = "enable_new_dispatch"
-    DISABLE_NEW_DISPATCH = "disable_new_dispatch"
+    START_WORK = "start-work"
+    END_WORK = "end-work"
+    ENABLE_NEW_DISPATCH = "enable-new-dispatch"
+    DISABLE_NEW_DISPATCH = "disable-new-dispatch"
+
+    @property
+    def label(self):
+        return self.name.lower()
 
 
 class ServiceAgreementType(TextChoices):
