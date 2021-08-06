@@ -264,7 +264,7 @@ def handle_rider_state(rider_id):
     try:
         rider_state = query_rider_state(rider_id)
     except RiderState.DoesNotExist:
-        raise HttpError(HTTPStatus.NOT_FOUND, "")
+        raise HttpError(HTTPStatus.BAD_REQUEST, "")
     current_deliveries = query_rider_current_deliveries(rider_id)
     return RiderStateOut(
         state=rider_state.state,
