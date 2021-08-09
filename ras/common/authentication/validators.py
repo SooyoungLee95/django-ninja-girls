@@ -7,10 +7,12 @@ from ras.rider_app.constants import (
     REGEX_PASSWORD_CONDITION,
 )
 
+password_condition = re.compile(REGEX_PASSWORD_CONDITION, re.X)
+
 
 class RiderAppPasswordConditionValidator:
     def validate(self, password, user=None):
-        if not re.match(REGEX_PASSWORD_CONDITION, password):
+        if not password_condition.match(password):
             raise ValidationError(message=MSG_INVALID_PASSWORD_CREATION_CONDITION)
 
     def get_help_text(self):
