@@ -172,9 +172,22 @@ MSG_FAIL_SENDING_VERIFICATION_CODE = "인증번호 SMS 전송에 실패 하였�
 MSG_INVALID_VERIFICATION_CODE = "인증번호가 일치하지 않습니다."
 MSG_SUCCESS_CHECKING_VERIFICATION_CODE = "인증이 완료되었습니다."
 MSG_INVALID_TOKEN = "유효하지 않은 토큰입니다."
-MSG_TOKEN_EXPIRED = "토큰 유효기간이 만료되었습니다."
+MSG_TOKEN_EXPIRED = "세션이 만료되었습니다. 처음부터 다시 시도해주세요."
+MSG_SUCCESS_RESET_PASSWORD = "비밀번호 변경이 완료되었습니다."
 
 YOGIYO_CUSTOMER_CENTER_PHONE_NUMBER = "1661-5270"
 
 VERIFICATION_CODE_TIMEOUT_SECONDS = 300
 VERIFY_TOKEN_MAX_AGE = 600
+
+
+# https://stackoverflow.com/a/21456918
+REGEX_PASSWORD_CONDITION = r"""
+^(?=.*[a-z]) # 최소 1개의 소문자
+(?=.*[A-Z]) # 최소 1개의 대문자
+(?=.*\d) # 최소 1개의 숫자
+(?=.*[!@#$%^&*()]) # 최소 1개의 특수문자
+[A-Za-z\d!@#$%^&*()]{8,}$ # 8자리 이상
+"""
+MAX_PASSWORD_LENGTH = 8
+MSG_INVALID_PASSWORD_CREATION_CONDITION = "비밀번호 생성조건을 확인해주세요."

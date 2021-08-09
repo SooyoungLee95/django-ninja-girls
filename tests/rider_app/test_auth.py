@@ -5,12 +5,14 @@ from unittest.mock import Mock, patch
 import jwt
 import pytest
 from django.conf import settings
+from django.core import signing
 from django.test import Client
 from django.urls import reverse
 from hubyo_client.client import HubyoClientError
 from ninja.errors import HttpError
 from pydantic import ValidationError
 
+from ras.common.authentication.helpers import generate_token_for_password_reset
 from ras.common.sms.helpers import send_sms_via_hubyo
 from ras.rider_app.constants import (
     AUTHYO_LOGIN_URL,
@@ -18,10 +20,12 @@ from ras.rider_app.constants import (
     MSG_INVALID_VERIFICATION_CODE,
     MSG_NOT_FOUND_RIDER,
     MSG_SUCCESS_CHECKING_VERIFICATION_CODE,
+    MSG_SUCCESS_RESET_PASSWORD,
     MSG_UNAUTHORIZED,
 )
 from ras.rider_app.helpers import RIDER_APP_INITIAL_PASSWORD
 from ras.rider_app.schemas import RiderLoginRequest
+from ras.rideryo.models import RiderAccount
 from tests.conftest import TEST_JWT_PRIVATE
 
 client = Client()
@@ -413,3 +417,104 @@ class TestCheckVerificationCode:
         response = json.loads(response.content)
         assert response["message"] == MSG_SUCCESS_CHECKING_VERIFICATION_CODE
         assert response["token"] == mock_token_for_password_reset
+
+
+class TestResetPassword:
+    def _call_reset_password(self, request_body):
+        return client.post(
+            reverse("ninja:reset_password"),
+            data=request_body,
+            content_type="application/json",
+        )
+
+    def test_reset_password_should_return_400_bad_request_when_token_is_invalid(self):
+        # Given: 유효하지 않은 token이 포함된 request body가 주어 지고,
+        invalid_request_body = {
+            "new_password": "my_new_password!@#$",
+            "token": "invalid_token",
+        }
+
+        # When: 비밀번호 재설정 API를 호출 했을 때,
+        response = self._call_reset_password(invalid_request_body)
+
+        # Then: 400 BAD_REQUEST 상태코드이어야 한다
+        assert response.status_code == HTTPStatus.BAD_REQUEST
+
+    @pytest.mark.parametrize(
+        "invalid_new_password_case",
+        [
+            "",  # 8자리 미만
+            "Abcdab11",  # 특수문자 미포함
+            "Abcdaba!",  # 숫자 미포함
+            "abcdab1!",  # 대문자 미포함
+            "ABCABC1!",  # 소문자 미포함
+        ],
+    )
+    @pytest.mark.django_db(transaction=True)
+    def test_reset_password_should_return_400_bad_request_when_token_is_valid_but_new_password_format_is_invalid(
+        self, mock_token_for_password_reset, invalid_new_password_case
+    ):
+        # Given: 유효하지 않은 형태의 new_password가 포함된 request body가 주어지고, (유효조건: 8자리 이상의 대소문자와 특수문자를 포함)
+        invalid_request_body = {
+            "new_password": invalid_new_password_case,
+            "token": mock_token_for_password_reset,
+        }
+
+        # When: 비밀번호 재설정 API를 호출 했을 때,
+        response = self._call_reset_password(invalid_request_body)
+
+        # Then: 400 BAD_REQUEST 상태코드이어야 한다
+        assert response.status_code == HTTPStatus.BAD_REQUEST
+
+    @pytest.mark.django_db(transaction=True)
+    def test_reset_password_should_return_400_bad_request_when_rider_id_does_not_exist(self, rider_profile):
+        # Given: 유효하지 않은 token이 포함된 request body가 주어 지고,
+        not_exist_rider_id = 123456
+        invalid_token = generate_token_for_password_reset(rider_id=not_exist_rider_id)
+        invalid_request_body = {
+            "new_password": "1!aAabcd",  # 8자리 이상, 최소 1개의 영 소,대 문자, 숫자, 특수문자
+            "token": invalid_token,
+        }
+
+        # When: 비밀번호 재설정 API를 호출 했을 때,
+        response = self._call_reset_password(invalid_request_body)
+
+        # Then: 400 BAD_REQUEST 상태코드이어야 한다
+        assert response.status_code == HTTPStatus.BAD_REQUEST
+
+    @patch("ras.common.authentication.helpers.signing.loads")
+    @pytest.mark.django_db(transaction=True)
+    def test_reset_password_should_return_400_bad_request_when_token_is_already_expired(
+        self, mock_signing_loads, mock_token_for_password_reset, rider_profile
+    ):
+        # Given: signing.SignatureExpired 에러가 발생 했을 때,
+        mock_signing_loads.side_effect = signing.SignatureExpired
+
+        # When: 비밀번호 재설정 API를 호출 했을 때,
+        valid_request_body = {
+            "new_password": "1!aAabcd",  # 8자리 이상, 최소 1개의 영 소,대 문자, 숫자, 특수문자
+            "token": mock_token_for_password_reset,
+        }
+        response = self._call_reset_password(valid_request_body)
+
+        # Then: 400 BAD_REQUEST 상태코드이어야 한다
+        assert response.status_code == HTTPStatus.BAD_REQUEST
+
+    @pytest.mark.django_db(transaction=True)
+    def test_reset_password_should_return_200_ok(self, rider_profile, mock_token_for_password_reset):
+        # Given: 유효한 형태의 request body가 주어지고,
+        valid_request_body = {
+            "new_password": "1!aAabcd",  # 8자리 이상, 최소 1개의 영 소,대 문자, 숫자, 특수문자
+            "token": mock_token_for_password_reset,
+        }
+
+        # When: 비밀번호 재설정 API를 호출 했을 때,
+        response = self._call_reset_password(valid_request_body)
+
+        # Then: 200 OK 상태코드이어야 한다
+        assert response.status_code == HTTPStatus.OK
+        # And: 비밀번호 변경이 완료되었습니다. 를 리턴해야한다
+        assert json.loads(response.content)["message"] == MSG_SUCCESS_RESET_PASSWORD
+        # And: 패스워드가 new_password 로 수정되어야 한다
+        rider = RiderAccount.objects.get(pk=rider_profile.rider_id)
+        assert rider.is_valid_password(valid_request_body["new_password"])

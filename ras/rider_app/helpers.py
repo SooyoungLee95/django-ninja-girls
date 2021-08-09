@@ -8,6 +8,8 @@ from typing import Optional, Union
 import jwt
 import transitions
 from asgiref.sync import async_to_sync
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoCoreValidationError
 from django.db.utils import DatabaseError, IntegrityError, OperationalError
 from django.utils import timezone
 from ninja.errors import HttpError
@@ -24,6 +26,7 @@ from ras.rider_app.constants import (
     AUTHYO_LOGIN_URL,
     MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1,
     MSG_AGREEMENT_NOT_SUBMITTED,
+    MSG_INVALID_PASSWORD_CREATION_CONDITION,
     MSG_INVALID_VALUE,
     MSG_STATE_MACHINE_CANNOT_PROCESS,
     MSG_UNAUTHORIZED,
@@ -48,6 +51,7 @@ from ras.rider_app.queries import (
 )
 from ras.rideryo.enums import DeliveryState, RiderResponse
 
+from ..common.authentication.validators import RiderAppPasswordConditionValidator
 from ..common.fcm import FCMSender
 from ..rideryo.models import (
     RiderAccount,
@@ -60,6 +64,7 @@ from .schemas import (
     DispatchRequestDetail,
     FcmPushPayload,
     MockRiderDispatch,
+    ResetPasswordResponse,
 )
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import (
@@ -385,4 +390,22 @@ def get_rider_profile_by_id(data: int):
 
 @get_rider_profile.register
 def get_rider_profile_by_data(data: VerificationCodeRequest):
-    return RiderProfile.objects.filter(rider__email_address=data.email_address, phone_number=data.phone_number).first()
+    return RiderProfile.objects.filter(rider__email_address=data.email_address).first()
+
+
+def handle_reset_password(rider_id, new_password) -> ResetPasswordResponse:
+    try:
+        rider = RiderAccount.objects.get(pk=rider_id)
+    except RiderAccount.DoesNotExist as e:
+        logger.error(f"[Rider Account Reset Password] {rider_id} {e!r}")
+        raise HttpError(HTTPStatus.BAD_REQUEST, MSG_INVALID_VALUE)
+
+    try:
+        validate_password(password=new_password, password_validators=[RiderAppPasswordConditionValidator()])
+    except DjangoCoreValidationError as e:
+        logger.error(f"[Rider Account Reset Password] {rider_id} {e!r}")
+        raise HttpError(HTTPStatus.BAD_REQUEST, MSG_INVALID_PASSWORD_CREATION_CONDITION)
+    else:
+        rider.password = new_password
+        rider.save()
+    return ResetPasswordResponse()

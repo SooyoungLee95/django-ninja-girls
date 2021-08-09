@@ -11,6 +11,7 @@ from ras.rider_app.constants import (
     CANCEL_REASON_ISSUE_MAP,
     CUSTOMER_ISSUE,
     MSG_SUCCESS_CHECKING_VERIFICATION_CODE,
+    MSG_SUCCESS_RESET_PASSWORD,
     RESTAURANT_ISSUE,
     SYSTEM_ISSUE,
     YOGIYO_CUSTOMER_CENTER_PHONE_NUMBER,
@@ -243,5 +244,14 @@ class VerificationCodeResponse(Schema):
 
 class VerificationInfo(Schema):
     rider_id: int
-    phone_number: str
-    verification_code: str
+    phone_number: Optional[str]
+    verification_code: Optional[str]
+
+
+class ResetPasswordRequest(Schema):
+    new_password: str
+    token: str
+
+
+class ResetPasswordResponse(Schema):
+    message: str = MSG_SUCCESS_RESET_PASSWORD

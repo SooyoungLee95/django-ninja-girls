@@ -19,6 +19,7 @@ from ras.rider_app.helpers import (
     handle_dispatch_request_detail,
     handle_jwt_payload,
     handle_partial_update_rider_service_agreements,
+    handle_reset_password,
     handle_retrieve_rider_service_agreements,
     handle_rider_action,
     handle_rider_authorization,
@@ -58,6 +59,7 @@ from .schemas import (
     DispatchRequestDetail,
 )
 from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
+from .schemas import ResetPasswordRequest, ResetPasswordResponse
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import RiderBan, RiderDeliveryState
 from .schemas import RiderDispatch as RiderDispatchResultSchema
@@ -229,7 +231,7 @@ def login(request, data: RiderLoginRequest):
     return HTTPStatus.OK, handle_rider_authorization(data)
 
 
-@auth_router.post(
+@sms_router.post(
     "/verification-code",
     url_name="send_verification_code_via_sms",
     summary="라이더 앱 SMS를 이용한 인증번호 전송 API",
@@ -264,7 +266,7 @@ def send_verification_code_via_sms(request, data: VerificationCodeRequest):
     )
 
 
-@auth_router.post(
+@sms_router.post(
     "/verification-code/check",
     url_name="check_verification_code",
     summary="휴대폰 번호 인증 요청 확인 API",
@@ -273,9 +275,22 @@ def send_verification_code_via_sms(request, data: VerificationCodeRequest):
 )
 def check_verification_code(request, data: CheckVerificationCodeRequest):
     payload: VerificationInfo = decode_token_for_password_reset(token=data.token)
-    if payload.phone_number != data.phone_number or payload.verification_code != data.verification_code:
+    is_valid = payload.phone_number == data.phone_number and payload.verification_code == data.verification_code
+    if not is_valid:
         raise HttpError(HTTPStatus.BAD_REQUEST, MSG_INVALID_VERIFICATION_CODE)
     return HTTPStatus.OK, CheckVerificationCodeResponse(token=generate_token_for_password_reset(payload.rider_id))
+
+
+@auth_router.post(
+    "/reset-password",
+    url_name="reset_password",
+    summary="비밀번호 재설정 API",
+    response={200: ResetPasswordResponse, codes_4xx: ErrorResponse, 500: ErrorResponse},
+    auth=None,
+)
+def reset_password(request, data: ResetPasswordRequest):
+    payload: VerificationInfo = decode_token_for_password_reset(token=data.token)
+    return HTTPStatus.OK, handle_reset_password(payload.rider_id, data.new_password)
 
 
 @rider_router.get(
