@@ -13,11 +13,7 @@ from django.utils import timezone
 from ninja.errors import HttpError
 from pydantic import ValidationError
 
-from ras.common.authentication.helpers import (
-    decode_token,
-    generate_token_for_password_reset,
-    get_encrypted_payload,
-)
+from ras.common.authentication.helpers import decode_token, get_encrypted_payload
 from ras.common.integration.services.jungleworks.handlers import (
     on_off_duty,
     retrieve_delivery_task_id,
@@ -62,7 +58,6 @@ from ..rideryo.models import (
 )
 from .schemas import (
     AuthyoPayload,
-    CheckVerificationCodeResponse,
     DispatchRequestDetail,
     FcmPushPayload,
     MockRiderDispatch,
@@ -396,7 +391,3 @@ def get_rider_profile_by_id(data: int):
 @get_rider_profile.register
 def get_rider_profile_by_data(data: VerificationCodeRequest):
     return RiderProfile.objects.filter(rider__email_address=data.email_address, phone_number=data.phone_number).first()
-
-
-def handle_check_verification_code(rider_id):
-    return CheckVerificationCodeResponse(token=generate_token_for_password_reset(rider_id))

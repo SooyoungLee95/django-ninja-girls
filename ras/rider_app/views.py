@@ -15,7 +15,6 @@ from ras.common.schemas import ErrorResponse
 from ras.rider_app.helpers import (
     generate_random_verification_code,
     get_rider_profile,
-    handle_check_verification_code,
     handle_create_rider_service_agreements,
     handle_dispatch_request_detail,
     handle_jwt_payload,
@@ -40,6 +39,7 @@ from ras.rideryo.enums import RiderTransition
 
 from ..common.authentication.helpers import (
     decode_token_for_password_reset,
+    generate_token_for_password_reset,
     generate_token_for_verification_code_check,
 )
 from ..common.sms.helpers import send_sms_via_hubyo
@@ -274,7 +274,7 @@ def check_verification_code(request, data: CheckVerificationCodeRequest):
     payload: VerificationInfo = decode_token_for_password_reset(token=data.token)
     if payload.phone_number != data.phone_number or payload.verification_code != data.verification_code:
         raise HttpError(HTTPStatus.BAD_REQUEST, MSG_INVALID_VERIFICATION_CODE)
-    return HTTPStatus.OK, handle_check_verification_code(payload.rider_id)
+    return HTTPStatus.OK, CheckVerificationCodeResponse(token=generate_token_for_password_reset(payload.rider_id))
 
 
 @rider_router.get(
