@@ -233,5 +233,6 @@ class VerificationCodeResponse(Schema):
 
 
 class VerificationInfo(Schema):
+    rider_id: int
     phone_number: str
     verification_code: str

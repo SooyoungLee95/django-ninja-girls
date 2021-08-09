@@ -25,18 +25,15 @@ def decode_token(token) -> dict[str, Union[str, int]]:
     return jwt.decode(jwt=token, key=settings.AUTHYO.SECRET_KEY, algorithms=[settings.AUTHYO.ALGORITHM])
 
 
-def generate_token_for_password_reset(rider_id, data: VerificationInfo):
-    return signing.dumps(
-        {"rider_id": rider_id, "phone_number": data.phone_number, "verification_code": data.verification_code},
-        compress=True,
-    )
+def generate_token_for_verification_code_check(data: VerificationInfo):
+    return signing.dumps(data.dict(), compress=True)
 
 
-def generate_token_for_verification_code_check(rider_id):
+def generate_token_for_password_reset(rider_id):
     return signing.dumps({"rider_id": rider_id}, compress=True)
 
 
-def decode_token_for_password_reset(token: str, max_age: int = VERIFY_TOKEN_MAX_AGE) -> dict:
+def decode_token_for_password_reset(token: str, max_age: int = VERIFY_TOKEN_MAX_AGE) -> VerificationInfo:
     try:
         payload = signing.loads(token, max_age=max_age)
     except signing.SignatureExpired:
@@ -44,4 +41,4 @@ def decode_token_for_password_reset(token: str, max_age: int = VERIFY_TOKEN_MAX_
     except signing.BadSignature:
         raise HttpError(HTTPStatus.BAD_REQUEST, MSG_INVALID_TOKEN)
     else:
-        return payload
+        return VerificationInfo.parse_obj(payload)

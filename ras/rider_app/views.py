@@ -32,14 +32,16 @@ from ras.rider_app.helpers import (
     handle_rider_profile_summary,
     handle_rider_state,
     handle_rider_working_report,
-    handle_send_verification_code_via_sms,
     handle_sns_notification_push_action,
     mock_delivery_state_push_action,
     mock_handle_rider_dispatch_request_creates,
 )
 from ras.rideryo.enums import RiderTransition
 
-from ..common.authentication.helpers import decode_token_for_password_reset
+from ..common.authentication.helpers import (
+    decode_token_for_password_reset,
+    generate_token_for_verification_code_check,
+)
 from ..common.sms.helpers import send_sms_via_hubyo
 from .constants import (
     MSG_FAIL_SENDING_VERIFICATION_CODE,
@@ -252,9 +254,12 @@ def send_verification_code_via_sms(request, data: VerificationCodeRequest):
     if not send_sms_via_hubyo(input_phone_number, message):
         return HttpError(HTTPStatus.INTERNAL_SERVER_ERROR, MSG_FAIL_SENDING_VERIFICATION_CODE)
 
-    return HTTPStatus.OK, handle_send_verification_code_via_sms(
-        rider_profile.rider_id,
-        VerificationInfo(phone_number=input_phone_number, verification_code=verification_code),
+    return HTTPStatus.OK, VerificationCodeResponse(
+        token=generate_token_for_verification_code_check(
+            VerificationInfo(
+                rider_id=rider_profile.rider_id, phone_number=input_phone_number, verification_code=verification_code
+            ),
+        )
     )
 
 
@@ -266,10 +271,10 @@ def send_verification_code_via_sms(request, data: VerificationCodeRequest):
     auth=None,
 )
 def check_verification_code(request, data: CheckVerificationCodeRequest):
-    payload = decode_token_for_password_reset(token=data.token)
-    if payload["phone_number"] != data.phone_number or payload["verification_code"] != data.verification_code:
+    payload: VerificationInfo = decode_token_for_password_reset(token=data.token)
+    if payload.phone_number != data.phone_number or payload.verification_code != data.verification_code:
         raise HttpError(HTTPStatus.BAD_REQUEST, MSG_INVALID_VERIFICATION_CODE)
-    return HTTPStatus.OK, handle_check_verification_code(payload["rider_id"])
+    return HTTPStatus.OK, handle_check_verification_code(payload.rider_id)
 
 
 @rider_router.get(

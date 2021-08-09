@@ -258,7 +258,11 @@ def mock_token_for_password_reset(rider_profile):
 @pytest.fixture
 def mock_token_for_verification_code_check(rider_profile):
     return signing.dumps(
-        {"rider_id": rider_profile.rider_id, "phone_number": rider_profile.phone_number, "verification_code": "112233"},
+        {
+            "rider_id": rider_profile.rider_id,
+            "phone_number": rider_profile.phone_number,
+            "verification_code": "112233",
+        },
         compress=True,
     )
 
