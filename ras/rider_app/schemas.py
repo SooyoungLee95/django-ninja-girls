@@ -13,6 +13,7 @@ from pydantic import root_validator, validator
 from ras.rider_app.constants import (
     CANCEL_REASON_ISSUE_MAP,
     CUSTOMER_ISSUE,
+    MSG_INVALID_PASSWORD_CREATION_CONDITION,
     MSG_SUCCESS_CHECKING_VERIFICATION_CODE,
     MSG_SUCCESS_RESET_PASSWORD,
     REGEX_PASSWORD_CONDITION,
@@ -23,10 +24,6 @@ from ras.rider_app.constants import (
 from ras.rider_app.enums import PushAction, RideryoRole
 from ras.rideryo.enums import DeliveryState
 from ras.rideryo.enums import RiderResponse as RiderResponseEnum
-
-MSG_INVALID_PASSWORD_CREATION_CONDITION = "비밀번호 생성조건을 확인해주세요."
-
-MAX_PASSWORD_LENGTH = 8
 
 
 class RiderAvailability(Schema):

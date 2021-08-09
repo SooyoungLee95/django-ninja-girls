@@ -181,3 +181,4 @@ VERIFY_TOKEN_MAX_AGE = 600
 # https://stackoverflow.com/a/21456918
 REGEX_PASSWORD_CONDITION = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
 MAX_PASSWORD_LENGTH = 8
+MSG_INVALID_PASSWORD_CREATION_CONDITION = "비밀번호 생성조건을 확인해주세요."
