@@ -230,7 +230,7 @@ def login(request, data: RiderLoginRequest):
     return HTTPStatus.OK, handle_rider_authorization(data)
 
 
-@auth_router.post(
+@sms_router.post(
     "/verification-code",
     url_name="send_verification_code_via_sms",
     summary="라이더 앱 SMS를 이용한 인증번호 전송 API",
@@ -265,7 +265,7 @@ def send_verification_code_via_sms(request, data: VerificationCodeRequest):
     )
 
 
-@auth_router.post(
+@sms_router.post(
     "/verification-code/check",
     url_name="check_verification_code",
     summary="휴대폰 번호 인증 요청 확인 API",
@@ -280,7 +280,7 @@ def check_verification_code(request, data: CheckVerificationCodeRequest):
     return HTTPStatus.OK, CheckVerificationCodeResponse(token=generate_token_for_password_reset(payload.rider_id))
 
 
-@rider_router.post(
+@auth_router.post(
     "/reset-password",
     url_name="reset_password",
     summary="비밀번호 재설정 API",
