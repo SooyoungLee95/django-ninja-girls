@@ -24,6 +24,8 @@ from ras.rider_app.enums import PushAction, RideryoRole
 from ras.rideryo.enums import DeliveryState
 from ras.rideryo.enums import RiderResponse as RiderResponseEnum
 
+MSG_INVALID_PASSWORD_CREATION_CONDITION = "비밀번호 생성조건을 확인해주세요."
+
 MAX_PASSWORD_LENGTH = 8
 
 
@@ -252,7 +254,7 @@ class ResetPasswordRequest(Schema):
     @validator("new_password")
     def check_new_password(cls, v):
         if not re.match(REGEX_PASSWORD_CONDITION, v):
-            raise HttpError(HTTPStatus.BAD_REQUEST, "패스워드 형식이 일치하지 않습니다.")
+            raise HttpError(HTTPStatus.BAD_REQUEST, MSG_INVALID_PASSWORD_CREATION_CONDITION)
         return v
 
 
