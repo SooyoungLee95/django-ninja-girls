@@ -170,8 +170,8 @@ class RiderMypage(RiderProfileSummary, RiderDispatchAcceptanceRate, RiderWorking
 
 
 class RiderServiceAgreement(Schema):
-    personal_information: bool
-    location_based_service: bool
+    personal_information: bool = False
+    location_based_service: bool = False
     promotion_receivable: bool = False
     night_promotion_receivable: bool = False
 

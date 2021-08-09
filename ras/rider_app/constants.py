@@ -160,7 +160,6 @@ CANCEL_REASON_ISSUE_MAP = {
 }
 
 MSG_AGREEMENT_ALREADY_SUBMITTED = "이미 서비스 이용약관에 동의하셨습니다."
-MSG_AGREEMENT_NOT_SUBMITTED = "서비스 이용약관에 먼저 동의해주세요."
 MSG_MUST_AGREE_REQUIRED_AGREEMENTS = "필수 이용약관에 동의해주세요."
 MSG_INVALID_VALUE = "유효하지 않은 값입니다."
 MSG_STATE_MACHINE_CANNOT_PROCESS = "해당 작업을 수행할 수 없습니다."

@@ -13,7 +13,6 @@ from django.core.exceptions import ValidationError as DjangoCoreValidationError
 from django.db.utils import DatabaseError, IntegrityError, OperationalError
 from django.utils import timezone
 from ninja.errors import HttpError
-from pydantic import ValidationError
 
 from ras.common.authentication.helpers import decode_token, get_encrypted_payload
 from ras.common.integration.services.jungleworks.handlers import (
@@ -25,7 +24,6 @@ from ras.common.integration.services.jungleworks.handlers import (
 from ras.rider_app.constants import (
     AUTHYO_LOGIN_URL,
     MOCK_DISPATCH_REQUEST_ADDITIONAL_INFO_1,
-    MSG_AGREEMENT_NOT_SUBMITTED,
     MSG_INVALID_PASSWORD_CREATION_CONDITION,
     MSG_INVALID_VALUE,
     MSG_STATE_MACHINE_CANNOT_PROCESS,
@@ -239,7 +237,7 @@ def handle_rider_profile_summary(rider_id):
     if rider_profile_summary:
         return rider_profile_summary
     else:
-        raise HttpError(HTTPStatus.NOT_FOUND, "라이더가 존재하지 않습니다.")
+        raise HttpError(HTTPStatus.BAD_REQUEST, "라이더가 존재하지 않습니다.")
 
 
 def handle_sns_notification_push_action(topic, message, instance):
@@ -269,7 +267,7 @@ def handle_rider_state(rider_id):
     try:
         rider_state = query_rider_state(rider_id)
     except RiderState.DoesNotExist:
-        raise HttpError(HTTPStatus.NOT_FOUND, "")
+        raise HttpError(HTTPStatus.BAD_REQUEST, "")
     current_deliveries = query_rider_current_deliveries(rider_id)
     return RiderStateOut(
         state=rider_state.state,
@@ -294,14 +292,9 @@ def handle_rider_working_report(data: SearchDate, rider_id):
 
 def handle_retrieve_rider_service_agreements(rider_id):
     agreements = query_get_rider_service_agreements(rider_id=rider_id)
-    try:
-        rider_agreements = RiderServiceAgreement(
-            **{agreement.get_agreement_type_display(): agreement.agreed for agreement in agreements}
-        )
-    except ValidationError:
-        raise HttpError(HTTPStatus.NOT_FOUND, MSG_AGREEMENT_NOT_SUBMITTED)
-    else:
-        return rider_agreements
+    return RiderServiceAgreement(
+        **{agreement.get_agreement_type_display(): agreement.agreed for agreement in agreements}
+    )
 
 
 def handle_create_or_replace_rider_service_agreements(

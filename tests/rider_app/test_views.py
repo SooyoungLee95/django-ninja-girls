@@ -13,11 +13,7 @@ from django.utils import timezone
 from freezegun import freeze_time
 
 from ras.common.integration.services.jungleworks.schemas import JungleworksResponseBody
-from ras.rider_app.constants import (
-    CUSTOMER_ISSUE,
-    MSG_AGREEMENT_NOT_SUBMITTED,
-    MSG_MUST_AGREE_REQUIRED_AGREEMENTS,
-)
+from ras.rider_app.constants import CUSTOMER_ISSUE, MSG_MUST_AGREE_REQUIRED_AGREEMENTS
 from ras.rider_app.enums import PushAction
 from ras.rider_app.schemas import RiderBan, RiderDeliveryState, RiderDispatchResponse
 from ras.rideryo.enums import DeliveryState
@@ -501,8 +497,8 @@ def test_retrieve_rider_profile_summary_when_rider_profile_does_not_exist(rider_
         reverse("ninja:retrieve_rider_profile_summary"),
         **{"HTTP_AUTHORIZATION": f"Bearer {mock_jwt_token}"},
     )
-    # Then: 404 NOT_FOUND를 return 해야하고,
-    assert response.status_code == HTTPStatus.NOT_FOUND
+    # Then: 400 BAD REQUEST를 return 해야하고,
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     # And: message는 라이더가 존재하지 않습니다. 이어야 한다
     assert json.loads(response.content)["message"] == "라이더가 존재하지 않습니다."
 
@@ -719,11 +715,14 @@ def test_retrieve_rider_service_agreements_return_not_found_when_missing_require
     )
 
     # Then: 200 OK를 return 해야하고,
-    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.status_code == HTTPStatus.OK
 
     # And: 이용약관에 대한 응답이 반환되어야 한다.
     data = response.json()
-    assert data["message"] == MSG_AGREEMENT_NOT_SUBMITTED
+    assert data["personal_information"] is False
+    assert data["location_based_service"] is False
+    assert data["promotion_receivable"] is False
+    assert data["night_promotion_receivable"] is False
 
 
 @pytest.mark.django_db(transaction=True)

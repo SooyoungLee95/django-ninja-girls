@@ -323,8 +323,8 @@ class TestSendVerificationCodeViaSMSView:
         # When: 인증요청 API를 호출 했을 때,
         response = self._call_send_verification_code_via_sms_api(not_exist_phone_number)
 
-        # Then: 상태 코드 404을 리턴 해야한다.
-        assert response.status_code == HTTPStatus.NOT_FOUND
+        # Then: 상태 코드 400을 리턴 해야한다.
+        assert response.status_code == HTTPStatus.BAD_REQUEST
         # AND: 라이더를 찾을 수 없습니다. 메세지를 리턴해야한다.
         assert json.loads(response.content)["message"] == MSG_NOT_FOUND_RIDER
 
