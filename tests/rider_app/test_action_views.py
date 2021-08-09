@@ -20,6 +20,9 @@ def test_action_error_when_invalid_action_is_given(rider_profile, rider_state, m
     # And: 상태머신에 올바르지 않은 함수명을 등록해둔 경우
     # - mocking한 상태전환 Enum 생성
     dummy_enum = Enum("DummyEnum", list(RiderTransition.__members__), type=str)  # type: ignore[misc]
+    # - 더미 값 반환하도록 설정
+    dummy_enum.label = property(lambda i: i)  # type: ignore[attr-defined]
+
     with patch("ras.rideryo.state_machine.rt", dummy_enum):
 
         # When: 라이더 상태 전환액션 API를 호출 하였을 때
