@@ -37,16 +37,26 @@ from ras.rider_app.helpers import (
 )
 from ras.rideryo.enums import RiderTransition
 
+from ..common.authentication.helpers import (
+    decode_token_for_password_reset,
+    generate_token_for_password_reset,
+    generate_token_for_verification_code_check,
+)
 from ..common.sms.helpers import send_sms_via_hubyo
 from .constants import (
     MSG_FAIL_SENDING_VERIFICATION_CODE,
+    MSG_INVALID_VERIFICATION_CODE,
     MSG_MUST_AGREE_REQUIRED_AGREEMENTS,
     MSG_NOT_FOUND_PHONE_NUMBER,
     MSG_NOT_FOUND_RIDER,
     MSG_UNAUTHORIZED,
 )
 from .enums import RideryoRole, WebhookName
-from .schemas import DispatchRequestDetail
+from .schemas import (
+    CheckVerificationCodeRequest,
+    CheckVerificationCodeResponse,
+    DispatchRequestDetail,
+)
 from .schemas import MockRiderDispatch as MockRiderDispatchResultSchema
 from .schemas import RiderAvailability as RiderAvailabilitySchema
 from .schemas import RiderBan, RiderDeliveryState
@@ -65,6 +75,8 @@ from .schemas import (
     RiderStateOut,
     SearchDate,
     VerificationCodeRequest,
+    VerificationCodeResponse,
+    VerificationInfo,
 )
 
 rider_router = Router()
@@ -221,7 +233,7 @@ def login(request, data: RiderLoginRequest):
     "/verification-code",
     url_name="send_verification_code_via_sms",
     summary="라이더 앱 SMS를 이용한 인증번호 전송 API",
-    response={200: None, codes_4xx: ErrorResponse, 500: ErrorResponse},
+    response={200: VerificationCodeResponse, codes_4xx: ErrorResponse, 500: ErrorResponse},
     auth=None,
 )
 def send_verification_code_via_sms(request, data: VerificationCodeRequest):
@@ -240,11 +252,30 @@ def send_verification_code_via_sms(request, data: VerificationCodeRequest):
 
     verification_code = generate_random_verification_code()
     message = f"[요기요라이더] 인증번호는 {verification_code} 입니다."
-    # TODO: verification_code를 TTL 300으로, redis에 저장 - ex) input_phone_number: verification_code
     if not send_sms_via_hubyo(input_phone_number, message):
         return HttpError(HTTPStatus.INTERNAL_SERVER_ERROR, MSG_FAIL_SENDING_VERIFICATION_CODE)
 
-    return HTTPStatus.OK, {}
+    return HTTPStatus.OK, VerificationCodeResponse(
+        token=generate_token_for_verification_code_check(
+            VerificationInfo(
+                rider_id=rider_profile.rider_id, phone_number=input_phone_number, verification_code=verification_code
+            ),
+        )
+    )
+
+
+@auth_router.post(
+    "/verification-code/check",
+    url_name="check_verification_code",
+    summary="휴대폰 번호 인증 요청 확인 API",
+    response={200: CheckVerificationCodeResponse, codes_4xx: ErrorResponse, 500: ErrorResponse},
+    auth=None,
+)
+def check_verification_code(request, data: CheckVerificationCodeRequest):
+    payload: VerificationInfo = decode_token_for_password_reset(token=data.token)
+    if payload.phone_number != data.phone_number or payload.verification_code != data.verification_code:
+        raise HttpError(HTTPStatus.BAD_REQUEST, MSG_INVALID_VERIFICATION_CODE)
+    return HTTPStatus.OK, CheckVerificationCodeResponse(token=generate_token_for_password_reset(payload.rider_id))
 
 
 @rider_router.get(

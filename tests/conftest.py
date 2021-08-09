@@ -1,6 +1,7 @@
 import jwt
 import pytest
 from django.conf import settings
+from django.core import signing
 from django.db.models import Count, Sum
 
 from ras.rideryo.enums import ContractType, DeliveryState, RiderResponse
@@ -246,6 +247,23 @@ def mock_jwt_token_with_staff(rider_profile):
         _generate_payload("staff", rider_profile.rider_id),
         TEST_JWT_PRIVATE,
         algorithm="RS256",
+    )
+
+
+@pytest.fixture
+def mock_token_for_password_reset(rider_profile):
+    return signing.dumps({"rider_id": rider_profile.rider_id}, compress=True)
+
+
+@pytest.fixture
+def mock_token_for_verification_code_check(rider_profile):
+    return signing.dumps(
+        {
+            "rider_id": rider_profile.rider_id,
+            "phone_number": rider_profile.phone_number,
+            "verification_code": "112233",
+        },
+        compress=True,
     )
 
 

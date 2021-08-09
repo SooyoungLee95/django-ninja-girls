@@ -15,7 +15,9 @@ from ras.common.sms.helpers import send_sms_via_hubyo
 from ras.rider_app.constants import (
     AUTHYO_LOGIN_URL,
     MSG_FAIL_SENDING_VERIFICATION_CODE,
+    MSG_INVALID_VERIFICATION_CODE,
     MSG_NOT_FOUND_RIDER,
+    MSG_SUCCESS_CHECKING_VERIFICATION_CODE,
     MSG_UNAUTHORIZED,
 )
 from ras.rider_app.helpers import RIDER_APP_INITIAL_PASSWORD
@@ -269,7 +271,7 @@ class TestSendVerificationCodeViaSMSView:
     @patch("ras.rider_app.views.send_sms_via_hubyo")
     @pytest.mark.django_db(transaction=True)
     def test_send_verification_code_via_sms_view_on_success_with_not_email_address_but_token(
-        self, mock_send_sms_via_hubyo, rider_profile, mock_jwt_token
+        self, mock_send_sms_via_hubyo, rider_profile, mock_jwt_token, mock_token_for_verification_code_check
     ):
         # Given: DB에 존재하는 phone_number가 주어지고,
         rider_phone_number = rider_profile.phone_number
@@ -287,6 +289,8 @@ class TestSendVerificationCodeViaSMSView:
         assert response.status_code == HTTPStatus.OK
         # And: send_sms_via_hubyo를 호출 해야 한다
         mock_send_sms_via_hubyo.assert_called_once_with(rider_phone_number, message)
+        # And: 인증을 위한 토큰이 응답으로 내려가야 한다
+        assert json.loads(response.content)["token"] == mock_token_for_verification_code_check
 
     @pytest.mark.django_db(transaction=True)
     def test_send_verification_code_via_sms_view_with_not_email_address_but_token_on_invalid_token_error(
@@ -321,6 +325,7 @@ class TestSendVerificationCodeViaSMSView:
         assert json.loads(response.content)["message"] == MSG_NOT_FOUND_RIDER
 
     @patch("ras.rider_app.views.send_sms_via_hubyo")
+    @patch("ras.rider_app.views.generate_random_verification_code", Mock(return_value="112233"))
     @pytest.mark.django_db(transaction=True)
     def test_send_verification_code_via_sms_view_on_unexpected_internal_server_error(
         self, mock_send_sms_via_hubyo, rider_profile
@@ -358,3 +363,53 @@ class TestSendVerificationCodeViaSMSView:
 
         # Then: 상태 코드 401을 리턴 해야한다.
         assert response.status_code == HTTPStatus.UNAUTHORIZED
+
+
+class TestCheckVerificationCode:
+    def _call_check_verification_code(self, request_body):
+        return client.post(
+            reverse("ninja:check_verification_code"),
+            data=request_body,
+            content_type="application/json",
+        )
+
+    @pytest.mark.django_db(transaction=True)
+    def test_check_verification_code_should_return_400_bad_request_when_phone_number_redis_key_does_not_exist(
+        self, mock_token_for_verification_code_check
+    ):
+        # Given: 유효하지 않은 request_body가 주어지고,
+        invalid_request_body = {
+            "phone_number": "invalid_phone_number",
+            "verification_code": "valid_verification_code",
+            "token": mock_token_for_verification_code_check,
+        }
+
+        # When: 휴대폰 번호 인증 요청 확인 API를 호출 했을 때,
+        response = self._call_check_verification_code(invalid_request_body)
+
+        # Then: 400 Bad Request 상태코드이어야 한다
+        assert response.status_code == HTTPStatus.BAD_REQUEST
+        # And: 인증번호가 일치하지 않습니다. 메세지를 리턴해야한다
+        assert json.loads(response.content)["message"] == MSG_INVALID_VERIFICATION_CODE
+
+    @pytest.mark.django_db(transaction=True)
+    def test_check_verification_code_should_return_200_ok_on_success(
+        self, mock_token_for_password_reset, mock_token_for_verification_code_check, rider_profile
+    ):
+        # Given: 유효한 request_body가 주어지고,
+        valid_input_verification_code = "112233"
+        valid_request_body = {
+            "phone_number": rider_profile.phone_number,
+            "verification_code": valid_input_verification_code,
+            "token": mock_token_for_verification_code_check,
+        }
+
+        # When: 휴대폰 번호 인증 요청 확인 API를 호출 했을 때,
+        response = self._call_check_verification_code(valid_request_body)
+
+        # Then: 200 OK 상태코드이어야 한다
+        assert response.status_code == HTTPStatus.OK
+        # And: token과 인증이 완료되었습니다 메세지를 리턴해야한다.
+        response = json.loads(response.content)
+        assert response["message"] == MSG_SUCCESS_CHECKING_VERIFICATION_CODE
+        assert response["token"] == mock_token_for_password_reset
