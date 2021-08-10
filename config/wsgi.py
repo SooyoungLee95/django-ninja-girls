@@ -1,5 +1,5 @@
 """
-WSGI config for ras project.
+WSGI config for src project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 

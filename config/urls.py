@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.urls import path
 from django.views.decorators.http import require_GET
 
-from ras.api import api
+from src.api import api
 
 
 @require_GET

@@ -1,4 +1,4 @@
-name: ras code quality check
+name: src code quality check
 
 on: [push]
 
